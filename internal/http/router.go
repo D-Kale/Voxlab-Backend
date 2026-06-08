@@ -72,7 +72,14 @@ func (r *Router) initEngine() {
 	api := r.engine.Group("/api/v1")
 	{
 		api.GET("/health", r.health.HealthCheck)
-		api.POST("/auth/login", r.auth.Login)
+
+		auth := api.Group("/auth")
+		{
+			auth.POST("/login", r.auth.Login)
+			auth.POST("/register", r.auth.Register)
+			auth.POST("/logout", r.auth.Logout)
+			auth.GET("/me", middleware.AuthMiddleware(), r.auth.Me)
+		}
 
 		tracks := api.Group("/tracks")
 		{

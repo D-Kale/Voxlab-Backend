@@ -140,11 +140,44 @@ docs/                        → Swagger autogenerado
 
 ### Autenticación
 ```bash
+🔓 POST /api/v1/auth/register                          # Crear cuenta (auto-login)
+🔓 POST /api/v1/auth/login                             # Iniciar sesión
+🔓 POST /api/v1/auth/logout                            # Revocar token actual
+🔒 GET  /api/v1/auth/me                                # Perfil del usuario autenticado
+```
+
+**Login:**
+```bash
 🔓 POST /api/v1/auth/login
 Content-Type: application/json
 Body: { "email": "user@example.com", "password": "password123" }
 # → { "token": "eyJ...", "expires_at": "2026-01-02T00:00:00Z",
 #     "user": { "id": "uuid", "name": "...", "email": "...", "xp": 0, "streak_days": 0 } }
+```
+
+**Register (auto-login incluido):**
+```bash
+🔓 POST /api/v1/auth/register
+Content-Type: application/json
+Body: { "name": "John Doe", "email": "user@example.com", "password": "password123" }
+# → 201 Created — misma respuesta que login (token + user)
+# → 409 Conflict — si el email ya existe
+```
+
+**Logout:** Invalida el token actual agregándolo a una blacklist en Redis.
+```bash
+🔓 POST /api/v1/auth/logout
+Authorization: Bearer <token>
+# → { "success": true, "message": "logged out successfully" }
+# El mismo token ya no funciona para endpoints protegidos.
+```
+
+**Me:** Devuelve el perfil del usuario autenticado.
+```bash
+🔒 GET /api/v1/auth/me
+Authorization: Bearer <token>
+# → { "success": true, "data": { "id": "uuid", "name": "...", "email": "...", "xp": 0, "streak_days": 0 } }
+# → 401 "token has been revoked" — si se usó después de logout
 ```
 
 ### Tracks (Cursos)
@@ -158,7 +191,7 @@ Body: { "email": "user@example.com", "password": "password123" }
 
 ### Modules (Módulos)
 ```bash
-🔓 GET  /api/v1/tracks/:tid/modules  # Listar módulos de un curso
+🔓 GET  /api/v1/tracks/:id/modules   # Listar módulos de un curso
 🔓 GET  /api/v1/modules/:id          # Obtener un módulo
 🔒 POST /api/v1/modules              # Crear módulo
 🔒 PUT  /api/v1/modules/:id          # Actualizar módulo
@@ -168,7 +201,7 @@ Body: { "email": "user@example.com", "password": "password123" }
 
 ### Lessons (Lecciones)
 ```bash
-🔓 GET  /api/v1/modules/:mid/lessons  # Listar lecciones de un módulo
+🔓 GET  /api/v1/modules/:id/lessons   # Listar lecciones de un módulo
 🔓 GET  /api/v1/lessons/:id           # Obtener una lección
 🔒 POST /api/v1/lessons               # Crear lección
 🔒 PUT  /api/v1/lessons/:id           # Actualizar lección
@@ -177,7 +210,7 @@ Body: { "email": "user@example.com", "password": "password123" }
 
 ### Exercises (Ejercicios — JSONB)
 ```bash
-🔓 GET  /api/v1/lessons/:lid/exercises  # Listar ejercicios de una lección
+🔓 GET  /api/v1/lessons/:id/exercises   # Listar ejercicios de una lección
 🔓 GET  /api/v1/exercises/:id           # Obtener un ejercicio
 🔒 POST /api/v1/exercises               # Crear ejercicio
 🔒 PUT  /api/v1/exercises/:id           # Actualizar ejercicio
@@ -194,11 +227,21 @@ Body: { "email": "user@example.com", "password": "password123" }
 
 Flujo completo para crear contenido educativo desde cero (con `curl`):
 
-### 1. Login (obtener token)
+### 1. Crear cuenta o login
+
+**Opción A — Registrarse (primera vez):**
+```bash
+curl -s -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Juan Pérez","email":"juan@example.com","password":"password123"}'
+# → 201 Created + token + user data
+```
+
+**Opción B — Login (usuario existente):**
 ```bash
 curl -s -X POST http://localhost:3000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"user@example.com","password":"password123"}' \
+  -d '{"email":"juan@example.com","password":"password123"}' \
   | jq .token -r
 ```
 Guardar el token: `export TOKEN="eyJ..."`

@@ -36,6 +36,23 @@ definitions:
       user:
         $ref: '#/definitions/services.UserData'
     type: object
+  services.RegisterRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      password:
+        example: password123
+        minLength: 6
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
   services.UserData:
     properties:
       email:
@@ -66,7 +83,10 @@ paths:
     post:
       consumes:
       - application/json
-      description: Authenticates credentials and returns a JWT token
+      description: |-
+        Authenticates with email + password and returns a JWT token.
+        The token must be sent as `Authorization: Bearer <token>` for protected endpoints.
+        Tokens expire after 24 hours.
       parameters:
       - description: Login credentials
         in: body
@@ -84,16 +104,96 @@ paths:
         "400":
           description: Bad Request
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
         "401":
           description: Unauthorized
           schema:
-            additionalProperties:
-              type: string
+            additionalProperties: true
             type: object
       summary: User Login
+      tags:
+      - Auth
+  /api/v1/auth/logout:
+    post:
+      description: |-
+        Invalidates the current JWT token by adding it to a Redis blacklist.
+        After calling this, the token can no longer be used for authenticated requests.
+        The frontend should also discard the token locally.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: User Logout
+      tags:
+      - Auth
+  /api/v1/auth/me:
+    get:
+      description: |-
+        Returns the authenticated user's profile (name, email, XP, streak, lives).
+        Use this to verify the token is valid and load the user's data on page refresh.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get Current User
+      tags:
+      - Auth
+  /api/v1/auth/register:
+    post:
+      consumes:
+      - application/json
+      description: |-
+        Creates a new user account and returns a JWT token (auto-login).
+        The password must be at least 6 characters.
+        If the email is already registered, returns a 409 conflict error.
+      parameters:
+      - description: Registration data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/services.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties: true
+            type: object
+      summary: User Registration
       tags:
       - Auth
   /api/v1/exercises:

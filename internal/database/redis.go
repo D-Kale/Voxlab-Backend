@@ -20,6 +20,7 @@ const (
 	ErrorLogsKey       = "logs:errors"
 )
 
+var Ctx = context.Background()
 var Redis *redis.Client
 
 func ConnectRedis(cfg *config.Config) error {

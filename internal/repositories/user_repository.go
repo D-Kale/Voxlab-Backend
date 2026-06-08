@@ -31,6 +31,10 @@ func (r *UserRepository) FindByID(id string) (*models.User, error) {
 	return &u, nil
 }
 
+func (r *UserRepository) Create(user *models.User) error {
+	return r.db.Create(user).Error
+}
+
 func (r *UserRepository) AddXP(id string, xp int) error {
 	return r.db.Model(&models.User{}).Where("id = ?", id).
 		UpdateColumn("xp", gorm.Expr("xp + ?", xp)).Error

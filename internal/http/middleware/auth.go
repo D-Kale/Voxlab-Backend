@@ -1,12 +1,15 @@
 package middleware
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/voxlab/voxlab-backend/internal/config"
+	"github.com/voxlab/voxlab-backend/internal/database"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
@@ -26,6 +29,15 @@ func AuthMiddleware() gin.HandlerFunc {
 		}
 
 		tokenString := parts[1]
+
+		blacklistKey := "auth:blacklist:" + tokenHash(tokenString)
+		blacklisted, err := database.GetRedis().Exists(database.Ctx, blacklistKey).Result()
+		if err == nil && blacklisted == 1 {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "token has been revoked"})
+			c.Abort()
+			return
+		}
+
 		cfg := config.MustGetConfig()
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -56,4 +68,9 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func tokenHash(tokenString string) string {
+	hash := sha256.Sum256([]byte(tokenString))
+	return hex.EncodeToString(hash[:])
 }
