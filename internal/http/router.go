@@ -68,6 +68,7 @@ func (r *Router) initEngine() {
 	r.engine.Use(middleware.CORSMiddleware())
 
 	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.engine.Static("/docs/es", "./docs/es")
 
 	api := r.engine.Group("/api/v1")
 	{

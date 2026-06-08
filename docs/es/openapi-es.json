@@ -1,0 +1,1515 @@
+{
+    "basePath": "/api/v1",
+    "definitions": {
+        "controllers.completeLessonRequest": {
+            "properties": {
+                "lesson_id": {
+                    "example": 1,
+                    "type": "integer"
+                },
+                "score": {
+                    "example": 85,
+                    "type": "integer"
+                }
+            },
+            "type": "object"
+        },
+        "controllers.linkLessonRequest": {
+            "properties": {
+                "lesson_id": {
+                    "example": 1,
+                    "type": "integer"
+                }
+            },
+            "type": "object"
+        },
+        "services.LoginRequest": {
+            "properties": {
+                "email": {
+                    "example": "usuario@ejemplo.com",
+                    "type": "string"
+                },
+                "password": {
+                    "example": "contraseña123",
+                    "type": "string"
+                }
+            },
+            "required": [
+                "email",
+                "password"
+            ],
+            "type": "object"
+        },
+        "services.LoginResponse": {
+            "properties": {
+                "expires_at": {
+                    "type": "string"
+                },
+                "token": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/services.UserData"
+                }
+            },
+            "type": "object"
+        },
+        "services.RegisterRequest": {
+            "properties": {
+                "email": {
+                    "example": "usuario@ejemplo.com",
+                    "type": "string"
+                },
+                "name": {
+                    "example": "John Doe",
+                    "type": "string"
+                },
+                "password": {
+                    "example": "contraseña123",
+                    "minLength": 6,
+                    "type": "string"
+                }
+            },
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "type": "object"
+        },
+        "services.UserData": {
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "streak_days": {
+                    "type": "integer"
+                },
+                "xp": {
+                    "type": "integer"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "host": "localhost:3000",
+    "info": {
+        "contact": {
+            "email": "soporte@voxlab.com",
+            "name": "API Support"
+        },
+        "description": "API de la plataforma educativa de oratoria Voxlab. Documentación en español para desarrolladores frontend, diseñadores y stakeholders.",
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "termsOfService": "http://voxlab.com/terms",
+        "title": "Voxlab API — Documentación en Español",
+        "version": "1.0"
+    },
+    "paths": {
+        "/api/v1/auth/login": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Autentica con email y contraseña y devuelve un token JWT.\nEl token debe enviarse como `Authorization: Bearer \u003ctoken\u003e` en los endpoints protegidos.\nLos tokens expiran después de 24 horas.",
+                "parameters": [
+                    {
+                        "description": "Credenciales de inicio de sesión",
+                        "in": "body",
+                        "name": "request",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.LoginRequest"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/services.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": "Iniciar sesión",
+                "tags": [
+                    "Autenticación"
+                ]
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "description": "Invalida el token JWT actual agregándolo a una lista negra en Redis.\nDespués de esto, el token ya no puede usarse para peticiones autenticadas.\nEl frontend también debe descartar el token localmente.",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Cerrar sesión",
+                "tags": [
+                    "Autenticación"
+                ]
+            }
+        },
+        "/api/v1/auth/me": {
+            "get": {
+                "description": "Devuelve el perfil del usuario autenticado (nombre, email, XP, racha, vidas).\nÚsalo para verificar que el token es válido y cargar los datos del usuario al recargar la página.",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Obtener usuario actual",
+                "tags": [
+                    "Autenticación"
+                ]
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Crea una cuenta nueva y devuelve un token JWT (inicio de sesión automático).\nLa contraseña debe tener al menos 6 caracteres.\nSi el email ya está registrado, devuelve un error 409 (conflicto).",
+                "parameters": [
+                    {
+                        "description": "Datos de registro",
+                        "in": "body",
+                        "name": "request",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.RegisterRequest"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Creado",
+                        "schema": {
+                            "$ref": "#/definitions/services.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud inválida",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflicto",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": "Registrar usuario",
+                "tags": [
+                    "Autenticación"
+                ]
+            }
+        },
+        "/api/v1/exercises": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Crea un ejercicio dentro de una lección. El campo \"type\" determina la estructura del campo \"content\" (JSONB).\n\n📝 Tipos de ejercicio soportados y su estructura:\n\n**quiz** — Pregunta de opción múltiple:\n```json\n{\n\"type\": \"quiz\",\n\"content\": {\n\"question\": \"¿Cuál es la función principal del diafragma al hablar?\",\n\"options\": [\"Proyectar la voz\", \"Respirar\", \"Articular\", \"Deglutir\"],\n\"correct_index\": 0,\n\"explanation\": \"El diafragma es el músculo clave para proyectar la voz\",\n\"points\": 10\n}\n}\n```\n\n**reading** — Lectura informativa:\n```json\n{\n\"type\": \"reading\",\n\"content\": {\n\"title\": \"La importancia de la pausa en el discurso\",\n\"content\": \"Texto completo de la lectura en español...\",\n\"reading_time_seconds\": 120,\n\"points\": 5\n}\n}\n```\n\n**oratory_minigame** — Reto de oratoria con requisitos:\n```json\n{\n\"type\": \"oratory_minigame\",\n\"content\": {\n\"prompt\": \"Graba un discurso de 30 segundos presentándote como líder\",\n\"topic\": \"Liderazgo\",\n\"duration_seconds\": 30,\n\"min_duration_seconds\": 15,\n\"requirements\": [\"Saludo inicial\", \"Menciona tu experiencia\", \"Cierre motivador\"],\n\"points\": 20\n}\n}\n```\n\n**audio** — Ejercicio de grabación de audio:\n```json\n{\n\"type\": \"audio\",\n\"content\": {\n\"prompt\": \"Lee este párrafo en voz alta...\",\n\"duration_seconds\": 60,\n\"points\": 15\n}\n}\n```\n\n**video** — Ejercicio de grabación de video:\n```json\n{\n\"type\": \"video\",\n\"content\": {\n\"prompt\": \"Grábate presentándote por 2 minutos...\",\n\"duration_seconds\": 120,\n\"points\": 25\n}\n}\n```\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "Datos del ejercicio",
+                        "in": "body",
+                        "name": "request",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "content": {
+                                    "type": "object"
+                                },
+                                "lesson_id": {
+                                    "type": "integer"
+                                },
+                                "order_index": {
+                                    "type": "integer"
+                                },
+                                "type": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Creado: { success: true, data: Exercise }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Crear un nuevo ejercicio",
+                "tags": [
+                    "Ejercicios"
+                ]
+            }
+        },
+        "/api/v1/exercises/{id}": {
+            "delete": {
+                "description": "Elimina permanentemente un ejercicio de una lección.\n⚠️ Esta acción no se puede deshacer.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "UUID del ejercicio (ejemplo: 550e8400-e29b-41d4-a716-446655440000)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Eliminado: { success: true, message: string }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Ejercicio no encontrado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Eliminar un ejercicio",
+                "tags": [
+                    "Ejercicios"
+                ]
+            },
+            "get": {
+                "description": "Devuelve un ejercicio con su contenido JSONB completo. La estructura del contenido\ndepende del tipo de ejercicio (quiz, reading, oratory_minigame, audio, video).\n\n🔓 Público — no requiere autenticación.",
+                "parameters": [
+                    {
+                        "description": "UUID del ejercicio (ejemplo: 550e8400-e29b-41d4-a716-446655440000)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Éxito: { success: true, data: Exercise }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Ejercicio no encontrado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": "Obtener un ejercicio por ID",
+                "tags": [
+                    "Ejercicios"
+                ]
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Modifica el tipo, contenido (JSONB) u orden de un ejercicio.\nAl actualizar content, envía el objeto NUEVO COMPLETO para el tipo de ejercicio.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "UUID del ejercicio (ejemplo: 550e8400-e29b-41d4-a716-446655440000)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "description": "Campos a actualizar",
+                        "in": "body",
+                        "name": "request",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "content": {
+                                    "type": "object"
+                                },
+                                "order_index": {
+                                    "type": "integer"
+                                },
+                                "type": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Actualizado: { success: true, data: Exercise }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Ejercicio no encontrado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Actualizar un ejercicio",
+                "tags": [
+                    "Ejercicios"
+                ]
+            }
+        },
+        "/api/v1/health": {
+            "get": {
+                "description": "Verifica el estado de la API, la conexión a la base de datos y Redis",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": "Verificación de Salud",
+                "tags": [
+                    "Sistema"
+                ]
+            }
+        },
+        "/api/v1/lessons": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Crea una lección independiente. Después de crearla, vincúlala a un módulo usando\nPOST /api/v1/modules/:id/lessons. Cada lección tiene ejercicios (creados por separado).\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "Datos de la lección",
+                        "in": "body",
+                        "name": "request",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "description": {
+                                    "type": "string"
+                                },
+                                "estimated_time_seconds": {
+                                    "type": "integer"
+                                },
+                                "title": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Creado: { success: true, data: Lesson }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Crear una nueva lección",
+                "tags": [
+                    "Lecciones"
+                ]
+            }
+        },
+        "/api/v1/lessons/{id}": {
+            "delete": {
+                "description": "Elimina permanentemente una lección y sus ejercicios.\n⚠️ Esta acción no se puede deshacer.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "ID de la lección (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Eliminado: { success: true, message: string }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Lección no encontrada",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Eliminar una lección",
+                "tags": [
+                    "Lecciones"
+                ]
+            },
+            "get": {
+                "description": "Devuelve una lección con sus ejercicios. Úsalo para cargar el contenido completo\nde la lección incluyendo todos los ejercicios.\n\n🔓 Público — no requiere autenticación.",
+                "parameters": [
+                    {
+                        "description": "ID de la lección (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Éxito: { success: true, data: Lesson }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Lección no encontrada",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": "Obtener una lección por ID",
+                "tags": [
+                    "Lecciones"
+                ]
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Cambia el título, descripción o tiempo estimado de una lección.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "ID de la lección (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "description": "Campos a actualizar",
+                        "in": "body",
+                        "name": "request",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "description": {
+                                    "type": "string"
+                                },
+                                "estimated_time_seconds": {
+                                    "type": "integer"
+                                },
+                                "title": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Actualizado: { success: true, data: Lesson }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Lección no encontrada",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Actualizar una lección",
+                "tags": [
+                    "Lecciones"
+                ]
+            }
+        },
+        "/api/v1/lessons/{id}/exercises": {
+            "get": {
+                "description": "Devuelve todos los ejercicios de una lección, ordenados por order_index.\nCada ejercicio tiene un campo \"type\" que define la estructura JSON del campo \"content\".\nVer las descripciones abajo para cada tipo de ejercicio.\n\n🔓 Público — no requiere autenticación.",
+                "parameters": [
+                    {
+                        "description": "ID de la lección (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Éxito: { success: true, data: Exercise[] }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Lección no encontrada",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": "Listar ejercicios de una lección",
+                "tags": [
+                    "Ejercicios"
+                ]
+            }
+        },
+        "/api/v1/modules": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Agrega un módulo dentro de un curso específico.\nEl track_id debe referenciar un curso existente. Los módulos se ordenan por order_index.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "Datos del módulo",
+                        "in": "body",
+                        "name": "request",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "description": {
+                                    "type": "string"
+                                },
+                                "order_index": {
+                                    "type": "integer"
+                                },
+                                "title": {
+                                    "type": "string"
+                                },
+                                "track_id": {
+                                    "type": "integer"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Creado: { success: true, data: Module }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Crear un nuevo módulo",
+                "tags": [
+                    "Módulos"
+                ]
+            }
+        },
+        "/api/v1/modules/{id}": {
+            "delete": {
+                "description": "Elimina permanentemente un módulo y sus vínculos a lecciones. Las lecciones NO se eliminan,\nsolo se elimina el vínculo entre el módulo y la lección.\n⚠️ Esta acción no se puede deshacer.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "ID del módulo (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Eliminado: { success: true, message: string }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Módulo no encontrado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Eliminar un módulo",
+                "tags": [
+                    "Módulos"
+                ]
+            },
+            "get": {
+                "description": "Devuelve un módulo con sus lecciones vinculadas y ejercicios.\n\n🔓 Público — no requiere autenticación.",
+                "parameters": [
+                    {
+                        "description": "ID del módulo (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Éxito: { success: true, data: Module }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Módulo no encontrado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": "Obtener un módulo por ID",
+                "tags": [
+                    "Módulos"
+                ]
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Cambia el título, descripción u orden de un módulo.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "ID del módulo (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "description": "Campos a actualizar",
+                        "in": "body",
+                        "name": "request",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "description": {
+                                    "type": "string"
+                                },
+                                "order_index": {
+                                    "type": "integer"
+                                },
+                                "title": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Actualizado: { success: true, data: Module }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Módulo no encontrado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Actualizar un módulo",
+                "tags": [
+                    "Módulos"
+                ]
+            }
+        },
+        "/api/v1/modules/{id}/lessons": {
+            "get": {
+                "description": "Devuelve todas las lecciones vinculadas a un módulo específico, con sus ejercicios.\nLas lecciones se devuelven a través de la tabla pivote ModuleLesson e incluyen order_index.\n\n🔓 Público — no requiere autenticación.",
+                "parameters": [
+                    {
+                        "description": "ID del módulo (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Éxito: { success: true, data: ModuleLesson[] }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Módulo no encontrado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": "Listar lecciones de un módulo",
+                "tags": [
+                    "Lecciones"
+                ]
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Asocia una lección existente con un módulo usando la tabla pivote ModuleLesson.\nUna lección puede vincularse a MÚLTIPLES módulos. Esto NO mueve ni copia la lección.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "ID del módulo (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "description": "ID de la lección a vincular",
+                        "in": "body",
+                        "name": "request",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.linkLessonRequest"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Vinculado: { success: true, message: string }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Módulo o Lección no encontrados",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Vincular una lección a un módulo",
+                "tags": [
+                    "Módulos"
+                ]
+            }
+        },
+        "/api/v1/progress": {
+            "get": {
+                "description": "Devuelve TODOS los registros de progreso del usuario autenticado.\nCada registro muestra: estado (in_progress/completed), XP ganado y timestamps.\nÚsalo en el frontend para determinar qué lecciones están completadas.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Éxito: { success: true, data: UserProgress[] }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado — token faltante o inválido",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Obtener mi progreso",
+                "tags": [
+                    "Progreso"
+                ]
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Marca una lección como completada para el usuario autenticado. Este endpoint:\n1. Cambia el estado del progreso a \"completed\"\n2. Agrega XP al total del usuario (según ejercicios + puntuación)\n3. Guarda la fecha de finalización\n\nSi la lección ya estaba completada, ACTUALIZA el registro existente.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "Datos de finalización de lección",
+                        "in": "body",
+                        "name": "request",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.completeLessonRequest"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Completado: { success: true, data: UserProgress }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado — token faltante o inválido",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Lección no encontrada",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Completar una lección",
+                "tags": [
+                    "Progreso"
+                ]
+            }
+        },
+        "/api/v1/tracks": {
+            "get": {
+                "description": "Devuelve TODOS los cursos disponibles con sus módulos, lecciones y ejercicios anidados.\nEste es el endpoint principal del catálogo — el frontend debe llamarlo una vez\npara construir el árbol de navegación completo. Cada curso contiene módulos,\ncada módulo contiene lecciones y cada lección contiene ejercicios.\n\n🔓 Público — no requiere autenticación.",
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Éxito: { success: true, data: Track[] }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": "Listar todos los cursos",
+                "tags": [
+                    "Cursos (Tracks)"
+                ]
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Agrega un nuevo curso (track) al catálogo educativo.\nDespués de crear un curso, puedes agregarle módulos usando POST /api/v1/modules.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "Datos del curso",
+                        "in": "body",
+                        "name": "request",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "description": {
+                                    "type": "string"
+                                },
+                                "icon_url": {
+                                    "type": "string"
+                                },
+                                "title": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Creado: { success: true, data: Track }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Crear un nuevo curso",
+                "tags": [
+                    "Cursos (Tracks)"
+                ]
+            }
+        },
+        "/api/v1/tracks/{id}": {
+            "delete": {
+                "description": "Elimina permanentemente un curso y todos sus módulos y vínculos asociados.\n⚠️ Esta acción no se puede deshacer.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "ID del curso (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Eliminado: { success: true, message: string }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Curso no encontrado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Eliminar un curso",
+                "tags": [
+                    "Cursos (Tracks)"
+                ]
+            },
+            "get": {
+                "description": "Devuelve un curso con sus módulos, lecciones y ejercicios anidados.\nÚsalo cuando necesites recargar u obtener detalles de un curso específico.\n\n🔓 Público — no requiere autenticación.",
+                "parameters": [
+                    {
+                        "description": "ID del curso (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Éxito: { success: true, data: Track }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Curso no encontrado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": "Obtener un curso por ID",
+                "tags": [
+                    "Cursos (Tracks)"
+                ]
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "description": "Modifica el título, descripción o icono de un curso.\nEnvía solo los campos que deseas actualizar.\n\n🔒 Requiere token JWT (Authorization: Bearer \u003ctoken\u003e).",
+                "parameters": [
+                    {
+                        "description": "ID del curso (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "description": "Campos del curso a actualizar",
+                        "in": "body",
+                        "name": "request",
+                        "required": true,
+                        "schema": {
+                            "properties": {
+                                "description": {
+                                    "type": "string"
+                                },
+                                "icon_url": {
+                                    "type": "string"
+                                },
+                                "title": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        }
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Actualizado: { success: true, data: Track }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "400": {
+                        "description": "Error de validación",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Curso no encontrado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "summary": "Actualizar un curso",
+                "tags": [
+                    "Cursos (Tracks)"
+                ]
+            }
+        },
+        "/api/v1/tracks/{id}/modules": {
+            "get": {
+                "description": "Devuelve todos los módulos de un curso específico, ordenados por order_index.\nCada módulo incluye sus lecciones vinculadas y los ejercicios de cada lección.\n\n🔓 Público — no requiere autenticación.",
+                "parameters": [
+                    {
+                        "description": "ID del curso (ejemplo: 1)",
+                        "in": "path",
+                        "name": "id",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Éxito: { success: true, data: Module[] }",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    },
+                    "404": {
+                        "description": "Curso no encontrado",
+                        "schema": {
+                            "additionalProperties": true,
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": "Listar módulos de un curso",
+                "tags": [
+                    "Módulos"
+                ]
+            }
+        }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "description": "Escribe \"Bearer \" seguido de tu token JWT",
+            "in": "header",
+            "name": "Authorization",
+            "type": "apiKey"
+        }
+    },
+    "swagger": "2.0"
+}
