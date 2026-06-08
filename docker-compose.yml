@@ -1,0 +1,142 @@
+services:
+  postgres:
+    build:
+      context: ./database
+      dockerfile: Dockerfile.postgres
+    container_name: voxlab-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: voxlab
+      POSTGRES_PASSWORD: voxlab_pass_2024
+      POSTGRES_DB: voxlab_db
+    command: >
+      postgres
+        -c shared_preload_libraries=pg_cron
+        -c cron.database_name=voxlab_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - voxlab-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U voxlab -d voxlab_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: voxlab-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - voxlab-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: voxlab-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@voxlab.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - voxlab-network
+    depends_on:
+      - postgres
+
+  minio:
+    image: minio/minio:latest
+    container_name: voxlab-minio
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: voxlab_minio_admin
+      MINIO_ROOT_PASSWORD: voxlab_minio_pass_2024
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+    networks:
+      - voxlab-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: voxlab-livekit
+    restart: unless-stopped
+    command: --dev --bind 0.0.0.0
+    ports:
+      - "7880:7880"
+      - "7881:7881"
+      - "7882:7882/udp"
+    volumes:
+      - livekit_data:/data
+    networks:
+      - voxlab-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: voxlab-backend
+    restart: unless-stopped
+    environment:
+      APP_ENV: development
+      APP_PORT: 3000
+      DATABASE_URL: postgres://voxlab:voxlab_pass_2024@postgres:5432/voxlab_db?sslmode=disable
+      REDIS_URL: redis:6379
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: voxlab_minio_admin
+      MINIO_SECRET_KEY: voxlab_minio_pass_2024
+      MINIO_BUCKET: voxlab-media
+      JWT_SECRET: voxlab_jwt_super_secret_key_2024_change_in_production
+      LIVEKIT_HOST: http://livekit:7880
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: secret
+    ports:
+      - "3000:3000"
+    networks:
+      - voxlab-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+  minio_data:
+    driver: local
+  livekit_data:
+    driver: local
+
+networks:
+  voxlab-network:
+    driver: bridge
