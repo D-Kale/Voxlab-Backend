@@ -98,8 +98,8 @@
     }
 
     /* Scalar overrides */
-    scalar-api-reference {
-      --theme-font: 'Inter', system-ui, sans-serif !important;
+    #scalar-app {
+      --theme-font: 'Inter', system-ui, sans-serif;
     }
   </style>
 </head>
@@ -157,15 +157,25 @@
         <p class="text-slate-500 text-sm">Todos los endpoints, esquemas y ejemplos en español</p>
       </div>
 
-      <script id="api-reference"
-        type="module"
-        src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"
-        data-url="openapi-es.json"
-        data-theme="deepSpace"
-        data-layout="modern"
-        data-hide-download-button="true"
-        data-with-search="true"
-        data-spec="openapi-es.json">
+      <div id="scalar-app" style="min-height: 600px;"></div>
+      <script type="module">
+        (async () => {
+          try {
+            const { createApiReference } = await import('https://cdn.jsdelivr.net/npm/@scalar/api-reference');
+            createApiReference('#scalar-app', {
+              url: 'openapi-es.json',
+              theme: 'deepSpace',
+              layout: 'modern',
+              showSidebar: true,
+              darkMode: true,
+              hideSearch: false,
+              hideDownloadButton: false,
+            });
+          } catch (e) {
+            document.getElementById('scalar-app').innerHTML =
+              '<div class="p-8 text-center text-slate-400">Error al cargar la referencia API: ' + e.message + '</div>';
+          }
+        })();
       </script>
     </section>
 
