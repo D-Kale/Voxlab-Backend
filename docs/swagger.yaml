@@ -1,0 +1,986 @@
+basePath: /api/v1
+definitions:
+  controllers.completeLessonRequest:
+    properties:
+      lesson_id:
+        example: 1
+        type: integer
+      score:
+        example: 85
+        type: integer
+    type: object
+  controllers.linkLessonRequest:
+    properties:
+      lesson_id:
+        example: 1
+        type: integer
+    type: object
+  services.LoginRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: password123
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  services.LoginResponse:
+    properties:
+      expires_at:
+        type: string
+      token:
+        type: string
+      user:
+        $ref: '#/definitions/services.UserData'
+    type: object
+  services.UserData:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      streak_days:
+        type: integer
+      xp:
+        type: integer
+    type: object
+host: localhost:3000
+info:
+  contact:
+    email: support@voxlab.com
+    name: API Support
+  description: API for the Voxlab public speaking educational platform
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://voxlab.com/terms
+  title: Voxlab API
+  version: "1.0"
+paths:
+  /api/v1/auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates credentials and returns a JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/services.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: User Login
+      tags:
+      - Auth
+  /api/v1/exercises:
+    post:
+      consumes:
+      - application/json
+      description: "Creates an exercise inside a lesson. The \"type\" field determines
+        the JSONB \"content\" structure.\n\n\U0001F4DD Supported exercise types and
+        their content structure:\n\n**quiz** — Multiple choice question:\n```json\n{\n\"type\":
+        \"quiz\",\n\"content\": {\n\"question\": \"What is public speaking?\",\n\"options\":
+        [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n\"correct_index\":
+        0,\n\"explanation\": \"Option A is correct because...\",\n\"points\": 10\n}\n}\n```\n\n**reading**
+        — Reading passage:\n```json\n{\n\"type\": \"reading\",\n\"content\": {\n\"title\":
+        \"The Art of Speech\",\n\"content\": \"Full reading text here...\",\n\"reading_time_seconds\":
+        120,\n\"points\": 5\n}\n}\n```\n\n**oratory_minigame** — Oratory challenge
+        with requirements:\n```json\n{\n\"type\": \"oratory_minigame\",\n\"content\":
+        {\n\"prompt\": \"Record a 30-second speech about...\",\n\"topic\": \"Leadership\",\n\"duration_seconds\":
+        30,\n\"min_duration_seconds\": 15,\n\"requirements\": [\"Clear introduction\",
+        \"Use at least 3 key points\", \"Strong conclusion\"],\n\"points\": 20\n}\n}\n```\n\n**audio**
+        — Audio recording exercise:\n```json\n{\n\"type\": \"audio\",\n\"content\":
+        {\n\"prompt\": \"Read this paragraph aloud...\",\n\"duration_seconds\": 60,\n\"points\":
+        15\n}\n}\n```\n\n**video** — Video recording exercise:\n```json\n{\n\"type\":
+        \"video\",\n\"content\": {\n\"prompt\": \"Record a video introducing yourself...\",\n\"duration_seconds\":
+        120,\n\"points\": 25\n}\n}\n```\n\n\U0001F512 Requires JWT token (Authorization:
+        Bearer <token>)"
+      parameters:
+      - description: Exercise data
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            content:
+              type: object
+            lesson_id:
+              type: integer
+            order_index:
+              type: integer
+            type:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'Created: { success: true, data: Exercise }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new exercise
+      tags:
+      - Exercises
+  /api/v1/exercises/{id}:
+    delete:
+      description: "Permanently removes an exercise from a lesson.\n⚠️ This action
+        cannot be undone.\n\n\U0001F512 Requires JWT token (Authorization: Bearer
+        <token>)"
+      parameters:
+      - description: Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Deleted: { success: true, message: string }'
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Exercise not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete an exercise
+      tags:
+      - Exercises
+    get:
+      description: "Returns one exercise with its full JSONB content. The content
+        structure depends\non the exercise type (quiz, reading, oratory_minigame,
+        audio, video).\n\n\U0001F513 Public — no authentication required."
+      parameters:
+      - description: Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: Exercise }'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Exercise not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a single exercise by ID
+      tags:
+      - Exercises
+    put:
+      consumes:
+      - application/json
+      description: "Modifies the type, content (JSONB), or order of an exercise.\nWhen
+        updating the content field, send the FULL new content object for the exercise
+        type.\n\n\U0001F512 Requires JWT token (Authorization: Bearer <token>)"
+      parameters:
+      - description: Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            content:
+              type: object
+            order_index:
+              type: integer
+            type:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Updated: { success: true, data: Exercise }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Exercise not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an exercise
+      tags:
+      - Exercises
+  /api/v1/health:
+    get:
+      description: Verifies API status, database and Redis connectivity
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Health Check
+      tags:
+      - System
+  /api/v1/lessons:
+    post:
+      consumes:
+      - application/json
+      description: "Creates a standalone lesson. After creation, link it to a module
+        using\nPOST /api/v1/modules/:id/lessons. Each lesson contains exercises (created
+        separately).\n\n\U0001F512 Requires JWT token (Authorization: Bearer <token>)"
+      parameters:
+      - description: Lesson data
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            description:
+              type: string
+            estimated_time_seconds:
+              type: integer
+            title:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'Created: { success: true, data: Lesson }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new lesson
+      tags:
+      - Lessons
+  /api/v1/lessons/{id}:
+    delete:
+      description: "Permanently removes a lesson and its exercises.\n⚠️ This action
+        cannot be undone.\n\n\U0001F512 Requires JWT token (Authorization: Bearer
+        <token>)"
+      parameters:
+      - description: Lesson ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Deleted: { success: true, message: string }'
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Lesson not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a lesson
+      tags:
+      - Lessons
+    get:
+      description: "Returns one lesson with its exercises. Use this to load the full
+        lesson content\nincluding all exercise data.\n\n\U0001F513 Public — no authentication
+        required."
+      parameters:
+      - description: Lesson ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: Lesson }'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Lesson not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a single lesson by ID
+      tags:
+      - Lessons
+    put:
+      consumes:
+      - application/json
+      description: "Changes the title, description, or estimated time of a lesson.\n\n\U0001F512
+        Requires JWT token (Authorization: Bearer <token>)"
+      parameters:
+      - description: Lesson ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            description:
+              type: string
+            estimated_time_seconds:
+              type: integer
+            title:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Updated: { success: true, data: Lesson }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Lesson not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a lesson
+      tags:
+      - Lessons
+  /api/v1/lessons/{id}/exercises:
+    get:
+      description: "Returns all exercises in a lesson, ordered by order_index.\nEach
+        exercise has a \"type\" field that defines the JSON structure of its \"content\"
+        field.\nSee the \"content\" field descriptions below for each exercise type.\n\n\U0001F513
+        Public — no authentication required."
+      parameters:
+      - description: Lesson ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: Exercise[] }'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Lesson not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List exercises for a lesson
+      tags:
+      - Exercises
+  /api/v1/modules:
+    post:
+      consumes:
+      - application/json
+      description: "Adds a module inside a specific track (course).\nThe track_id
+        must reference an existing track. Modules appear in order_index order.\n\n\U0001F512
+        Requires JWT token (Authorization: Bearer <token>)"
+      parameters:
+      - description: Module data
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            description:
+              type: string
+            order_index:
+              type: integer
+            title:
+              type: string
+            track_id:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'Created: { success: true, data: Module }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new module
+      tags:
+      - Modules
+  /api/v1/modules/{id}:
+    delete:
+      description: "Permanently removes a module and its lesson links. Lessons themselves
+        are NOT deleted,\nonly the link between the module and the lesson is removed.\n⚠️
+        This action cannot be undone.\n\n\U0001F512 Requires JWT token (Authorization:
+        Bearer <token>)"
+      parameters:
+      - description: Module ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Deleted: { success: true, message: string }'
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Module not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a module
+      tags:
+      - Modules
+    get:
+      description: "Returns one module with its linked lessons and exercises.\n\n\U0001F513
+        Public — no authentication required."
+      parameters:
+      - description: Module ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: Module }'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Module not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a single module by ID
+      tags:
+      - Modules
+    put:
+      consumes:
+      - application/json
+      description: "Changes the title, description, or order of a module.\n\n\U0001F512
+        Requires JWT token (Authorization: Bearer <token>)"
+      parameters:
+      - description: Module ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            description:
+              type: string
+            order_index:
+              type: integer
+            title:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Updated: { success: true, data: Module }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Module not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update a module
+      tags:
+      - Modules
+  /api/v1/modules/{id}/lessons:
+    get:
+      description: "Returns all lessons linked to a specific module, with their exercises.\nLessons
+        are returned through the ModuleLesson pivot and include an order_index.\n\n\U0001F513
+        Public — no authentication required."
+      parameters:
+      - description: Module ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: ModuleLesson[] }'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Module not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List lessons in a module
+      tags:
+      - Lessons
+    post:
+      consumes:
+      - application/json
+      description: "Associates an existing lesson with a module using the ModuleLesson
+        pivot table.\nA lesson can be linked to MULTIPLE modules. This does NOT move
+        or copy the lesson.\n\n\U0001F512 Requires JWT token (Authorization: Bearer
+        <token>)"
+      parameters:
+      - description: Module ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Lesson ID to link
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.linkLessonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Linked: { success: true, message: string }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Module or Lesson not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Link a lesson to a module
+      tags:
+      - Modules
+  /api/v1/progress:
+    get:
+      description: "Returns ALL progress records for the authenticated user (every
+        lesson they've started or completed).\nEach record shows: status (in_progress/completed),
+        xp_earned, and timestamps.\nUse this on the frontend to determine which lessons
+        are completed and show user progress bars.\n\n\U0001F512 Requires JWT token
+        (Authorization: Bearer <token>)"
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: UserProgress[] }'
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized — token missing or invalid
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get my learning progress
+      tags:
+      - Progress
+    post:
+      consumes:
+      - application/json
+      description: "Marks a lesson as completed for the authenticated user. This endpoint:\n1.
+        Sets the progress status to \"completed\"\n2. Adds XP to the user's total
+        (calculated from exercises + score)\n3. Stores the completion timestamp\n\nIf
+        the lesson was already completed before, it UPDATES the existing record\n(the
+        final score replaces the previous one).\n\n\U0001F512 Requires JWT token (Authorization:
+        Bearer <token>)"
+      parameters:
+      - description: Lesson completion data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.completeLessonRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Completed: { success: true, data: UserProgress }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized — token missing or invalid
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Lesson not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Complete a lesson
+      tags:
+      - Progress
+  /api/v1/tracks:
+    get:
+      description: "Returns ALL available tracks with their modules, lessons, and
+        exercises nested inside.\nThis is the main endpoint for the course catalog
+        — frontends should call this once\nto build the full navigation tree. Each
+        track contains modules, each module contains\nlessons (through the pivot table),
+        and each lesson contains exercises.\n\n\U0001F513 Public — no authentication
+        required."
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: Track[] }'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Server error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List all educational tracks
+      tags:
+      - Tracks (Educational Content)
+    post:
+      consumes:
+      - application/json
+      description: "Adds a new educational track (course) to the catalog.\nAfter creating
+        a track, you can add modules to it using POST /api/v1/modules.\n\n\U0001F512
+        Requires JWT token (Authorization: Bearer <token>)"
+      parameters:
+      - description: Track data
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            description:
+              type: string
+            icon_url:
+              type: string
+            title:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: 'Created: { success: true, data: Track }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create a new track
+      tags:
+      - Tracks (Educational Content)
+  /api/v1/tracks/{id}:
+    delete:
+      description: "Permanently removes a track and all its associated modules and
+        module-lesson links.\n⚠️ This action cannot be undone.\n\n\U0001F512 Requires
+        JWT token (Authorization: Bearer <token>)"
+      parameters:
+      - description: Track ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Deleted: { success: true, message: string }'
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Track not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete a track
+      tags:
+      - Tracks (Educational Content)
+    get:
+      description: "Returns one track with its nested modules, lessons, and exercises.\nUse
+        this when you need to reload or fetch details for a specific track.\n\n\U0001F513
+        Public — no authentication required."
+      parameters:
+      - description: Track ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: Track }'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Track not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get a single track by ID
+      tags:
+      - Tracks (Educational Content)
+    put:
+      consumes:
+      - application/json
+      description: "Modifies the title, description, or icon of a track.\nSend only
+        the fields you want to update.\n\n\U0001F512 Requires JWT token (Authorization:
+        Bearer <token>)"
+      parameters:
+      - description: Track ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Track fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            description:
+              type: string
+            icon_url:
+              type: string
+            title:
+              type: string
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Updated: { success: true, data: Track }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Validation error
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Track not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update an existing track
+      tags:
+      - Tracks (Educational Content)
+  /api/v1/tracks/{id}/modules:
+    get:
+      description: "Returns all modules belonging to a specific track, ordered by
+        order_index.\nEach module includes its linked lessons and their exercises.\n\n\U0001F513
+        Public — no authentication required."
+      parameters:
+      - description: Track ID (e.g. 1)
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: Module[] }'
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Track not found
+          schema:
+            additionalProperties: true
+            type: object
+      summary: List modules for a track
+      tags:
+      - Modules
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer " followed by your JWT token
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -85,7 +85,7 @@ func getEnv(key, defaultValue string) string {
 
 func MustGetConfig() *Config {
 	if AppConfig == nil {
-		panic("Configuración no inicializada. Llame a LoadConfig() primero.")
+		panic("config not initialized — call LoadConfig() first")
 	}
 	return AppConfig
 }
