@@ -1,15 +1,36 @@
-FROM golang:1.26-alpine
+# Build stage
+FROM golang:1.26-alpine AS builder
 
 WORKDIR /app
 
+# Install dependencies
 RUN apk add --no-cache git
 
+# Copy go mod files first for better caching
 COPY go.mod go.sum ./
 RUN go mod download
 
+# Copy source code
 COPY . .
 
-RUN go build -o main cmd/api/main.go
+# Build
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/api/main.go
+
+# Runtime stage
+FROM alpine:3.19
+
+WORKDIR /app
+
+# Install ca-certificates for HTTPS
+RUN apk --no-cache add ca-certificates tzdata
+
+# Copy binary from builder
+COPY --from=builder /app/main .
+COPY --from=builder /app/docs ./docs
+
+# Create non-root user
+RUN adduser -D -g '' appuser
+USER appuser
 
 EXPOSE 3000
 

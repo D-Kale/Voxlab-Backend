@@ -26,6 +26,7 @@ type Router struct {
 	exercise *controllers.ExerciseController
 	progress *controllers.ProgressController
 	reaction *controllers.ReactionController
+	docs     *controllers.DocsController
 }
 
 func NewRouter(cfg *config.Config) *Router {
@@ -59,6 +60,7 @@ func (r *Router) initDependencies() {
 	r.lesson = controllers.NewLessonController(lessonSvc)
 	r.exercise = controllers.NewExerciseController(exerciseSvc)
 	r.progress = controllers.NewProgressController(progressSvc)
+	r.docs = controllers.NewDocsController()
 }
 
 func (r *Router) initEngine() {
@@ -68,7 +70,8 @@ func (r *Router) initEngine() {
 	r.engine.Use(middleware.CORSMiddleware())
 
 	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	r.engine.Static("/docs/es", "./docs/es")
+	r.engine.GET("/docs/es", r.docs.ServeSwaggerUI)
+	r.engine.GET("/api/v1/docs/es/spec", r.docs.ServeTranslatedSpec)
 
 	api := r.engine.Group("/api/v1")
 	{

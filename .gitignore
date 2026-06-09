@@ -36,6 +36,12 @@ Thumbs.db
 # Docker
 docker-compose.override.yml
 
+# Translation script
+tmp_swagger_es.json
+tools/translate-docs/.env
+tools/translate-docs/.venv/
+tools/translate-docs/uv.lock
+
 # MinIO data (local)
 .minio/
 

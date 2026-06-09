@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Development
+*.md
+!README.md
+.vscode
+.idea
+*.log
+*.tmp
+
+# Test files
+*_test.go
+*_test.go.golden
+testdata/
+
+# Local env
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+bin/
+tmp/
+vendor/
+
+# Translation script (host-side only)
+tools/
+
+# Translation temp file (any location)
+**/tmp_swagger_es.json

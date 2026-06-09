@@ -1,0 +1,11 @@
+[project]
+name = "translate-docs"
+version = "1.0.0"
+description = "Translate Swagger/OpenAPI specs to Spanish via NVIDIA API"
+requires-python = ">=3.13"
+dependencies = [
+    "requests>=2.34.2",
+]
+
+[project.scripts]
+translate-docs = "main:main"
