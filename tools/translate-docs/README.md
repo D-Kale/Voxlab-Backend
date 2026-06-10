@@ -79,5 +79,22 @@ Usa `moonshotai/kimi-k2.6` (tier gratuito de NVIDIA). ~2-3 min para 178 strings.
 ## Docker
 
 El archivo `docs/es/openapi-es.json` se copia en la imagen Docker durante el build.
-El endpoint `GET /api/v1/docs/es/spec` lo sirve directamente.
+El endpoint `GET /api/v1/docs/es/spec` lo sirve directamente (raw, sin parseo).
 `GET /docs/es` muestra Swagger UI en español cargando desde ese endpoint.
+
+```bash
+# Reconstruir imagen con la última traducción
+docker compose up -d --build backend
+```
+
+## Mantenimiento
+
+```bash
+# Regenerar spec desde comentarios del código
+swag init --dir ./cmd/api,./internal
+
+# Re-traducir con el spec actualizado
+cd tools/translate-docs && uv run python main.py --verbose
+```
+
+Las rutas de traducción se definen en `swagger.py` mediante `walk_fields()`. Si se agregan nuevos campos al spec, hay que extender esa función para que los incluya.
