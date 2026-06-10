@@ -994,7 +994,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controllers.linkLessonRequest"
+                            "$ref": "#/definitions/http_controllers.linkLessonRequest"
                         }
                     }
                 ],
@@ -1086,7 +1086,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controllers.completeLessonRequest"
+                            "$ref": "#/definitions/http_controllers.completeLessonRequest"
                         }
                     }
                 ],
@@ -1413,7 +1413,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "controllers.completeLessonRequest": {
+        "http_controllers.completeLessonRequest": {
             "type": "object",
             "properties": {
                 "lesson_id": {
@@ -1426,7 +1426,7 @@ const docTemplate = `{
                 }
             }
         },
-        "controllers.linkLessonRequest": {
+        "http_controllers.linkLessonRequest": {
             "type": "object",
             "properties": {
                 "lesson_id": {

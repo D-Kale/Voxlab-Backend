@@ -47,3 +47,6 @@ tools/translate-docs/uv.lock
 
 # Redis dump (local)
 dump.rdb
+
+#python cache
+__pycache__

@@ -988,7 +988,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controllers.linkLessonRequest"
+                            "$ref": "#/definitions/http_controllers.linkLessonRequest"
                         }
                     }
                 ],
@@ -1080,7 +1080,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controllers.completeLessonRequest"
+                            "$ref": "#/definitions/http_controllers.completeLessonRequest"
                         }
                     }
                 ],
@@ -1407,7 +1407,7 @@
         }
     },
     "definitions": {
-        "controllers.completeLessonRequest": {
+        "http_controllers.completeLessonRequest": {
             "type": "object",
             "properties": {
                 "lesson_id": {
@@ -1420,7 +1420,7 @@
                 }
             }
         },
-        "controllers.linkLessonRequest": {
+        "http_controllers.linkLessonRequest": {
             "type": "object",
             "properties": {
                 "lesson_id": {

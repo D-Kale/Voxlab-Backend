@@ -52,18 +52,128 @@
                         "description": "Solicitud incorrecta",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "additionalProperties": true
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": {
-                                "type": "string"
-                            }
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Invalida el JWT token actual agregándolo a una lista negra de Redis.\nDespués de llamar a este endpoint, el token ya no puede usarse para solicitudes autenticadas.\nEl frontend también debe descartar el token localmente.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Cerrar sesión del usuario",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/me": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Devuelve el perfil del usuario autenticado (nombre, email, XP, racha, vidas).\nÚsalo para verificar que el token es válido y cargar los datos del usuario al refrescar la página.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Obtener usuario actual",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "401": {
+                        "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "description": "Crea una nueva cuenta de usuario y devuelve un JWT token (auto-login).\nLa contraseña debe tener al menos 6 caracteres.\nSi el email ya está registrado, devuelve un error 409 de conflicto.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Autenticación"
+                ],
+                "summary": "Registro de usuario",
+                "parameters": [
+                    {
+                        "description": "Datos de registro",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/services.RegisterRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Creado",
+                        "schema": {
+                            "$ref": "#/definitions/services.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Solicitud incorrecta",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "409": {
+                        "description": "Conflicto",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
                         }
                     }
                 }
@@ -878,7 +988,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controllers.linkLessonRequest"
+                            "$ref": "#/definitions/http_controllers.linkLessonRequest"
                         }
                     }
                 ],
@@ -970,7 +1080,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controllers.completeLessonRequest"
+                            "$ref": "#/definitions/http_controllers.completeLessonRequest"
                         }
                     }
                 ],
@@ -1297,7 +1407,7 @@
         }
     },
     "definitions": {
-        "controllers.completeLessonRequest": {
+        "http_controllers.completeLessonRequest": {
             "type": "object",
             "properties": {
                 "lesson_id": {
@@ -1310,7 +1420,7 @@
                 }
             }
         },
-        "controllers.linkLessonRequest": {
+        "http_controllers.linkLessonRequest": {
             "type": "object",
             "properties": {
                 "lesson_id": {
@@ -1347,6 +1457,29 @@
                 },
                 "user": {
                     "$ref": "#/definitions/services.UserData"
+                }
+            }
+        },
+        "services.RegisterRequest": {
+            "type": "object",
+            "required": [
+                "email",
+                "name",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 6,
+                    "example": "password123"
                 }
             }
         },

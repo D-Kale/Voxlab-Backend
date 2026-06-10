@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  controllers.completeLessonRequest:
+  http_controllers.completeLessonRequest:
     properties:
       lesson_id:
         example: 1
@@ -9,7 +9,7 @@ definitions:
         example: 85
         type: integer
     type: object
-  controllers.linkLessonRequest:
+  http_controllers.linkLessonRequest:
     properties:
       lesson_id:
         example: 1
@@ -772,7 +772,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/controllers.linkLessonRequest'
+          $ref: '#/definitions/http_controllers.linkLessonRequest'
       produces:
       - application/json
       responses:
@@ -841,7 +841,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/controllers.completeLessonRequest'
+          $ref: '#/definitions/http_controllers.completeLessonRequest'
       produces:
       - application/json
       responses:
