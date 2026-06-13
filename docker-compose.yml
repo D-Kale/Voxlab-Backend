@@ -18,6 +18,7 @@ services:
       - AWS_ENDPOINT_URL=http://minio:9000
       - AWS_S3_BUCKET=voxlab
       - MINIO_PUBLIC_ENDPOINT=http://localhost:9010
+      - ANALYZER_URL=http://analyzer:8000
     depends_on:
       postgres:
         condition: service_healthy
@@ -25,6 +26,15 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+    restart: unless-stopped
+
+  analyzer:
+    build:
+      context: ./analyzer
+      dockerfile: Dockerfile
+    container_name: voxlab-analyzer
+    ports:
+      - "8001:8000"
     restart: unless-stopped
 
   postgres:

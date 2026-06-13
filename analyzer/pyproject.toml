@@ -1,0 +1,16 @@
+[project]
+name = "voxlab-analyzer"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "spacy>=3.8",
+    "textstat>=0.7",
+]
+
+[project.scripts]
+download-model = "analyzers.download_model:main"
+
+[tool.uv]
+dev-dependencies = []

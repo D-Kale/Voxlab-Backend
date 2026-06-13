@@ -136,6 +136,7 @@ func (r *Router) initEngine() {
 			exercises.POST("", middleware.AuthMiddleware(), r.exercise.CreateExercise)
 			exercises.PUT("/:id", middleware.AuthMiddleware(), r.exercise.UpdateExercise)
 			exercises.DELETE("/:id", middleware.AuthMiddleware(), r.exercise.DeleteExercise)
+			exercises.POST("/analyze-text", middleware.AuthMiddleware(), r.exercise.AnalyzeText)
 		}
 
 		progress := api.Group("/progress")

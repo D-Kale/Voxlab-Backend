@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/voxlab/voxlab-backend/internal/analyzer"
 	"github.com/voxlab/voxlab-backend/internal/models"
 	"github.com/voxlab/voxlab-backend/internal/services"
 )
@@ -309,5 +310,48 @@ func (h *ExerciseController) DeleteExercise(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Exercise deleted successfully",
+	})
+}
+
+type analyzeTextInput struct {
+	Text         string   `json:"text"`
+	Requirements []string `json:"requirements,omitempty"`
+}
+
+// AnalyzeText godoc
+// @Summary      Analyze text for writing exercises
+// @Description  Sends text to the Python analyzer service for NLP metrics: word count, sentence structure, vocabulary richness, readability, keyword matching, and automated feedback.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Exercises
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body  analyzeTextInput  true  "Text to analyze"
+// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: AnalyzeResponse }"
+// @Failure      400  {object}  map[string]interface{}  "Validation error"
+// @Failure      502  {object}  map[string]interface{}  "Analyzer unavailable"
+// @Router       /api/v1/exercises/analyze-text [post]
+func (h *ExerciseController) AnalyzeText(c *gin.Context) {
+	var input analyzeTextInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	if input.Text == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "text is required"})
+		return
+	}
+
+	result, err := analyzer.AnalyzeText(input.Text, input.Requirements)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Analyzer service unavailable", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    result,
 	})
 }
