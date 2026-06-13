@@ -23,6 +23,8 @@ var translations = map[string]string{
 	"Exercises":                    "Ejercicios",
 	"Progress":                     "Progreso",
 	"System":                       "Sistema",
+	"Upload":                       "Subida de archivos",
+	"Users":                        "Usuarios",
 
 	// Auth endpoints
 	"User Login":        "Iniciar sesión",
@@ -63,6 +65,22 @@ var translations = map[string]string{
 	// Progress
 	"Get my learning progress": "Obtener mi progreso de aprendizaje",
 	"Complete a lesson":        "Completar lección",
+
+	// Upload
+	"Upload track image":           "Subir imagen del curso",
+	"Upload module image":          "Subir imagen del módulo",
+	"Upload lesson image":          "Subir imagen de la lección",
+	"Upload user avatar":           "Subir avatar del usuario",
+
+	// Users
+	"List all users (admin)":    "Listar usuarios (admin)",
+	"Get user by ID (admin)":    "Obtener usuario por ID (admin)",
+	"Update user (admin)":       "Actualizar usuario (admin)",
+	"Delete user (admin)":       "Eliminar usuario (admin)",
+
+	// Auth profile
+	"Get user profile":    "Obtener perfil del usuario",
+	"Update user profile": "Actualizar perfil del usuario",
 
 	// Common responses
 	"OK":           "OK",

@@ -139,8 +139,71 @@ func (h *AuthController) Me(c *gin.Context) {
 			ID:         user.ID,
 			Name:       user.Name,
 			Email:      user.Email,
+			Role:       user.Role,
+			AvatarURL:  user.AvatarURL,
 			XP:         user.XP,
 			StreakDays: user.StreakDays,
 		},
 	})
+}
+
+// GetProfile godoc
+// @Summary      Get user profile
+// @Description  Returns the authenticated user's extended profile (name, email, avatar_url, XP, streak, lives).
+// @Description  Unlike /auth/me, this returns a richer profile object with all user-facing fields.
+// @Tags         Auth
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  map[string]interface{}
+// @Failure      401  {object}  map[string]interface{}
+// @Router       /api/v1/auth/profile [get]
+func (h *AuthController) GetProfile(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+		return
+	}
+
+	profile, err := h.service.GetProfile(userID.(string))
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": profile})
+}
+
+// UpdateProfile godoc
+// @Summary      Update user profile
+// @Description  Updates the authenticated user's profile fields (name, avatar_url, etc.).
+// @Description  Send only the fields you want to change.
+// @Tags         Auth
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body      services.UpdateProfileRequest  true  "Profile fields to update"
+// @Success      200  {object}  map[string]interface{}
+// @Failure      400  {object}  map[string]interface{}
+// @Failure      401  {object}  map[string]interface{}
+// @Router       /api/v1/auth/profile [put]
+func (h *AuthController) UpdateProfile(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+		return
+	}
+
+	var req services.UpdateProfileRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request", "details": err.Error()})
+		return
+	}
+
+	profile, err := h.service.UpdateProfile(userID.(string), req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update profile"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": profile})
 }

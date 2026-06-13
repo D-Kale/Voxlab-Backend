@@ -44,6 +44,8 @@ type UserData struct {
 	ID         uuid.UUID `json:"id"`
 	Name       string    `json:"name"`
 	Email      string    `json:"email"`
+	Role       string    `json:"role"`
+	AvatarURL  string    `json:"avatar_url"`
 	XP         int       `json:"xp"`
 	StreakDays int       `json:"streak_days"`
 }
@@ -101,6 +103,7 @@ func (s *AuthService) generateTokenResponse(u *models.User) (*LoginResponse, err
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"user_id":  u.ID.String(),
 		"email":    u.Email,
+		"role":     u.Role,
 		"exp":      expiresAt.Unix(),
 		"token_id": tokenID,
 	})
@@ -113,10 +116,12 @@ func (s *AuthService) generateTokenResponse(u *models.User) (*LoginResponse, err
 	return &LoginResponse{
 		Token:     tokenString,
 		ExpiresAt: expiresAt,
-		User: UserData{
+		User: 		UserData{
 			ID:         u.ID,
 			Name:       u.Name,
 			Email:      u.Email,
+			Role:       u.Role,
+			AvatarURL:  u.AvatarURL,
 			XP:         u.XP,
 			StreakDays: u.StreakDays,
 		},
@@ -141,6 +146,48 @@ func (s *AuthService) IsTokenBlacklisted(tokenString string) (bool, error) {
 
 func (s *AuthService) GetMe(userID string) (*models.User, error) {
 	return s.userRepo.FindByID(userID)
+}
+
+func (s *AuthService) GetProfile(userID string) (*UserData, error) {
+	u, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	return &UserData{
+		ID:         u.ID,
+		Name:       u.Name,
+		Email:      u.Email,
+		Role:       u.Role,
+		AvatarURL:  u.AvatarURL,
+		XP:         u.XP,
+		StreakDays: u.StreakDays,
+	}, nil
+}
+
+type UpdateProfileRequest struct {
+	Name string `json:"name,omitempty"`
+}
+
+func (s *AuthService) UpdateProfile(userID string, req UpdateProfileRequest) (*UserData, error) {
+	u, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return nil, err
+	}
+	if req.Name != "" {
+		u.Name = req.Name
+	}
+	if err := s.userRepo.Update(u); err != nil {
+		return nil, err
+	}
+	return &UserData{
+		ID:         u.ID,
+		Name:       u.Name,
+		Email:      u.Email,
+		Role:       u.Role,
+		AvatarURL:  u.AvatarURL,
+		XP:         u.XP,
+		StreakDays: u.StreakDays,
+	}, nil
 }
 
 func tokenBlacklistKey(tokenString string) string {

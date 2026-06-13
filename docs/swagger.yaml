@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  http_controllers.completeLessonRequest:
+  controllers.completeLessonRequest:
     properties:
       lesson_id:
         example: 1
@@ -9,7 +9,7 @@ definitions:
         example: 85
         type: integer
     type: object
-  http_controllers.linkLessonRequest:
+  controllers.linkLessonRequest:
     properties:
       lesson_id:
         example: 1
@@ -53,13 +53,31 @@ definitions:
     - name
     - password
     type: object
+  services.UpdateProfileRequest:
+    properties:
+      name:
+        type: string
+    type: object
+  services.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      role:
+        type: string
+    type: object
   services.UserData:
     properties:
+      avatar_url:
+        type: string
       email:
         type: string
       id:
         type: string
       name:
+        type: string
+      role:
         type: string
       streak_days:
         type: integer
@@ -159,6 +177,65 @@ paths:
       security:
       - BearerAuth: []
       summary: Get Current User
+      tags:
+      - Auth
+  /api/v1/auth/profile:
+    get:
+      description: |-
+        Returns the authenticated user's extended profile (name, email, avatar_url, XP, streak, lives).
+        Unlike /auth/me, this returns a richer profile object with all user-facing fields.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user profile
+      tags:
+      - Auth
+    put:
+      consumes:
+      - application/json
+      description: |-
+        Updates the authenticated user's profile fields (name, avatar_url, etc.).
+        Send only the fields you want to change.
+      parameters:
+      - description: Profile fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.UpdateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user profile
       tags:
       - Auth
   /api/v1/auth/register:
@@ -772,7 +849,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http_controllers.linkLessonRequest'
+          $ref: '#/definitions/controllers.linkLessonRequest'
       produces:
       - application/json
       responses:
@@ -841,7 +918,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/http_controllers.completeLessonRequest'
+          $ref: '#/definitions/controllers.completeLessonRequest'
       produces:
       - application/json
       responses:
@@ -1077,6 +1154,331 @@ paths:
       summary: List modules for a track
       tags:
       - Modules
+  /api/v1/upload/avatar:
+    post:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Uploads and sets the authenticated user's avatar image. WebP optimized, max 2MB, 400x400.
+        The old avatar is deleted from storage automatically.
+      parameters:
+      - description: Avatar image (JPEG/PNG, max 2MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: { url: string } }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Missing file or too large
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Upload or database error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Upload user avatar
+      tags:
+      - Upload
+  /api/v1/upload/lesson/{id}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Same as track upload but for a lesson's image_url. WebP optimized,
+        max 2MB, 1920x1080.
+      parameters:
+      - description: Lesson ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Image file (JPEG/PNG, max 2MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: { url: string } }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid lesson ID or missing file
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden — admin only
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Upload or database error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Upload lesson image
+      tags:
+      - Upload
+  /api/v1/upload/module/{id}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Same as track upload but for a module's image_url. WebP optimized,
+        max 2MB, 1920x1080.
+      parameters:
+      - description: Module ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Image file (JPEG/PNG, max 2MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: { url: string } }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid module ID or missing file
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden — admin only
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Upload or database error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Upload module image
+      tags:
+      - Upload
+  /api/v1/upload/track/{id}:
+    post:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Accepts an image file (JPEG/PNG), optimizes it to WebP (quality 80), and uploads to MinIO.
+        The track's icon_url is updated automatically. The old image is deleted from storage.
+        Max file size: 2MB. Image is resized to fit 1920x1080 while preserving aspect ratio.
+      parameters:
+      - description: Track ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Image file (JPEG/PNG, max 2MB)
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: { url: string } }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid track ID or missing file
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden — admin only
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Upload or database error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Upload track image
+      tags:
+      - Upload
+  /api/v1/users:
+    get:
+      description: Returns all registered users. Admin only. Includes profile data
+        (name, email, XP, streak).
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: User[] }'
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden — admin only
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List all users (admin)
+      tags:
+      - Users
+  /api/v1/users/{id}:
+    delete:
+      description: Permanently removes a user account. Admin only. ⚠️ This cannot
+        be undone.
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Deleted: { success: true, message: string }'
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden — admin only
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete user (admin)
+      tags:
+      - Users
+    get:
+      description: Returns a single user's profile data. Admin only.
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Success: { success: true, data: User }'
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden — admin only
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: User not found
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get user by ID (admin)
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Modifies a user's role, name, email, or other fields. Admin only.
+      parameters:
+      - description: User ID (UUID)
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/services.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'Updated: { success: true, data: User }'
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Invalid request
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties: true
+            type: object
+        "403":
+          description: Forbidden — admin only
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update user (admin)
+      tags:
+      - Users
 securityDefinitions:
   BearerAuth:
     description: Type "Bearer " followed by your JWT token

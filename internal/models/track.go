@@ -18,6 +18,7 @@ type Module struct {
 	TrackID     int            `gorm:"not null" json:"track_id"`
 	Title       string         `gorm:"type:varchar(100);not null" json:"title"`
 	Description string         `gorm:"type:text" json:"description"`
+	ImageURL    string         `gorm:"type:varchar(512)" json:"image_url"`
 	OrderIndex  int            `gorm:"not null" json:"order_index"`
 	Lessons     []ModuleLesson `gorm:"foreignKey:ModuleID" json:"lessons,omitempty"`
 	Track       Track          `gorm:"foreignKey:TrackID" json:"-"`
@@ -29,6 +30,7 @@ type Lesson struct {
 	ID                   int        `gorm:"primary_key" json:"id"`
 	Title                string     `gorm:"type:varchar(150);not null" json:"title"`
 	Description          string     `gorm:"type:text" json:"description"`
+	ImageURL             string     `gorm:"type:varchar(512)" json:"image_url"`
 	EstimatedTimeSeconds int        `gorm:"not null" json:"estimated_time_seconds"`
 	Exercises            []Exercise `gorm:"foreignKey:LessonID" json:"exercises,omitempty"`
 	CreatedAt            time.Time  `gorm:"autoCreateTime" json:"created_at"`

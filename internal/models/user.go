@@ -11,6 +11,8 @@ type User struct {
 	ID           uuid.UUID      `gorm:"type:uuid;primary_key" json:"id" swaggertype:"string"`
 	Name         string         `gorm:"type:varchar(100);not null" json:"name"`
 	Email        string         `gorm:"type:varchar(255);uniqueIndex;not null" json:"email"`
+	Role         string         `gorm:"type:varchar(20);default:user" json:"role"`
+	AvatarURL    string         `gorm:"type:varchar(512)" json:"avatar_url"`
 	PasswordHash string         `gorm:"type:varchar(255);not null" json:"-"`
 	XP           int            `gorm:"type:int;default:0" json:"xp"`
 	StreakDays   int            `gorm:"type:int;default:0" json:"streak_days"`

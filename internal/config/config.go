@@ -14,6 +14,7 @@ type Config struct {
 	MinIO   MinIOConfig
 	JWT     JWTConfig
 	LiveKit LiveKitConfig
+	Admin   AdminConfig
 }
 
 type DatabaseConfig struct {
@@ -34,6 +35,11 @@ type MinIOConfig struct {
 
 type JWTConfig struct {
 	Secret string
+}
+
+type AdminConfig struct {
+	Email    string
+	Password string
 }
 
 type LiveKitConfig struct {
@@ -65,6 +71,10 @@ func LoadConfig() error {
 		},
 		JWT: JWTConfig{
 			Secret: getEnv("JWT_SECRET", "voxlab_jwt_super_secret_key_2024_change_in_production"),
+		},
+		Admin: AdminConfig{
+			Email:    getEnv("ADMIN_EMAIL", "admin@voxlab.com"),
+			Password: getEnv("ADMIN_PASSWORD", "admin123"),
 		},
 		LiveKit: LiveKitConfig{
 			Host:      getEnv("LIVEKIT_HOST", "http://localhost:7880"),

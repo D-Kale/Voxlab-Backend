@@ -12,6 +12,7 @@ import (
 	"github.com/voxlab/voxlab-backend/internal/http/middleware"
 	"github.com/voxlab/voxlab-backend/internal/repositories"
 	"github.com/voxlab/voxlab-backend/internal/services"
+	"github.com/voxlab/voxlab-backend/internal/storage"
 )
 
 type Router struct {
@@ -26,6 +27,8 @@ type Router struct {
 	exercise *controllers.ExerciseController
 	progress *controllers.ProgressController
 	reaction *controllers.ReactionController
+	user     *controllers.UserController
+	upload   *controllers.UploadController
 	docs     *controllers.DocsController
 }
 
@@ -53,6 +56,12 @@ func (r *Router) initDependencies() {
 	exerciseSvc := services.NewExerciseService(exerciseRepo)
 	progressSvc := services.NewProgressService(progressRepo, lessonRepo, userRepo)
 
+	userSvc := services.NewUserService(userRepo)
+	uploadSvc := services.NewUploadService(
+		storage.GetStorage(),
+		trackRepo, moduleRepo, lessonRepo, userRepo,
+	)
+
 	r.health = controllers.NewHealthController()
 	r.auth = controllers.NewAuthController(authSvc)
 	r.track = controllers.NewTrackController(trackSvc)
@@ -60,6 +69,8 @@ func (r *Router) initDependencies() {
 	r.lesson = controllers.NewLessonController(lessonSvc)
 	r.exercise = controllers.NewExerciseController(exerciseSvc)
 	r.progress = controllers.NewProgressController(progressSvc)
+	r.user = controllers.NewUserController(userSvc)
+	r.upload = controllers.NewUploadController(uploadSvc)
 	r.docs = controllers.NewDocsController()
 }
 
@@ -83,6 +94,8 @@ func (r *Router) initEngine() {
 			auth.POST("/register", r.auth.Register)
 			auth.POST("/logout", r.auth.Logout)
 			auth.GET("/me", middleware.AuthMiddleware(), r.auth.Me)
+			auth.GET("/profile", middleware.AuthMiddleware(), r.auth.GetProfile)
+			auth.PUT("/profile", middleware.AuthMiddleware(), r.auth.UpdateProfile)
 		}
 
 		tracks := api.Group("/tracks")
@@ -130,6 +143,23 @@ func (r *Router) initEngine() {
 		{
 			progress.GET("", r.progress.GetMyProgress)
 			progress.POST("", r.progress.CompleteLesson)
+		}
+
+		users := api.Group("/users")
+		users.Use(middleware.AuthMiddleware(), middleware.AdminMiddleware())
+		{
+			users.GET("", r.user.GetUsers)
+			users.GET("/:id", r.user.GetUser)
+			users.PUT("/:id", r.user.UpdateUser)
+			users.DELETE("/:id", r.user.DeleteUser)
+		}
+
+		upload := api.Group("/upload")
+		{
+			upload.POST("/track/:id", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.upload.UploadTrackImage)
+			upload.POST("/module/:id", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.upload.UploadModuleImage)
+			upload.POST("/lesson/:id", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.upload.UploadLessonImage)
+			upload.POST("/avatar", middleware.AuthMiddleware(), r.upload.UploadAvatar)
 		}
 	}
 }

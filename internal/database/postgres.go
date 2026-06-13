@@ -54,6 +54,10 @@ func AutoMigrate() error {
 		log.Printf("Seed warning: %v", err)
 	}
 
+	if err := SeedAdmin(config.MustGetConfig()); err != nil {
+		log.Printf("Admin seed warning: %v", err)
+	}
+
 	return nil
 }
 
