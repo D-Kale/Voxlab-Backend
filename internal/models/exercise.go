@@ -15,6 +15,7 @@ const (
 	ExerciseTypeAudio          ExerciseType = "audio"
 	ExerciseTypeOratoryMinigame ExerciseType = "oratory_minigame"
 	ExerciseTypeVideo          ExerciseType = "video"
+	ExerciseTypeWriting        ExerciseType = "writing"
 )
 
 type Exercise struct {
@@ -28,12 +29,16 @@ type Exercise struct {
 	UpdatedAt  time.Time       `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
-type ExerciseContentQuiz struct {
+type QuizQuestion struct {
 	Question     string   `json:"question"`
 	Options      []string `json:"options"`
 	CorrectIndex int      `json:"correct_index"`
-	Explanation  string   `json:"explanation"`
-	Points       int      `json:"points"`
+	Explanation  string   `json:"explanation,omitempty"`
+}
+
+type ExerciseContentQuiz struct {
+	Questions          []QuizQuestion `json:"questions"`
+	PointsPerQuestion  int            `json:"points_per_question"`
 }
 
 type ExerciseContentOratoryMinigame struct {
@@ -50,4 +55,12 @@ type ExerciseContentReading struct {
 	Content     string `json:"content"`
 	ReadingTime int    `json:"reading_time_seconds"`
 	Points      int    `json:"points"`
+}
+
+type ExerciseContentWriting struct {
+	Prompt       string   `json:"prompt"`
+	MinWords     int      `json:"min_words"`
+	MaxWords     int      `json:"max_words"`
+	Requirements []string `json:"requirements"`
+	Points       int      `json:"points"`
 }

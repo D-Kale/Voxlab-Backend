@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -53,7 +54,7 @@ func (h *ExerciseController) GetExercisesByLesson(c *gin.Context) {
 // GetExercise    godoc
 // @Summary      Get a single exercise by ID
 // @Description  Returns one exercise with its full JSONB content. The content structure depends
-// @Description  on the exercise type (quiz, reading, oratory_minigame, audio, video).
+// @Description  on the exercise type (quiz, reading, oratory_minigame, audio, video, writing).
 // @Description
 // @Description  🔓 Public — no authentication required.
 // @Tags         Exercises
@@ -87,16 +88,20 @@ func (h *ExerciseController) GetExercise(c *gin.Context) {
 // @Description
 // @Description  📝 Supported exercise types and their content structure:
 // @Description
-// @Description  **quiz** — Multiple choice question:
+// @Description  **quiz** — Multiple choice questions (multi-pregunta):
 // @Description  ```json
 // @Description  {
 // @Description    "type": "quiz",
 // @Description    "content": {
-// @Description      "question": "What is public speaking?",
-// @Description      "options": ["Option A", "Option B", "Option C", "Option D"],
-// @Description      "correct_index": 0,
-// @Description      "explanation": "Option A is correct because...",
-// @Description      "points": 10
+// @Description      "questions": [
+// @Description        {
+// @Description          "question": "What is public speaking?",
+// @Description          "options": ["Option A", "Option B", "Option C", "Option D"],
+// @Description          "correct_index": 0,
+// @Description          "explanation": "Option A is correct because..."
+// @Description        }
+// @Description      ],
+// @Description      "points_per_question": 10
 // @Description    }
 // @Description  }
 // @Description  ```
@@ -124,6 +129,20 @@ func (h *ExerciseController) GetExercise(c *gin.Context) {
 // @Description      "duration_seconds": 30,
 // @Description      "min_duration_seconds": 15,
 // @Description      "requirements": ["Clear introduction", "Use at least 3 key points", "Strong conclusion"],
+// @Description      "points": 20
+// @Description    }
+// @Description  }
+// @Description  ```
+// @Description
+// @Description  **writing** — Writing exercise with requirements:
+// @Description  ```json
+// @Description  {
+// @Description    "type": "writing",
+// @Description    "content": {
+// @Description      "prompt": "Write a 200-word essay about leadership",
+// @Description      "min_words": 100,
+// @Description      "max_words": 500,
+// @Description      "requirements": ["Include a thesis", "Support with examples"],
 // @Description      "points": 20
 // @Description    }
 // @Description  }
@@ -171,7 +190,7 @@ func (h *ExerciseController) CreateExercise(c *gin.Context) {
 	}
 
 	if exercise.Type == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Type is required. Accepted: quiz, reading, oratory_minigame, audio, video"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Type is required. Accepted: quiz, reading, oratory_minigame, audio, video, writing"})
 		return
 	}
 
@@ -210,6 +229,12 @@ func (h *ExerciseController) CreateExercise(c *gin.Context) {
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      404  {object}  map[string]interface{}  "Exercise not found"
 // @Router       /api/v1/exercises/{id} [put]
+type updateExerciseInput struct {
+	Type       models.ExerciseType `json:"type,omitempty"`
+	Content    json.RawMessage     `json:"content,omitempty"`
+	OrderIndex *int                `json:"order_index,omitempty"`
+}
+
 func (h *ExerciseController) UpdateExercise(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
 	if err != nil {
@@ -223,7 +248,7 @@ func (h *ExerciseController) UpdateExercise(c *gin.Context) {
 		return
 	}
 
-	var input models.Exercise
+	var input updateExerciseInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
 		return
@@ -235,8 +260,8 @@ func (h *ExerciseController) UpdateExercise(c *gin.Context) {
 	if input.Content != nil {
 		existing.Content = input.Content
 	}
-	if input.OrderIndex != 0 {
-		existing.OrderIndex = input.OrderIndex
+	if input.OrderIndex != nil {
+		existing.OrderIndex = *input.OrderIndex
 	}
 
 	if err := h.service.Update(existing); err != nil {

@@ -26,11 +26,12 @@ type RedisConfig struct {
 }
 
 type MinIOConfig struct {
-	Endpoint  string
-	AccessKey string
-	SecretKey string
-	Bucket    string
-	UseSSL    bool
+	Endpoint        string
+	AccessKey       string
+	SecretKey       string
+	Bucket          string
+	UseSSL          bool
+	PublicEndpoint string
 }
 
 type JWTConfig struct {
@@ -63,11 +64,12 @@ func LoadConfig() error {
 			URL: getEnv("REDIS_URL", "localhost:6379"),
 		},
 		MinIO: MinIOConfig{
-			Endpoint:  getEnv("MINIO_ENDPOINT", "localhost:9000"),
-			AccessKey: getEnv("MINIO_ACCESS_KEY", "voxlab_minio_admin"),
-			SecretKey: getEnv("MINIO_SECRET_KEY", "voxlab_minio_pass_2024"),
-			Bucket:    getEnv("MINIO_BUCKET", "voxlab-media"),
-			UseSSL:    false,
+			Endpoint:        getEnv("MINIO_ENDPOINT", "localhost:9000"),
+			AccessKey:       getEnv("MINIO_ACCESS_KEY", "voxlab_minio_admin"),
+			SecretKey:       getEnv("MINIO_SECRET_KEY", "voxlab_minio_pass_2024"),
+			Bucket:          getEnv("MINIO_BUCKET", "voxlab-media"),
+			UseSSL:          false,
+			PublicEndpoint:  getEnv("MINIO_PUBLIC_ENDPOINT", "http://localhost:9010"),
 		},
 		JWT: JWTConfig{
 			Secret: getEnv("JWT_SECRET", "voxlab_jwt_super_secret_key_2024_change_in_production"),
