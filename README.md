@@ -13,6 +13,7 @@ Plataforma educativa de oratoria con progresión gamificada (estilo Duolingo) y 
 | Admin DB | pgAdmin 4 | `5050` |
 | Archivos | MinIO (S3-compatible) | `9000` / `9001` |
 | Llamadas | LiveKit | `7880` / `7881` / `7882` |
+| Analizador de texto | Python (FastAPI + spaCy) | `8001` |
 
 ## Arquitectura del flujo
 
@@ -72,7 +73,8 @@ docker compose logs -f backend
 | Herramienta | URL | Credenciales |
 |-------------|-----|--------------|
 | API | http://localhost:3000 | — |
-| Swagger | http://localhost:3000/swagger/index.html | — |
+| Swagger (English) | http://localhost:3000/swagger/index.html | — |
+| Swagger (Español) | http://localhost:3000/docs/es | — |
 | pgAdmin | http://localhost:5050 | `admin@voxlab.com` / `admin` |
 | MinIO Console | http://localhost:9001 | `voxlab_minio_admin` / `voxlab_minio_pass_2024` |
 
@@ -84,8 +86,18 @@ docker compose logs -f backend
    - **Name**: `Voxlab DB`
    - **Host**: `postgres`
    - **Port**: `5432`
-   - **Username**: `voxlab`
-   - **Password**: `voxlab_pass_2024`
+   - **Username**: `postgres`
+   - **Password**: `postgres`
+
+## Documentación Técnica
+
+| Documento | Descripción |
+|-----------|-------------|
+| [docs/md/ARCHITECTURE.md](docs/md/ARCHITECTURE.md) | Arquitectura completa del sistema, diagramas y flujo de datos |
+| [docs/md/DEPLOYMENT.md](docs/md/DEPLOYMENT.md) | Guía de despliegue en VPS con Docker |
+| [docs/md/ANALYZER.md](docs/md/ANALYZER.md) | Documentación detallada del analizador NLP (Python) |
+| [docs/md/ENV_VARS.md](docs/md/ENV_VARS.md) | Referencia completa de variables de entorno |
+| [docs/md/scoring.md](docs/md/scoring.md) | Algoritmo de puntuación del analizador de texto |
 
 ## Estructura del código
 
@@ -119,7 +131,8 @@ database/
   Dockerfile.postgres        → PostgreSQL con pg_cron compilado
   init.sql                   → Habilita pg_cron programa cleanup mensual
   seed.sql                   → Datos iniciales (tracks, módulos, lecciones, títulos)
-docs/                        → Swagger autogenerado
+docs/md/                     → Documentación técnica en Markdown (arquitectura, deployment, etc.)
+docs/                        → Swagger autogenerado (swagger.json, swagger.yaml)
 ```
 
 ## Endpoints de la API
@@ -210,11 +223,12 @@ Authorization: Bearer <token>
 
 ### Exercises (Ejercicios — JSONB)
 ```bash
-🔓 GET  /api/v1/lessons/:id/exercises   # Listar ejercicios de una lección
-🔓 GET  /api/v1/exercises/:id           # Obtener un ejercicio
-🔒 POST /api/v1/exercises               # Crear ejercicio
-🔒 PUT  /api/v1/exercises/:id           # Actualizar ejercicio
-🔒 DELETE /api/v1/exercises/:id         # Eliminar ejercicio
+🔓 GET  /api/v1/lessons/:id/exercises       # Listar ejercicios de una lección
+🔓 GET  /api/v1/exercises/:id               # Obtener un ejercicio
+🔒 POST /api/v1/exercises                   # Crear ejercicio
+🔒 PUT  /api/v1/exercises/:id               # Actualizar ejercicio
+🔒 DELETE /api/v1/exercises/:id             # Eliminar ejercicio
+🔒 POST /api/v1/exercises/analyze-text      # Analizar texto (writing)
 ```
 
 ### Progress (Progreso del usuario)
@@ -222,6 +236,51 @@ Authorization: Bearer <token>
 🔒 GET  /api/v1/progress            # Mi progreso (todas las lecciones)
 🔒 POST /api/v1/progress            # Completar una lección (+ XP)
 ```
+
+### Analizador de Texto (Writing Exercises)
+
+El endpoint `POST /api/v1/exercises/analyze-text` envía texto al microservicio **Python Analyzer** (`analyzer/`) que devuelve:
+
+- **word_count**: cantidad de palabras
+- **sentence_count**: cantidad de oraciones
+- **sentence_length**: promedio, min, max, desviación estándar
+- **vocabulary_richness**: ratio types/tokens (lematizado)
+- **paragraphs**: cantidad de párrafos, detección de introducción/conclusión
+- **readability**: Fernández-Huerta (adaptación española de Flesch)
+- **filler_words**: muletillas detectadas (este, eh, o sea, etc.)
+- **keywords**: palabras clave extraídas por frecuencia
+- **requirements**: matching de cada requisito contra el texto
+- **score**: puntuación 0-100
+- **feedback**: retroalimentación automática en español
+
+```bash
+🔒 POST /api/v1/exercises/analyze-text
+Authorization: Bearer $TOKEN
+Content-Type: application/json
+
+{
+  "text": "El liderazgo es una habilidad fundamental...",
+  "requirements": ["liderazgo", "comunicación"]
+}
+```
+
+**Arquitectura:**
+```
+Frontend → Go Backend → Python Analyzer (FastAPI + spaCy + textstat)
+```
+
+El servicio `analyzer` corre como sidecar en Docker Compose, se comunica por HTTP interno en `analyzer:8000`.
+
+```yaml
+analyzer:
+  build: ./analyzer
+  container_name: voxlab-analyzer
+  ports:
+    - "8001:8000"
+  restart: unless-stopped
+```
+
+Si el analyzer no responde, el endpoint devuelve `502 Bad Gateway`.
 
 ## Ejemplos de Creación de Curso
 
@@ -296,7 +355,7 @@ curl -s -X POST http://localhost:3000/api/v1/modules/4/lessons \
 
 ### 6. Crear Ejercicios (JSONB)
 
-**Tipo quiz (multiple choice):**
+**Tipo quiz (multi-pregunta):**
 ```bash
 curl -s -X POST http://localhost:3000/api/v1/exercises \
   -H "Content-Type: application/json" \
@@ -306,11 +365,15 @@ curl -s -X POST http://localhost:3000/api/v1/exercises \
     "type": "quiz",
     "order_index": 1,
     "content": {
-      "question": "¿Cuál es el músculo principal para respirar al hablar?",
-      "options": ["Diafragma", "Pecho", "Hombros", "Abdomen"],
-      "correct_index": 0,
-      "explanation": "El diafragma es el músculo clave para una respiración eficiente al hablar",
-      "points": 10
+      "questions": [
+        {
+          "question": "¿Cuál es el músculo principal para respirar al hablar?",
+          "options": ["Diafragma", "Pecho", "Hombros", "Abdomen"],
+          "correct_index": 0,
+          "explanation": "El diafragma es el músculo clave"
+        }
+      ],
+      "points_per_question": 10
     }
   }'
 ```
@@ -329,6 +392,25 @@ curl -s -X POST http://localhost:3000/api/v1/exercises \
       "content": "Texto completo del artículo...",
       "reading_time_seconds": 120,
       "points": 5
+    }
+  }'
+```
+
+**Tipo writing (redacción):**
+```bash
+curl -s -X POST http://localhost:3000/api/v1/exercises \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "lesson_id": 7,
+    "type": "writing",
+    "order_index": 3,
+    "content": {
+      "prompt": "Escribí un ensayo sobre liderazgo",
+      "min_words": 100,
+      "max_words": 500,
+      "requirements": ["mencioná liderazgo", "incluí un ejemplo"],
+      "points": 20
     }
   }'
 ```
@@ -416,3 +498,64 @@ Para acceder a los archivos subidos:
 1. Ir a http://localhost:9001
 2. Login con las credenciales de arriba
 3. Explorar el bucket `voxlab-media`
+
+---
+
+## 🚀 Inicio rápido (Quickstart)
+
+```bash
+# 1. Clonar y entrar
+git clone https://github.com/D-Kale/Voxlab-Backend.git
+cd Voxlab-Backend
+
+# 2. Configurar entorno
+cp .env.example .env
+# Editar .env si necesario (ver docs/ENV_VARS.md)
+
+# 3. Levantar servicios con Docker
+docker compose up -d --build
+
+# 4. Verificar
+curl http://localhost:3000/api/v1/health
+# → {"status":"ok","services":{"postgres":"ok","redis":"ok"}}
+
+# 5. Login como admin (creado automáticamente)
+curl -s -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@voxlab.com","password":"admin123"}'
+
+# 6. Abrir Swagger
+open http://localhost:3000/swagger/index.html
+```
+
+### 🧪 Testing endpoints rápidamente
+
+```bash
+# Registrar usuario de prueba
+curl -s -X POST http://localhost:3000/api/v1/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Test User","email":"test@test.com","password":"test123"}' | jq
+
+# Listar cursos
+curl -s http://localhost:3000/api/v1/tracks | jq
+
+# Ver progreso (con token)
+curl -s http://localhost:3000/api/v1/progress \
+  -H "Authorization: Bearer $TOKEN" | jq
+```
+
+---
+
+## 📋 Resumen del Proyecto
+
+Voxlab Backend es una API REST para una plataforma educativa de oratoria que permite:
+
+- 🎓 Gestión de contenido educativo (cursos → módulos → lecciones → ejercicios)
+- 👤 Autenticación JWT con logout (blacklist en Redis)
+- 🏆 Gamificación (XP, rachas, títulos)
+- 📊 Análisis NLP de textos (via Python analyzer)
+- 📱 Subida de archivos (avatares, imágenes) a MinIO
+- 🔴 Sesiones en vivo (LiveKit para WebRTC)
+- 🌐 Documentación Swagger bilingüe (inglés/español)
+
+Todo el contenido está contenerizado con Docker Compose y listo para producción.

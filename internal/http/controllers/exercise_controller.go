@@ -16,6 +16,19 @@ type ExerciseController struct {
 	service *services.ExerciseService
 }
 
+// CreateExerciseRequest represents the request body for creating an exercise
+// @Description Request body for creating an exercise
+type CreateExerciseRequest struct {
+	// Lesson ID where the exercise will be created
+	LessonID int `json:"lesson_id" example:"1"`
+	// Exercise type: quiz, reading, oratory_minigame, audio, video, writing
+	Type models.ExerciseType `json:"type" example:"quiz"`
+	// Exercise content (JSONB structure varies by type)
+	Content interface{} `json:"content" swaggertype:"object"`
+	// Order index for sequencing
+	OrderIndex int `json:"order_index" example:"1"`
+}
+
 func NewExerciseController(service *services.ExerciseService) *ExerciseController {
 	return &ExerciseController{service: service}
 }
@@ -177,9 +190,103 @@ func (h *ExerciseController) GetExercise(c *gin.Context) {
 // @Tags         Exercises
 // @Accept       json
 // @Produce      json
+// CreateExercise godoc
+// @Summary      Create a new exercise
+// @Description  Creates an exercise inside a lesson. The "type" field determines the JSONB "content" structure.
+// @Description
+// @Description  📝 Supported exercise types and their content structure:
+// @Description
+// @Description  **quiz** — Multiple choice questions (multi-pregunta):
+// @Description  ```json
+// @Description  {
+// @Description    "type": "quiz",
+// @Description    "content": {
+// @Description      "questions": [
+// @Description        {
+// @Description          "question": "What is public speaking?",
+// @Description          "options": ["Option A", "Option B", "Option C", "Option D"],
+// @Description          "correct_index": 0,
+// @Description          "explanation": "Option A is correct because..."
+// @Description        }
+// @Description      ],
+// @Description      "points_per_question": 10
+// @Description    }
+// @Description  }
+// @Description  ```
+// @Description
+// @Description  **reading** — Reading passage:
+// @Description  ```json
+// @Description  {
+// @Description    "type": "reading",
+// @Description    "content": {
+// @Description      "title": "The Art of Speech",
+// @Description      "content": "Full reading text here...",
+// @Description      "reading_time_seconds": 120,
+// @Description      "points": 5
+// @Description    }
+// @Description  }
+// @Description  ```
+// @Description
+// @Description  **oratory_minigame** — Oratory challenge with requirements:
+// @Description  ```json
+// @Description  {
+// @Description    "type": "oratory_minigame",
+// @Description    "content": {
+// @Description      "prompt": "Record a 30-second speech about...",
+// @Description      "topic": "Leadership",
+// @Description      "duration_seconds": 30,
+// @Description      "min_duration_seconds": 15,
+// @Description      "requirements": ["Clear introduction", "Use at least 3 key points", "Strong conclusion"],
+// @Description      "points": 20
+// @Description    }
+// @Description  }
+// @Description  ```
+// @Description
+// @Description  **writing** — Writing exercise with requirements:
+// @Description  ```json
+// @Description  {
+// @Description    "type": "writing",
+// @Description    "content": {
+// @Description      "prompt": "Write a 200-word essay about leadership",
+// @Description      "min_words": 100,
+// @Description      "max_words": 500,
+// @Description      "requirements": ["Include a thesis", "Support with examples"],
+// @Description      "points": 20
+// @Description    }
+// @Description  }
+// @Description  ```
+// @Description
+// @Description  **audio** — Audio recording exercise:
+// @Description  ```json
+// @Description  {
+// @Description    "type": "audio",
+// @Description    "content": {
+// @Description      "prompt": "Read this paragraph aloud...",
+// @Description      "duration_seconds": 60,
+// @Description      "points": 15
+// @Description    }
+// @Description  }
+// @Description  ```
+// @Description
+// @Description  **video** — Video recording exercise:
+// @Description  ```json
+// @Description  {
+// @Description    "type": "video",
+// @Description    "content": {
+// @Description      "prompt": "Record a video introducing yourself...",
+// @Description      "duration_seconds": 120,
+// @Description      "points": 25
+// @Description    }
+// @Description  }
+// @Description  ```
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Exercises
+// @Accept       json
+// @Produce      json
 // @Security     BearerAuth
-// @Param        request  body  object{lesson_id=int,type=string,order_index=int,content=object}  true  "Exercise data"
-// @Success      201  {object}  map[string]interface{}  "Created: { success: true, data: Exercise }"
+// @Param        request  body  CreateExerciseRequest true  "Exercise data"
+// @Success      201  {object}  models.Exercise
 // @Failure      400  {object}  map[string]interface{}  "Validation error"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Router       /api/v1/exercises [post]
@@ -313,27 +420,71 @@ func (h *ExerciseController) DeleteExercise(c *gin.Context) {
 	})
 }
 
-type analyzeTextInput struct {
+type AnalyzeTextInput struct {
 	Text         string   `json:"text"`
 	Requirements []string `json:"requirements,omitempty"`
+	MinWords     *int     `json:"min_words,omitempty"`
+	MaxWords     *int     `json:"max_words,omitempty"`
+}
+
+type RequirementCatalogItem struct {
+	ID       string `json:"id"`
+	Text     string `json:"text"`
+	Category string `json:"category"`
+	Order    int    `json:"order"`
+}
+
+// GetRequirementCatalog godoc
+// @Summary      Get requirement catalog for writing exercises
+// @Description  Returns the curated list of selectable requirements for writing exercises,
+// @Description  grouped by category. The frontend renders these as checkboxes so teachers
+// @Description  can pick predefined requirements instead of typing free text.
+// @Description
+// @Description  🔓 Public — no authentication required.
+// @Tags         Exercises
+// @Produce      json
+// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: RequirementCatalogItem[] }"
+// @Router       /api/v1/exercises/requirement-catalog [get]
+func (h *ExerciseController) GetRequirementCatalog(c *gin.Context) {
+	catalog := models.GetRequirementCatalog()
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    catalog,
+	})
 }
 
 // AnalyzeText godoc
 // @Summary      Analyze text for writing exercises
-// @Description  Sends text to the Python analyzer service for NLP metrics: word count, sentence structure, vocabulary richness, readability, keyword matching, and automated feedback.
+// @Description  Sends text to the Python analyzer service for NLP analysis including:
+// @Description  gibberish detection, sentence structure, vocabulary richness, readability,
+// @Description  semantic requirement matching, and weighted score calculation.
+// @Description
+// @Description  **Ejemplo de request:**
+// @Description  ```json
+// @Description  {
+// @Description    "text": "El liderazgo es una habilidad fundamental...",
+// @Description    "requirements": ["Incluir una introducción", "Dar ejemplos concretos"],
+// @Description    "min_words": 100,
+// @Description    "max_words": 500
+// @Description  }
+// @Description  ```
+// @Description
+// @Description  **Respuesta:** `score` (0-100), `score_breakdown` con cada componente
+// @Description  (cobertura_requisitos 30%, estructura 25%, calidad_linguistica 25%,
+// @Description  longitud 20%), `gibberish_detected`, métricas y retroalimentación.
 // @Description
 // @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
 // @Tags         Exercises
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body  analyzeTextInput  true  "Text to analyze"
+// @Param        request  body  AnalyzeTextInput  true  "Text to analyze"
 // @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: AnalyzeResponse }"
 // @Failure      400  {object}  map[string]interface{}  "Validation error"
 // @Failure      502  {object}  map[string]interface{}  "Analyzer unavailable"
 // @Router       /api/v1/exercises/analyze-text [post]
 func (h *ExerciseController) AnalyzeText(c *gin.Context) {
-	var input analyzeTextInput
+	var input AnalyzeTextInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
 		return
@@ -344,7 +495,7 @@ func (h *ExerciseController) AnalyzeText(c *gin.Context) {
 		return
 	}
 
-	result, err := analyzer.AnalyzeText(input.Text, input.Requirements)
+	result, err := analyzer.AnalyzeText(input.Text, input.Requirements, input.MinWords, input.MaxWords)
 	if err != nil {
 		c.JSON(http.StatusBadGateway, gin.H{"error": "Analyzer service unavailable", "details": err.Error()})
 		return

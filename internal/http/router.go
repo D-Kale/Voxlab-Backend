@@ -132,6 +132,7 @@ func (r *Router) initEngine() {
 
 		exercises := api.Group("/exercises")
 		{
+			exercises.GET("/requirement-catalog", r.exercise.GetRequirementCatalog)
 			exercises.GET("/:id", r.exercise.GetExercise)
 			exercises.POST("", middleware.AuthMiddleware(), r.exercise.CreateExercise)
 			exercises.PUT("/:id", middleware.AuthMiddleware(), r.exercise.UpdateExercise)

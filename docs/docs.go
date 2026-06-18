@@ -277,14 +277,17 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Creates an exercise inside a lesson. The \"type\" field determines the JSONB \"content\" structure.\n\n📝 Supported exercise types and their content structure:\n\n**quiz** — Multiple choice question:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"quiz\",\n\"content\": {\n\"question\": \"What is public speaking?\",\n\"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n\"correct_index\": 0,\n\"explanation\": \"Option A is correct because...\",\n\"points\": 10\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**reading** — Reading passage:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"reading\",\n\"content\": {\n\"title\": \"The Art of Speech\",\n\"content\": \"Full reading text here...\",\n\"reading_time_seconds\": 120,\n\"points\": 5\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**oratory_minigame** — Oratory challenge with requirements:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"oratory_minigame\",\n\"content\": {\n\"prompt\": \"Record a 30-second speech about...\",\n\"topic\": \"Leadership\",\n\"duration_seconds\": 30,\n\"min_duration_seconds\": 15,\n\"requirements\": [\"Clear introduction\", \"Use at least 3 key points\", \"Strong conclusion\"],\n\"points\": 20\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**audio** — Audio recording exercise:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"audio\",\n\"content\": {\n\"prompt\": \"Read this paragraph aloud...\",\n\"duration_seconds\": 60,\n\"points\": 15\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**video** — Video recording exercise:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"video\",\n\"content\": {\n\"prompt\": \"Record a video introducing yourself...\",\n\"duration_seconds\": 120,\n\"points\": 25\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n🔒 Requires JWT token (Authorization: Bearer \u003ctoken\u003e)",
+                "description": "Creates an exercise inside a lesson. The \"type\" field determines the JSONB \"content\" structure.\n\n📝 Supported exercise types and their content structure:\n\n**quiz** — Multiple choice questions (multi-pregunta):\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"quiz\",\n\"content\": {\n\"questions\": [\n{\n\"question\": \"What is public speaking?\",\n\"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n\"correct_index\": 0,\n\"explanation\": \"Option A is correct because...\"\n}\n],\n\"points_per_question\": 10\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**reading** — Reading passage:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"reading\",\n\"content\": {\n\"title\": \"The Art of Speech\",\n\"content\": \"Full reading text here...\",\n\"reading_time_seconds\": 120,\n\"points\": 5\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**oratory_minigame** — Oratory challenge with requirements:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"oratory_minigame\",\n\"content\": {\n\"prompt\": \"Record a 30-second speech about...\",\n\"topic\": \"Leadership\",\n\"duration_seconds\": 30,\n\"min_duration_seconds\": 15,\n\"requirements\": [\"Clear introduction\", \"Use at least 3 key points\", \"Strong conclusion\"],\n\"points\": 20\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**writing** — Writing exercise with requirements:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"writing\",\n\"content\": {\n\"prompt\": \"Write a 200-word essay about leadership\",\n\"min_words\": 100,\n\"max_words\": 500,\n\"requirements\": [\"Include a thesis\", \"Support with examples\"],\n\"points\": 20\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**audio** — Audio recording exercise:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"audio\",\n\"content\": {\n\"prompt\": \"Read this paragraph aloud...\",\n\"duration_seconds\": 60,\n\"points\": 15\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**video** — Video recording exercise:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"video\",\n\"content\": {\n\"prompt\": \"Record a video introducing yourself...\",\n\"duration_seconds\": 120,\n\"points\": 25\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n🔒 Requires JWT token (Authorization: Bearer \u003ctoken\u003e)\nCreates an exercise inside a lesson. The \"type\" field determines the JSONB \"content\" structure.\n\n📝 Supported exercise types and their content structure:\n\n**quiz** — Multiple choice questions (multi-pregunta):\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"quiz\",\n\"content\": {\n\"questions\": [\n{\n\"question\": \"What is public speaking?\",\n\"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n\"correct_index\": 0,\n\"explanation\": \"Option A is correct because...\"\n}\n],\n\"points_per_question\": 10\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**reading** — Reading passage:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"reading\",\n\"content\": {\n\"title\": \"The Art of Speech\",\n\"content\": \"Full reading text here...\",\n\"reading_time_seconds\": 120,\n\"points\": 5\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**oratory_minigame** — Oratory challenge with requirements:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"oratory_minigame\",\n\"content\": {\n\"prompt\": \"Record a 30-second speech about...\",\n\"topic\": \"Leadership\",\n\"duration_seconds\": 30,\n\"min_duration_seconds\": 15,\n\"requirements\": [\"Clear introduction\", \"Use at least 3 key points\", \"Strong conclusion\"],\n\"points\": 20\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**writing** — Writing exercise with requirements:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"writing\",\n\"content\": {\n\"prompt\": \"Write a 200-word essay about leadership\",\n\"min_words\": 100,\n\"max_words\": 500,\n\"requirements\": [\"Include a thesis\", \"Support with examples\"],\n\"points\": 20\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**audio** — Audio recording exercise:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"audio\",\n\"content\": {\n\"prompt\": \"Read this paragraph aloud...\",\n\"duration_seconds\": 60,\n\"points\": 15\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**video** — Video recording exercise:\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"type\": \"video\",\n\"content\": {\n\"prompt\": \"Record a video introducing yourself...\",\n\"duration_seconds\": 120,\n\"points\": 25\n}\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n🔒 Requires JWT token (Authorization: Bearer \u003ctoken\u003e)",
                 "consumes": [
+                    "application/json",
                     "application/json"
                 ],
                 "produces": [
+                    "application/json",
                     "application/json"
                 ],
                 "tags": [
+                    "Exercises",
                     "Exercises"
                 ],
                 "summary": "Create a new exercise",
@@ -295,30 +298,15 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "content": {
-                                    "type": "object"
-                                },
-                                "lesson_id": {
-                                    "type": "integer"
-                                },
-                                "order_index": {
-                                    "type": "integer"
-                                },
-                                "type": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.CreateExerciseRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created: { success: true, data: Exercise }",
+                        "description": "Created",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Exercise"
                         }
                     },
                     "400": {
@@ -338,9 +326,84 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/exercises/analyze-text": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Sends text to the Python analyzer service for NLP analysis including:\ngibberish detection, sentence structure, vocabulary richness, readability,\nsemantic requirement matching, and weighted score calculation.\n\n**Ejemplo de request:**\n` + "`" + `` + "`" + `` + "`" + `json\n{\n\"text\": \"El liderazgo es una habilidad fundamental...\",\n\"requirements\": [\"Incluir una introducción\", \"Dar ejemplos concretos\"],\n\"min_words\": 100,\n\"max_words\": 500\n}\n` + "`" + `` + "`" + `` + "`" + `\n\n**Respuesta:** ` + "`" + `score` + "`" + ` (0-100), ` + "`" + `score_breakdown` + "`" + ` con cada componente\n(cobertura_requisitos 30%, estructura 25%, calidad_linguistica 25%,\nlongitud 20%), ` + "`" + `gibberish_detected` + "`" + `, métricas y retroalimentación.\n\n🔒 Requires JWT token (Authorization: Bearer \u003ctoken\u003e)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Exercises"
+                ],
+                "summary": "Analyze text for writing exercises",
+                "parameters": [
+                    {
+                        "description": "Text to analyze",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.AnalyzeTextInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Success: { success: true, data: AnalyzeResponse }",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Validation error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "502": {
+                        "description": "Analyzer unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/exercises/requirement-catalog": {
+            "get": {
+                "description": "Returns the curated list of selectable requirements for writing exercises,\ngrouped by category. The frontend renders these as checkboxes so teachers\ncan pick predefined requirements instead of typing free text.\n\n🔓 Public — no authentication required.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Exercises"
+                ],
+                "summary": "Get requirement catalog for writing exercises",
+                "responses": {
+                    "200": {
+                        "description": "Success: { success: true, data: RequirementCatalogItem[] }",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/exercises/{id}": {
             "get": {
-                "description": "Returns one exercise with its full JSONB content. The content structure depends\non the exercise type (quiz, reading, oratory_minigame, audio, video).\n\n🔓 Public — no authentication required.",
+                "description": "Returns one exercise with its full JSONB content. The content structure depends\non the exercise type (quiz, reading, oratory_minigame, audio, video, writing).\n\n🔓 Public — no authentication required.",
                 "produces": [
                     "application/json"
                 ],
@@ -360,83 +423,6 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "Success: { success: true, data: Exercise }",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "404": {
-                        "description": "Exercise not found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            },
-            "put": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Modifies the type, content (JSONB), or order of an exercise.\nWhen updating the content field, send the FULL new content object for the exercise type.\n\n🔒 Requires JWT token (Authorization: Bearer \u003ctoken\u003e)",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Exercises"
-                ],
-                "summary": "Update an exercise",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Fields to update",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "content": {
-                                    "type": "object"
-                                },
-                                "order_index": {
-                                    "type": "integer"
-                                },
-                                "type": {
-                                    "type": "string"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Updated: { success: true, data: Exercise }",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "400": {
-                        "description": "Validation error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1965,6 +1951,55 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "controllers.AnalyzeTextInput": {
+            "type": "object",
+            "properties": {
+                "max_words": {
+                    "type": "integer"
+                },
+                "min_words": {
+                    "type": "integer"
+                },
+                "requirements": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "text": {
+                    "type": "string"
+                }
+            }
+        },
+        "controllers.CreateExerciseRequest": {
+            "description": "Request body for creating an exercise",
+            "type": "object",
+            "properties": {
+                "content": {
+                    "description": "Exercise content (JSONB structure varies by type)",
+                    "type": "object"
+                },
+                "lesson_id": {
+                    "description": "Lesson ID where the exercise will be created",
+                    "type": "integer",
+                    "example": 1
+                },
+                "order_index": {
+                    "description": "Order index for sequencing",
+                    "type": "integer",
+                    "example": 1
+                },
+                "type": {
+                    "description": "Exercise type: quiz, reading, oratory_minigame, audio, video, writing",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/models.ExerciseType"
+                        }
+                    ],
+                    "example": "quiz"
+                }
+            }
+        },
         "controllers.completeLessonRequest": {
             "type": "object",
             "properties": {
@@ -1986,6 +2021,51 @@ const docTemplate = `{
                     "example": 1
                 }
             }
+        },
+        "models.Exercise": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "object"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lesson_id": {
+                    "type": "integer"
+                },
+                "order_index": {
+                    "type": "integer"
+                },
+                "type": {
+                    "$ref": "#/definitions/models.ExerciseType"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ExerciseType": {
+            "type": "string",
+            "enum": [
+                "reading",
+                "quiz",
+                "audio",
+                "oratory_minigame",
+                "video",
+                "writing"
+            ],
+            "x-enum-varnames": [
+                "ExerciseTypeReading",
+                "ExerciseTypeQuiz",
+                "ExerciseTypeAudio",
+                "ExerciseTypeOratoryMinigame",
+                "ExerciseTypeVideo",
+                "ExerciseTypeWriting"
+            ]
         },
         "services.LoginRequest": {
             "type": "object",

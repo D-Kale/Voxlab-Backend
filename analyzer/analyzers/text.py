@@ -1,161 +1,117 @@
-import re
-import textstat
-import spacy
-from spacy.lang.es import Spanish
+"""Orquestador del análisis de texto.
+
+Coordina todos los submódulos (gibberish, structure, vocabulary,
+readability, requirements) y devuelve un dict unificado de métricas.
+
+Flujo:
+    1. Validación básica (texto vacío)
+    2. Detección de gibberish (3 filtros rápidos)
+    3. Análisis completo de métricas
+    4. Cálculo de score ponderado
+"""
+
 from typing import List, Optional
 
-_nlp: Optional[Spanish] = None
+from analyzers.nlp import get_nlp
+from analyzers import gibberish, structure, vocabulary, readability, requirements
+from analyzers.scoring import calculate_score
 
 
-def get_nlp() -> Spanish:
-    global _nlp
-    if _nlp is None:
-        try:
-            _nlp = spacy.load("es_core_news_md")
-        except OSError:
-            _nlp = spacy.blank("es")
-    return _nlp
+def _empty_result(word_count: int, feedback: list) -> dict:
+    """Devuelve un resultado mínimo con todos los campos requeridos por AnalyzeResponse."""
+    return {
+        "word_count": word_count,
+        "sentence_count": 0,
+        "sentence_length": {"avg": 0, "min": 0, "max": 0, "std": 0},
+        "sentence_analysis": {"sentence_count": 0, "avg_length": 0, "std_length": 0, "connector_ratio": 0.0},
+        "paragraphs": {"paragraph_count": 0, "has_introduction": False, "has_conclusion": False},
+        "vocabulary_richness": 0.0,
+        "oov_ratio": 0.0,
+        "readability": {"flesch": 0, "fernandez_huerta": 0, "label": "N/A"},
+        "filler_words": 0,
+        "keywords": [],
+        "requirements": [],
+        "gibberish_detected": True,
+        "score": 0,
+        "score_breakdown": {},
+        "feedback": feedback,
+    }
 
 
-FILLER_WORDS = {
-    "este", "eh", "mmm", "em", "ah", "o sea", "tipo", "digamos",
-    "entonces", "como que", "o sea que", "vale", "bueno", "pues",
-    "este…", "ehm",
-}
+def analyze_text(
+    text: str,
+    requirements_list: Optional[List[str]] = None,
+    min_words: Optional[int] = None,
+    max_words: Optional[int] = None,
+) -> dict:
+    """Analiza un texto de escritura y devuelve métricas + score.
 
+    Args:
+        text: Texto del alumno en español.
+        requirements_list: Lista de requisitos del ejercicio.
+        min_words: Mínimo de palabras configurado.
+        max_words: Máximo de palabras configurado.
 
-def extract_keywords(text: str) -> List[str]:
+    Returns:
+        dict con word_count, sentence_count, sentence_length, paragraphs,
+        sentence_analysis, vocabulary_richness, oov_ratio, readability,
+        filler_words, keywords, requirements (matching semántico),
+        gibberish_detected, score, score_breakdown, feedback.
+    """
     nlp = get_nlp()
-    doc = nlp(text.lower())
-    lemmas = [token.lemma_ for token in doc if token.is_alpha and not token.is_stop]
-    freq = {}
-    for lemma in lemmas:
-        freq[lemma] = freq.get(lemma, 0) + 1
-    sorted_kw = sorted(freq.items(), key=lambda x: -x[1])
-    return [kw for kw, count in sorted_kw[:20]]
+    stripped = text.strip()
+    if not stripped:
+        return _empty_result(0, ["El texto está vacío."])
+
+    gibberish_detected, gibberish_reason = gibberish.is_gibberish(stripped)
+    if gibberish_detected:
+        return _empty_result(len(stripped.split()), [gibberish_reason])
+
+    doc = nlp(stripped)
+    words = [token for token in doc if token.is_alpha]
+    word_count = len(words)
+
+    result = {
+        "word_count": word_count,
+        "sentence_count": len(list(doc.sents)),
+        "gibberish_detected": False,
+    }
+
+    result["sentence_length"] = _sentence_length_stats(doc)
+    result["sentence_analysis"] = structure.sentence_analysis(stripped)
+    result["paragraphs"] = structure.paragraph_structure(stripped)
+    result["vocabulary_richness"] = vocabulary.lexical_richness(stripped)
+    result["oov_ratio"] = vocabulary.oov_ratio(stripped)
+    result["readability"] = readability.readability_score(stripped)
+    result["filler_words"] = vocabulary.count_filler_words(stripped)
+    result["keywords"] = vocabulary.extract_keywords(stripped, top_n=10)
+    result["requirements"] = requirements.match_requirements(stripped, requirements_list or [])
+
+    scoring_result = calculate_score(result, min_words, max_words)
+    result["score"] = scoring_result["score"]
+    result["score_breakdown"] = scoring_result["score_breakdown"]
+    result["feedback"] = scoring_result["feedback"]
+
+    return result
 
 
-def match_requirements(text: str, requirements: List[str]) -> List[dict]:
-    text_lower = text.lower()
-    results = []
-    for req in requirements:
-        req_lower = req.lower().strip()
-        if not req_lower:
-            continue
-        nlp = get_nlp()
-        req_doc = nlp(req_lower)
-        req_lemmas = {token.lemma_ for token in req_doc if token.is_alpha and not token.is_stop}
-        text_doc = nlp(text_lower)
-        text_lemmas = {token.lemma_ for token in text_doc if token.is_alpha}
-        matched = req_lemmas & text_lemmas
-        score = len(matched) / max(len(req_lemmas), 1)
-        results.append({
-            "requirement": req,
-            "matched": score >= 0.5,
-            "score": round(score, 2),
-            "keywords_found": list(matched),
-        })
-    return results
-
-
-def count_filler_words(text: str) -> int:
-    text_lower = text.lower()
-    count = 0
-    for filler in FILLER_WORDS:
-        count += len(re.findall(r'\b' + re.escape(filler) + r'\b', text_lower))
-    return count
-
-
-def sentence_length_variation(text: str) -> dict:
-    nlp = get_nlp()
-    doc = nlp(text)
+def _sentence_length_stats(doc) -> dict:
     sentences = list(doc.sents)
     if not sentences:
         return {"avg": 0, "min": 0, "max": 0, "std": 0}
+
     lengths = [len([t for t in s if t.is_alpha]) for s in sentences]
     avg = sum(lengths) / len(lengths)
-    variance = sum((x - avg) ** 2 for x in lengths) / len(lengths)
+
+    if len(lengths) > 1:
+        variance = sum((x - avg) ** 2 for x in lengths) / len(lengths)
+        std = variance ** 0.5
+    else:
+        std = 0.0
+
     return {
         "avg": round(avg, 1),
         "min": min(lengths),
         "max": max(lengths),
-        "std": round(variance ** 0.5, 1),
-    }
-
-
-def vocabulary_richness(text: str) -> float:
-    nlp = get_nlp()
-    doc = nlp(text.lower())
-    lemmas = [token.lemma_ for token in doc if token.is_alpha]
-    if not lemmas:
-        return 0.0
-    unique = set(lemmas)
-    return round(len(unique) / len(lemmas), 4)
-
-
-def paragraph_structure(text: str) -> dict:
-    paragraphs = [p.strip() for p in text.split("\n") if p.strip()]
-    return {
-        "paragraph_count": len(paragraphs),
-        "has_introduction": len(paragraphs) >= 2,
-        "has_conclusion": len(paragraphs) >= 3,
-    }
-
-
-def readability_score(text: str) -> dict:
-    try:
-        flesch = textstat.flesch_reading_ease(text)
-        fernandez_huerta = textstat.fernandez_huerta(text)
-        return {
-            "flesch": round(flesch, 1),
-            "fernandez_huerta": round(fernandez_huerta, 1),
-            "label": _readability_label(fernandez_huerta),
-        }
-    except Exception:
-        return {"flesch": 0, "fernandez_huerta": 0, "label": "N/A"}
-
-
-def _readability_label(score: float) -> str:
-    if score >= 80:
-        return "Muy fácil"
-    elif score >= 70:
-        return "Bastante fácil"
-    elif score >= 60:
-        return "Normal"
-    elif score >= 50:
-        return "Bastante difícil"
-    else:
-        return "Muy difícil"
-
-
-def analyze_text(text: str, requirements: Optional[List[str]] = None) -> dict:
-    nlp = get_nlp()
-    text_stripped = text.strip()
-    if not text_stripped:
-        return {"word_count": 0, "error": "Texto vacío"}
-
-    doc = nlp(text_stripped)
-    words = [token for token in doc if token.is_alpha]
-
-    word_count = len(words)
-    sentence_count = len(list(doc.sents))
-
-    req_results = match_requirements(text_stripped, requirements or [])
-    sentence_var = sentence_length_variation(text_stripped)
-    richness = vocabulary_richness(text_stripped)
-    paragraph = paragraph_structure(text_stripped)
-    readability = readability_score(text_stripped)
-    filler = count_filler_words(text_stripped)
-    keywords = extract_keywords(text_stripped)
-
-    return {
-        "word_count": word_count,
-        "sentence_count": sentence_count,
-        "sentence_length": sentence_var,
-        "vocabulary_richness": richness,
-        "paragraphs": paragraph,
-        "readability": readability,
-        "filler_words": filler,
-        "keywords": keywords[:10],
-        "requirements": req_results,
+        "std": round(std, 1),
     }
