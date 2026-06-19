@@ -43,9 +43,9 @@ func NewExerciseController(service *services.ExerciseService) *ExerciseControlle
 // @Tags         Exercises
 // @Produce      json
 // @Param        id   path      int  true  "Lesson ID (e.g. 1)"
-// @Success      200  {array}   models.Exercise  "List of exercises"
-// @Failure      400  {object}  map[string]interface{}  "Invalid lesson ID"
-// @Failure      500  {object}  map[string]interface{}  "Server error"
+// @Success      200  {object}  resources.ListExercisesResponse   "Ejercicios de la lección"
+// @Failure      400  {object}  resources.BadRequestError         "ID de lección inválido"
+// @Failure      500  {object}  resources.InternalServerError     "Error al obtener los ejercicios"
 // @Router       /api/v1/lessons/{id}/exercises [get]
 func (h *ExerciseController) GetExercisesByLesson(c *gin.Context) {
 	lessonID, err := strconv.Atoi(c.Param("id"))
@@ -75,9 +75,9 @@ func (h *ExerciseController) GetExercisesByLesson(c *gin.Context) {
 // @Tags         Exercises
 // @Produce      json
 // @Param        id   path      string  true  "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
-// @Success      200  {object}  models.Exercise  "Exercise details"
-// @Failure      400  {object}  map[string]interface{}  "Invalid exercise UUID"
-// @Failure      404  {object}  map[string]interface{}  "Exercise not found"
+// @Success      200  {object}  resources.GetExerciseResponse  "Detalles del ejercicio"
+// @Failure      400  {object}  resources.BadRequestError      "UUID de ejercicio inválido"
+// @Failure      404  {object}  resources.NotFoundError        "Ejercicio no encontrado"
 // @Router       /api/v1/exercises/{id} [get]
 func (h *ExerciseController) GetExercise(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
@@ -288,9 +288,9 @@ func (h *ExerciseController) GetExercise(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request  body  CreateExerciseRequest true  "Exercise data"
-// @Success      201  {object}  models.Exercise  "Created exercise"
-// @Failure      400  {object}  map[string]interface{}  "Validation error"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
+// @Success      201  {object}  resources.CreateExerciseResponse  "Ejercicio creado correctamente"
+// @Failure      400  {object}  resources.BadRequestError          "Datos inválidos — tipo y lesson_id requeridos"
+// @Failure      401  {object}  resources.UnauthorizedError        "Token no proporcionado o inválido"
 // @Router       /api/v1/exercises [post]
 func (h *ExerciseController) CreateExercise(c *gin.Context) {
 	var exercise models.Exercise
@@ -334,10 +334,10 @@ func (h *ExerciseController) CreateExercise(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        id       path  string  true  "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
 // @Param        request  body  object{type=string,order_index=int,content=object}  true  "Fields to update"
-// @Success      200  {object}  models.Exercise  "Updated exercise"
-// @Failure      400  {object}  map[string]interface{}  "Validation error"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
-// @Failure      404  {object}  map[string]interface{}  "Exercise not found"
+// @Success      200  {object}  resources.UpdateExerciseResponse  "Ejercicio actualizado correctamente"
+// @Failure      400  {object}  resources.BadRequestError          "UUID inválido o datos incorrectos"
+// @Failure      401  {object}  resources.UnauthorizedError        "Token no proporcionado o inválido"
+// @Failure      404  {object}  resources.NotFoundError            "Ejercicio no encontrado"
 // @Router       /api/v1/exercises/{id} [put]
 type updateExerciseInput struct {
 	Type       models.ExerciseType `json:"type,omitempty"`
@@ -395,11 +395,11 @@ func (h *ExerciseController) UpdateExercise(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id   path  string  true  "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
-// @Success      200  {object}  map[string]interface{}  "Deleted: { success: true, message: string }"
-// @Failure      400  {object}  map[string]interface{}  "Invalid exercise UUID"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
-// @Failure      404  {object}  map[string]interface{}  "Exercise not found"
-// @Failure      500  {object}  map[string]interface{}  "Server error"
+// @Success      200  {object}  resources.DeleteExerciseResponse  "Ejercicio eliminado correctamente"
+// @Failure      400  {object}  resources.BadRequestError          "UUID de ejercicio inválido"
+// @Failure      401  {object}  resources.UnauthorizedError        "Token no proporcionado o inválido"
+// @Failure      404  {object}  resources.NotFoundError            "Ejercicio no encontrado"
+// @Failure      500  {object}  resources.InternalServerError      "Error al eliminar el ejercicio"
 // @Router       /api/v1/exercises/{id} [delete]
 func (h *ExerciseController) DeleteExercise(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
@@ -447,7 +447,7 @@ type RequirementCatalogItem struct {
 // @Description  🔓 Public — no authentication required.
 // @Tags         Exercises
 // @Produce      json
-// @Success      200  {array}   RequirementCatalogItem  "List of catalog items"
+// @Success      200  {object}  resources.RequirementCatalogResponse  "Catálogo de requisitos agrupados por categoría"
 // @Router       /api/v1/exercises/requirement-catalog [get]
 func (h *ExerciseController) GetRequirementCatalog(c *gin.Context) {
 	catalog := models.GetRequirementCatalog()
@@ -483,9 +483,10 @@ func (h *ExerciseController) GetRequirementCatalog(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request  body  AnalyzeTextInput  true  "Text to analyze"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: AnalyzeResponse }"
-// @Failure      400  {object}  map[string]interface{}  "Validation error"
-// @Failure      502  {object}  map[string]interface{}  "Analyzer unavailable"
+// @Success      200  {object}  resources.AnalyzeTextResponse      "Análisis completo del texto"
+// @Failure      400  {object}  resources.BadRequestError           "Texto vacío o datos inválidos"
+// @Failure      401  {object}  resources.UnauthorizedError         "Token no proporcionado o inválido"
+// @Failure      502  {object}  resources.ServiceUnavailableError   "Analizador NLP no disponible — intente más tarde"
 // @Router       /api/v1/exercises/analyze-text [post]
 func (h *ExerciseController) AnalyzeText(c *gin.Context) {
 	var input AnalyzeTextInput

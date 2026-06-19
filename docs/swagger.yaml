@@ -1,5 +1,110 @@
 basePath: /api/v1
 definitions:
+  analyzer.AnalyzeResponse:
+    properties:
+      feedback:
+        items:
+          type: string
+        type: array
+      filler_words:
+        type: integer
+      gibberish_detected:
+        type: boolean
+      keywords:
+        items:
+          type: string
+        type: array
+      oov_ratio:
+        type: number
+      paragraphs:
+        $ref: '#/definitions/analyzer.Paragraphs'
+      readability:
+        $ref: '#/definitions/analyzer.Readability'
+      requirements:
+        items:
+          $ref: '#/definitions/analyzer.RequirementResult'
+        type: array
+      score:
+        type: integer
+      score_breakdown:
+        additionalProperties:
+          $ref: '#/definitions/analyzer.ScoreBreakdownItem'
+        type: object
+      sentence_analysis:
+        $ref: '#/definitions/analyzer.SentenceAnalysis'
+      sentence_count:
+        type: integer
+      sentence_length:
+        $ref: '#/definitions/analyzer.SentenceLength'
+      vocabulary_richness:
+        type: number
+      word_count:
+        type: integer
+    type: object
+  analyzer.Paragraphs:
+    properties:
+      has_conclusion:
+        type: boolean
+      has_introduction:
+        type: boolean
+      paragraph_count:
+        type: integer
+    type: object
+  analyzer.Readability:
+    properties:
+      fernandez_huerta:
+        type: number
+      flesch:
+        type: number
+      label:
+        type: string
+    type: object
+  analyzer.RequirementResult:
+    properties:
+      keywords_found:
+        items:
+          type: string
+        type: array
+      matched:
+        type: boolean
+      requirement:
+        type: string
+      score:
+        type: number
+    type: object
+  analyzer.ScoreBreakdownItem:
+    properties:
+      feedbacks:
+        items:
+          type: string
+        type: array
+      score:
+        type: integer
+      weight:
+        type: number
+    type: object
+  analyzer.SentenceAnalysis:
+    properties:
+      avg_length:
+        type: number
+      connector_ratio:
+        type: number
+      sentence_count:
+        type: integer
+      std_length:
+        type: number
+    type: object
+  analyzer.SentenceLength:
+    properties:
+      avg:
+        type: number
+      max:
+        type: integer
+      min:
+        type: integer
+      std:
+        type: number
+    type: object
   controllers.AnalyzeTextInput:
     properties:
       max_words:
@@ -104,21 +209,6 @@ definitions:
         example: 1.0.0
         type: string
     type: object
-  controllers.RequirementCatalogItem:
-    properties:
-      category:
-        example: Cobertura del contenido
-        type: string
-      id:
-        example: intro
-        type: string
-      order:
-        example: 1
-        type: integer
-      text:
-        example: Incluir una introducción clara del tema
-        type: string
-    type: object
   controllers.UpdateLessonRequest:
     description: Request body for updating an existing lesson
     properties:
@@ -156,12 +246,6 @@ definitions:
         type: string
       title:
         example: Oratoria Avanzada
-        type: string
-    type: object
-  controllers.UploadResponse:
-    properties:
-      url:
-        example: https://storage.example.com/uploads/track-1.webp
         type: string
     type: object
   controllers.completeLessonRequest:
@@ -269,6 +353,21 @@ definitions:
       order_index:
         type: integer
     type: object
+  models.RequirementCatalogItem:
+    properties:
+      category:
+        example: Cobertura del contenido
+        type: string
+      id:
+        example: intro
+        type: string
+      order:
+        example: 1
+        type: integer
+      text:
+        example: Incluir una introducción clara del tema
+        type: string
+    type: object
   models.Track:
     properties:
       created_at:
@@ -306,6 +405,442 @@ definitions:
         type: string
       xp_earned:
         type: integer
+    type: object
+  resources.AnalyzeTextResponse:
+    properties:
+      data:
+        $ref: '#/definitions/analyzer.AnalyzeResponse'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.BadRequestError:
+    properties:
+      error:
+        example: Solicitud inválida — verifique los campos enviados
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  resources.CompleteProgressResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.UserProgress'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.ConflictError:
+    properties:
+      error:
+        example: El recurso ya existe — conflicto con datos existentes
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  resources.CreateExerciseResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Exercise'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.CreateLessonResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Lesson'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.CreateModuleResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Module'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.CreateTrackResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Track'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.DeleteExerciseResponse:
+    properties:
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.DeleteLessonResponse:
+    properties:
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.DeleteModuleResponse:
+    properties:
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.DeleteTrackResponse:
+    properties:
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.DeleteUserResponse:
+    properties:
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.ForbiddenError:
+    properties:
+      error:
+        example: No tiene permisos para realizar esta acción
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  resources.GetExerciseResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Exercise'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.GetLessonResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Lesson'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.GetModuleResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Module'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.GetTrackResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Track'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.GetUserResponse:
+    properties:
+      data:
+        $ref: '#/definitions/services.AdminUserData'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.InternalServerError:
+    properties:
+      error:
+        example: Error interno del servidor
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  resources.LinkLessonResponse:
+    properties:
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.ListExercisesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Exercise'
+        type: array
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.ListLessonsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Lesson'
+        type: array
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.ListModulesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Module'
+        type: array
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.ListProgressResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.UserProgress'
+        type: array
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.ListTracksResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.Track'
+        type: array
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.ListUsersResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/services.AdminUserData'
+        type: array
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.LoginResponseData:
+    properties:
+      expires_at:
+        example: "2026-01-02T00:00:00Z"
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzA2NzU4NDAwfQ.signature
+        type: string
+      user:
+        $ref: '#/definitions/services.UserData'
+    type: object
+  resources.LogoutResponse:
+    properties:
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.NotFoundError:
+    properties:
+      error:
+        example: Recurso no encontrado
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  resources.NotImplementedResponse:
+    properties:
+      message:
+        example: not implemented
+        type: string
+    type: object
+  resources.RegisterResponseData:
+    properties:
+      expires_at:
+        example: "2026-01-02T00:00:00Z"
+        type: string
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzA2NzU4NDAwfQ.signature
+        type: string
+      user:
+        $ref: '#/definitions/services.UserData'
+    type: object
+  resources.RequirementCatalogResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.RequirementCatalogItem'
+        type: array
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.ServiceUnavailableError:
+    properties:
+      error:
+        example: Servicio temporalmente no disponible — intente más tarde
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  resources.UnauthorizedError:
+    properties:
+      error:
+        example: Token de autenticación no proporcionado o inválido
+        type: string
+      success:
+        example: false
+        type: boolean
+    type: object
+  resources.UpdateLessonResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Lesson'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.UpdateModuleResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Module'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.UpdateTrackResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.Track'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.UpdateUserResponse:
+    properties:
+      data:
+        $ref: '#/definitions/services.AdminUserData'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.UploadFileResponse:
+    properties:
+      data:
+        properties:
+          url:
+            example: https://storage.voxlab.com/uploads/track-1.webp
+            type: string
+        type: object
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.UserProfileResponse:
+    properties:
+      data:
+        $ref: '#/definitions/services.UserData'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
     type: object
   services.AdminUserData:
     properties:
@@ -348,17 +883,6 @@ definitions:
     required:
     - email
     - password
-    type: object
-  services.LoginResponse:
-    properties:
-      expires_at:
-        example: "2026-01-02T00:00:00Z"
-        type: string
-      token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzA2NzU4NDAwfQ.signature
-        type: string
-      user:
-        $ref: '#/definitions/services.UserData'
     type: object
   services.RegisterRequest:
     properties:
@@ -451,19 +975,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Login exitoso — token + datos del usuario
           schema:
-            $ref: '#/definitions/services.LoginResponse'
+            $ref: '#/definitions/resources.LoginResponseData'
         "400":
-          description: Bad Request
+          description: Credenciales inválidas o formato incorrecto
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Email o contraseña incorrectos
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
       summary: User Login
       tags:
       - Auth
@@ -477,15 +999,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: OK
+          description: Sesión cerrada correctamente
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.LogoutResponse'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
       security:
       - BearerAuth: []
       summary: User Logout
@@ -500,19 +1020,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: Current user profile
+          description: Perfil del usuario autenticado
           schema:
-            $ref: '#/definitions/services.UserData'
+            $ref: '#/definitions/resources.UserProfileResponse'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
+        "404":
+          description: Usuario no encontrado
+          schema:
+            $ref: '#/definitions/resources.NotFoundError'
         "500":
-          description: Server error
+          description: Error al obtener el perfil
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Get Current User
@@ -527,19 +1049,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: Extended user profile
+          description: Perfil extendido del usuario
           schema:
-            $ref: '#/definitions/services.UserData'
+            $ref: '#/definitions/resources.UserProfileResponse'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
+        "404":
+          description: Usuario no encontrado
+          schema:
+            $ref: '#/definitions/resources.NotFoundError'
         "500":
-          description: Server error
+          description: Error al obtener el perfil
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Get user profile
@@ -562,24 +1086,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: Updated user profile
+          description: Perfil actualizado correctamente
           schema:
-            $ref: '#/definitions/services.UserData'
+            $ref: '#/definitions/resources.UserProfileResponse'
         "400":
-          description: Bad Request
+          description: Datos inválidos en la solicitud
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "500":
-          description: Server error
+          description: Error al actualizar el perfil
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Update user profile
@@ -604,19 +1125,17 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created
+          description: Usuario creado — auto-login con token
           schema:
-            $ref: '#/definitions/services.LoginResponse'
+            $ref: '#/definitions/resources.RegisterResponseData'
         "400":
-          description: Bad Request
+          description: Datos de registro inválidos
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "409":
-          description: Conflict
+          description: El email ya está registrado
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.ConflictError'
       summary: User Registration
       tags:
       - Auth
@@ -703,19 +1222,17 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created exercise
+          description: Ejercicio creado correctamente
           schema:
-            $ref: '#/definitions/models.Exercise'
+            $ref: '#/definitions/resources.CreateExerciseResponse'
         "400":
-          description: Validation error
+          description: Datos inválidos — tipo y lesson_id requeridos
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
       security:
       - BearerAuth: []
       summary: Create a new exercise
@@ -737,30 +1254,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: 'Deleted: { success: true, message: string }'
+          description: Ejercicio eliminado correctamente
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.DeleteExerciseResponse'
         "400":
-          description: Invalid exercise UUID
+          description: UUID de ejercicio inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "404":
-          description: Exercise not found
+          description: Ejercicio no encontrado
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
         "500":
-          description: Server error
+          description: Error al eliminar el ejercicio
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Delete an exercise
@@ -780,19 +1292,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: Exercise details
+          description: Detalles del ejercicio
           schema:
-            $ref: '#/definitions/models.Exercise'
+            $ref: '#/definitions/resources.GetExerciseResponse'
         "400":
-          description: Invalid exercise UUID
+          description: UUID de ejercicio inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "404":
-          description: Exercise not found
+          description: Ejercicio no encontrado
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
       summary: Get a single exercise by ID
       tags:
       - Exercises
@@ -820,20 +1330,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: 'Success: { success: true, data: AnalyzeResponse }'
+          description: Análisis completo del texto
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.AnalyzeTextResponse'
         "400":
-          description: Validation error
+          description: Texto vacío o datos inválidos
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
+        "401":
+          description: Token no proporcionado o inválido
+          schema:
+            $ref: '#/definitions/resources.UnauthorizedError'
         "502":
-          description: Analyzer unavailable
+          description: Analizador NLP no disponible — intente más tarde
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.ServiceUnavailableError'
       security:
       - BearerAuth: []
       summary: Analyze text for writing exercises
@@ -849,11 +1360,9 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of catalog items
+          description: Catálogo de requisitos agrupados por categoría
           schema:
-            items:
-              $ref: '#/definitions/controllers.RequirementCatalogItem'
-            type: array
+            $ref: '#/definitions/resources.RequirementCatalogResponse'
       summary: Get requirement catalog for writing exercises
       tags:
       - Exercises
@@ -866,14 +1375,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: System health status
+          description: Estado del sistema — ok
           schema:
             $ref: '#/definitions/controllers.HealthResponse'
         "503":
-          description: Service unhealthy
+          description: Servicio no saludable — postgres o redis caídos
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.ServiceUnavailableError'
       summary: Health Check
       tags:
       - System
@@ -895,19 +1403,21 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created lesson
+          description: Lección creada correctamente
           schema:
-            $ref: '#/definitions/models.Lesson'
+            $ref: '#/definitions/resources.CreateLessonResponse'
         "400":
-          description: Validation error
+          description: Datos inválidos — el título es requerido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
+        "500":
+          description: Error al crear la lección
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Create a new lesson
@@ -928,30 +1438,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: 'Deleted: { success: true, message: string }'
+          description: Lección eliminada correctamente
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.DeleteLessonResponse'
         "400":
-          description: Invalid lesson ID
+          description: ID de lección inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "404":
-          description: Lesson not found
+          description: Lección no encontrada
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
         "500":
-          description: Server error
+          description: Error al eliminar la lección
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Delete a lesson
@@ -971,19 +1476,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: Lesson details with exercises
+          description: Lección con ejercicios
           schema:
-            $ref: '#/definitions/models.Lesson'
+            $ref: '#/definitions/resources.GetLessonResponse'
         "400":
-          description: Invalid lesson ID
+          description: ID de lección inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "404":
-          description: Lesson not found
+          description: Lección no encontrada
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
       summary: Get a single lesson by ID
       tags:
       - Lessons
@@ -1008,24 +1511,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: Updated lesson
+          description: Lección actualizada correctamente
           schema:
-            $ref: '#/definitions/models.Lesson'
+            $ref: '#/definitions/resources.UpdateLessonResponse'
         "400":
-          description: Validation error
+          description: ID de lección inválido o datos incorrectos
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "404":
-          description: Lesson not found
+          description: Lección no encontrada
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
+        "500":
+          description: Error al actualizar la lección
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Update a lesson
@@ -1047,21 +1551,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of exercises
+          description: Ejercicios de la lección
           schema:
-            items:
-              $ref: '#/definitions/models.Exercise'
-            type: array
+            $ref: '#/definitions/resources.ListExercisesResponse'
         "400":
-          description: Invalid lesson ID
+          description: ID de lección inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "500":
-          description: Server error
+          description: Error al obtener los ejercicios
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       summary: List exercises for a lesson
       tags:
       - Exercises
@@ -1083,19 +1583,21 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created module
+          description: Módulo creado correctamente
           schema:
-            $ref: '#/definitions/models.Module'
+            $ref: '#/definitions/resources.CreateModuleResponse'
         "400":
-          description: Validation error
+          description: Datos inválidos — título y track_id requeridos
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
+        "500":
+          description: Error al crear el módulo
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Create a new module
@@ -1117,30 +1619,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: 'Deleted: { success: true, message: string }'
+          description: Módulo eliminado correctamente
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.DeleteModuleResponse'
         "400":
-          description: Invalid module ID
+          description: ID de módulo inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "404":
-          description: Module not found
+          description: Módulo no encontrado
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
         "500":
-          description: Server error
+          description: Error al eliminar el módulo
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Delete a module
@@ -1159,19 +1656,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: Module details
+          description: Módulo con lecciones y ejercicios
           schema:
-            $ref: '#/definitions/models.Module'
+            $ref: '#/definitions/resources.GetModuleResponse'
         "400":
-          description: Invalid module ID
+          description: ID de módulo inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "404":
-          description: Module not found
+          description: Módulo no encontrado
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
       summary: Get a single module by ID
       tags:
       - Modules
@@ -1196,24 +1691,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: Updated module
+          description: Módulo actualizado correctamente
           schema:
-            $ref: '#/definitions/models.Module'
+            $ref: '#/definitions/resources.UpdateModuleResponse'
         "400":
-          description: Validation error
+          description: ID de módulo inválido o datos incorrectos
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "404":
-          description: Module not found
+          description: Módulo no encontrado
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
+        "500":
+          description: Error al actualizar el módulo
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Update a module
@@ -1234,21 +1730,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of lessons
+          description: Lecciones del módulo
           schema:
-            items:
-              $ref: '#/definitions/models.Lesson'
-            type: array
+            $ref: '#/definitions/resources.ListLessonsResponse'
         "400":
-          description: Invalid module ID
+          description: ID de módulo inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "500":
-          description: Server error
+          description: Error al obtener las lecciones
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       summary: List lessons in a module
       tags:
       - Lessons
@@ -1275,25 +1767,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: 'Linked: { success: true, message: string }'
+          description: Lección vinculada al módulo correctamente
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.LinkLessonResponse'
         "400":
-          description: Validation error
+          description: ID de módulo inválido o datos incorrectos
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "404":
-          description: Module or Lesson not found
+          description: Módulo o lección no encontrados
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
+        "500":
+          description: Error al vincular la lección
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Link a lesson to a module
@@ -1310,21 +1802,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: User progress records
+          description: Registros de progreso del usuario
           schema:
-            items:
-              $ref: '#/definitions/models.UserProgress'
-            type: array
+            $ref: '#/definitions/resources.ListProgressResponse'
         "401":
-          description: Unauthorized — token missing or invalid
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "500":
-          description: Server error
+          description: Error al obtener el progreso
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Get my learning progress
@@ -1350,29 +1838,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: Updated progress record
+          description: Progreso actualizado — lección completada
           schema:
-            $ref: '#/definitions/models.UserProgress'
+            $ref: '#/definitions/resources.CompleteProgressResponse'
         "400":
-          description: Validation error
+          description: Datos inválidos — lesson_id requerido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized — token missing or invalid
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "404":
-          description: Lesson not found
+          description: Lección no encontrada
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
         "500":
-          description: Server error
+          description: Error al completar la lección
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Complete a lesson
@@ -1390,10 +1874,9 @@ paths:
       - application/json
       responses:
         "501":
-          description: Not Implemented — endpoint not yet active
+          description: Funcionalidad no implementada aún
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotImplementedResponse'
       security:
       - BearerAuth: []
       summary: '[TODO] Create a reaction (emoji/like) during live sessions'
@@ -1411,16 +1894,13 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of all tracks
+          description: Lista de todos los tracks
           schema:
-            items:
-              $ref: '#/definitions/models.Track'
-            type: array
+            $ref: '#/definitions/resources.ListTracksResponse'
         "500":
-          description: Server error
+          description: Error al obtener los tracks
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       summary: List all educational tracks
       tags:
       - Tracks (Educational Content)
@@ -1441,19 +1921,21 @@ paths:
       - application/json
       responses:
         "201":
-          description: Created track
+          description: Track creado correctamente
           schema:
-            $ref: '#/definitions/models.Track'
+            $ref: '#/definitions/resources.CreateTrackResponse'
         "400":
-          description: Validation error
+          description: Datos inválidos — el título es requerido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
+        "500":
+          description: Error al crear el track
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Create a new track
@@ -1474,20 +1956,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: 'Deleted: { success: true, message: string }'
+          description: Track eliminado correctamente
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.DeleteTrackResponse'
+        "400":
+          description: ID de track inválido
+          schema:
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "404":
-          description: Track not found
+          description: Track no encontrado
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
+        "500":
+          description: Error al eliminar el track
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Delete a track
@@ -1507,19 +1994,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: Track details with nested content
+          description: Track con módulos, lecciones y ejercicios
           schema:
-            $ref: '#/definitions/models.Track'
+            $ref: '#/definitions/resources.GetTrackResponse'
         "400":
-          description: Invalid track ID
+          description: ID de track inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "404":
-          description: Track not found
+          description: Track no encontrado
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
       summary: Get a single track by ID
       tags:
       - Tracks (Educational Content)
@@ -1545,24 +2030,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: Updated track
+          description: Track actualizado correctamente
           schema:
-            $ref: '#/definitions/models.Track'
+            $ref: '#/definitions/resources.UpdateTrackResponse'
         "400":
-          description: Validation error
+          description: ID de track inválido o datos incorrectos
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "404":
-          description: Track not found
+          description: Track no encontrado
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
+        "500":
+          description: Error al actualizar el track
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Update an existing track
@@ -1583,21 +2069,17 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of modules
+          description: Módulos del track
           schema:
-            items:
-              $ref: '#/definitions/models.Module'
-            type: array
+            $ref: '#/definitions/resources.ListModulesResponse'
         "400":
-          description: Invalid track ID
+          description: ID de track inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "500":
-          description: Server error
+          description: Error al obtener los módulos
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       summary: List modules for a track
       tags:
       - Modules
@@ -1618,24 +2100,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: Upload result
+          description: Avatar actualizado correctamente
           schema:
-            $ref: '#/definitions/controllers.UploadResponse'
+            $ref: '#/definitions/resources.UploadFileResponse'
         "400":
-          description: Missing file or too large
+          description: Archivo faltante o excede el tamaño máximo
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "500":
-          description: Upload or database error
+          description: Error al subir o procesar el avatar
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Upload user avatar
@@ -1662,29 +2141,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: Upload result
+          description: Imagen subida correctamente
           schema:
-            $ref: '#/definitions/controllers.UploadResponse'
+            $ref: '#/definitions/resources.UploadFileResponse'
         "400":
-          description: Invalid lesson ID or missing file
+          description: ID de lección inválido o archivo faltante
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "403":
-          description: Forbidden — admin only
+          description: Solo administradores pueden subir imágenes
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.ForbiddenError'
         "500":
-          description: Upload or database error
+          description: Error al subir o procesar la imagen
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Upload lesson image
@@ -1711,29 +2186,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: Upload result
+          description: Imagen subida correctamente
           schema:
-            $ref: '#/definitions/controllers.UploadResponse'
+            $ref: '#/definitions/resources.UploadFileResponse'
         "400":
-          description: Invalid module ID or missing file
+          description: ID de módulo inválido o archivo faltante
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "403":
-          description: Forbidden — admin only
+          description: Solo administradores pueden subir imágenes
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.ForbiddenError'
         "500":
-          description: Upload or database error
+          description: Error al subir o procesar la imagen
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Upload module image
@@ -1762,29 +2233,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: Upload result
+          description: Imagen subida correctamente
           schema:
-            $ref: '#/definitions/controllers.UploadResponse'
+            $ref: '#/definitions/resources.UploadFileResponse'
         "400":
-          description: Invalid track ID or missing file
+          description: ID de track inválido o archivo faltante
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "403":
-          description: Forbidden — admin only
+          description: Solo administradores pueden subir imágenes
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.ForbiddenError'
         "500":
-          description: Upload or database error
+          description: Error al subir o procesar la imagen
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Upload track image
@@ -1798,26 +2265,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: List of users
+          description: Lista de todos los usuarios
           schema:
-            items:
-              $ref: '#/definitions/services.AdminUserData'
-            type: array
+            $ref: '#/definitions/resources.ListUsersResponse'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "403":
-          description: Forbidden — admin only
+          description: Solo administradores pueden listar usuarios
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.ForbiddenError'
         "500":
-          description: Server error
+          description: Error al obtener los usuarios
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: List all users (admin)
@@ -1837,30 +2299,25 @@ paths:
       - application/json
       responses:
         "200":
-          description: Deleted confirmation
+          description: Usuario eliminado correctamente
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.DeleteUserResponse'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "403":
-          description: Forbidden — admin only
+          description: Solo administradores pueden eliminar usuarios
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.ForbiddenError'
         "404":
-          description: User not found
+          description: Usuario no encontrado
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
         "500":
-          description: Server error
+          description: Error al eliminar el usuario
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Delete user (admin)
@@ -1878,24 +2335,21 @@ paths:
       - application/json
       responses:
         "200":
-          description: User details
+          description: Datos del usuario
           schema:
-            $ref: '#/definitions/services.AdminUserData'
+            $ref: '#/definitions/resources.GetUserResponse'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "403":
-          description: Forbidden — admin only
+          description: Solo administradores pueden ver usuarios
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.ForbiddenError'
         "404":
-          description: User not found
+          description: Usuario no encontrado
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
       security:
       - BearerAuth: []
       summary: Get user by ID (admin)
@@ -1921,34 +2375,29 @@ paths:
       - application/json
       responses:
         "200":
-          description: Updated user
+          description: Usuario actualizado correctamente
           schema:
-            $ref: '#/definitions/services.AdminUserData'
+            $ref: '#/definitions/resources.UpdateUserResponse'
         "400":
-          description: Invalid request
+          description: Datos inválidos en la solicitud
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.BadRequestError'
         "401":
-          description: Unauthorized
+          description: Token no proporcionado o inválido
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.UnauthorizedError'
         "403":
-          description: Forbidden — admin only
+          description: Solo administradores pueden modificar usuarios
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.ForbiddenError'
         "404":
-          description: User not found
+          description: Usuario no encontrado
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.NotFoundError'
         "500":
-          description: Server error
+          description: Error al actualizar el usuario
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/resources.InternalServerError'
       security:
       - BearerAuth: []
       summary: Update user (admin)

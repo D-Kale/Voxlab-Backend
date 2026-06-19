@@ -49,23 +49,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Login exitoso — token + datos del usuario",
                         "schema": {
-                            "$ref": "#/definitions/services.LoginResponse"
+                            "$ref": "#/definitions/resources.LoginResponseData"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Credenciales inválidas o formato incorrecto",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Email o contraseña incorrectos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     }
                 }
@@ -88,17 +86,15 @@ const docTemplate = `{
                 "summary": "User Logout",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Sesión cerrada correctamente",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.LogoutResponse"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     }
                 }
@@ -121,23 +117,27 @@ const docTemplate = `{
                 "summary": "Get Current User",
                 "responses": {
                     "200": {
-                        "description": "Current user profile",
+                        "description": "Perfil del usuario autenticado",
                         "schema": {
-                            "$ref": "#/definitions/services.UserData"
+                            "$ref": "#/definitions/resources.UserProfileResponse"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al obtener el perfil",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -160,23 +160,27 @@ const docTemplate = `{
                 "summary": "Get user profile",
                 "responses": {
                     "200": {
-                        "description": "Extended user profile",
+                        "description": "Perfil extendido del usuario",
                         "schema": {
-                            "$ref": "#/definitions/services.UserData"
+                            "$ref": "#/definitions/resources.UserProfileResponse"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al obtener el perfil",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -211,30 +215,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Updated user profile",
+                        "description": "Perfil actualizado correctamente",
                         "schema": {
-                            "$ref": "#/definitions/services.UserData"
+                            "$ref": "#/definitions/resources.UserProfileResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Datos inválidos en la solicitud",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al actualizar el perfil",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -266,23 +267,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Usuario creado — auto-login con token",
                         "schema": {
-                            "$ref": "#/definitions/services.LoginResponse"
+                            "$ref": "#/definitions/resources.RegisterResponseData"
                         }
                     },
                     "400": {
-                        "description": "Bad Request",
+                        "description": "Datos de registro inválidos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "409": {
-                        "description": "Conflict",
+                        "description": "El email ya está registrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ConflictError"
                         }
                     }
                 }
@@ -349,23 +348,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created exercise",
+                        "description": "Ejercicio creado correctamente",
                         "schema": {
-                            "$ref": "#/definitions/models.Exercise"
+                            "$ref": "#/definitions/resources.CreateExerciseResponse"
                         }
                     },
                     "400": {
-                        "description": "Validation error",
+                        "description": "Datos inválidos — tipo y lesson_id requeridos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     }
                 }
@@ -402,24 +399,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: AnalyzeResponse }",
+                        "description": "Análisis completo del texto",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.AnalyzeTextResponse"
                         }
                     },
                     "400": {
-                        "description": "Validation error",
+                        "description": "Texto vacío o datos inválidos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Token no proporcionado o inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "502": {
-                        "description": "Analyzer unavailable",
+                        "description": "Analizador NLP no disponible — intente más tarde",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ServiceUnavailableError"
                         }
                     }
                 }
@@ -437,12 +437,9 @@ const docTemplate = `{
                 "summary": "Get requirement catalog for writing exercises",
                 "responses": {
                     "200": {
-                        "description": "List of catalog items",
+                        "description": "Catálogo de requisitos agrupados por categoría",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/controllers.RequirementCatalogItem"
-                            }
+                            "$ref": "#/definitions/resources.RequirementCatalogResponse"
                         }
                     }
                 }
@@ -469,23 +466,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Exercise details",
+                        "description": "Detalles del ejercicio",
                         "schema": {
-                            "$ref": "#/definitions/models.Exercise"
+                            "$ref": "#/definitions/resources.GetExerciseResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid exercise UUID",
+                        "description": "UUID de ejercicio inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "404": {
-                        "description": "Exercise not found",
+                        "description": "Ejercicio no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     }
                 }
@@ -515,38 +510,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Deleted: { success: true, message: string }",
+                        "description": "Ejercicio eliminado correctamente",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.DeleteExerciseResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid exercise UUID",
+                        "description": "UUID de ejercicio inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
-                        "description": "Exercise not found",
+                        "description": "Ejercicio no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al eliminar el ejercicio",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -564,16 +554,15 @@ const docTemplate = `{
                 "summary": "Health Check",
                 "responses": {
                     "200": {
-                        "description": "System health status",
+                        "description": "Estado del sistema — ok",
                         "schema": {
                             "$ref": "#/definitions/controllers.HealthResponse"
                         }
                     },
                     "503": {
-                        "description": "Service unhealthy",
+                        "description": "Servicio no saludable — postgres o redis caídos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ServiceUnavailableError"
                         }
                     }
                 }
@@ -610,23 +599,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created lesson",
+                        "description": "Lección creada correctamente",
                         "schema": {
-                            "$ref": "#/definitions/models.Lesson"
+                            "$ref": "#/definitions/resources.CreateLessonResponse"
                         }
                     },
                     "400": {
-                        "description": "Validation error",
+                        "description": "Datos inválidos — el título es requerido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al crear la lección",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -653,23 +646,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Lesson details with exercises",
+                        "description": "Lección con ejercicios",
                         "schema": {
-                            "$ref": "#/definitions/models.Lesson"
+                            "$ref": "#/definitions/resources.GetLessonResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid lesson ID",
+                        "description": "ID de lección inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "404": {
-                        "description": "Lesson not found",
+                        "description": "Lección no encontrada",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     }
                 }
@@ -711,30 +702,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Updated lesson",
+                        "description": "Lección actualizada correctamente",
                         "schema": {
-                            "$ref": "#/definitions/models.Lesson"
+                            "$ref": "#/definitions/resources.UpdateLessonResponse"
                         }
                     },
                     "400": {
-                        "description": "Validation error",
+                        "description": "ID de lección inválido o datos incorrectos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
-                        "description": "Lesson not found",
+                        "description": "Lección no encontrada",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al actualizar la lección",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -764,38 +758,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Deleted: { success: true, message: string }",
+                        "description": "Lección eliminada correctamente",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.DeleteLessonResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid lesson ID",
+                        "description": "ID de lección inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
-                        "description": "Lesson not found",
+                        "description": "Lección no encontrada",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al eliminar la lección",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -822,26 +811,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of exercises",
+                        "description": "Ejercicios de la lección",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Exercise"
-                            }
+                            "$ref": "#/definitions/resources.ListExercisesResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid lesson ID",
+                        "description": "ID de lección inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al obtener los ejercicios",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -878,23 +862,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created module",
+                        "description": "Módulo creado correctamente",
                         "schema": {
-                            "$ref": "#/definitions/models.Module"
+                            "$ref": "#/definitions/resources.CreateModuleResponse"
                         }
                     },
                     "400": {
-                        "description": "Validation error",
+                        "description": "Datos inválidos — título y track_id requeridos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al crear el módulo",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -921,23 +909,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Module details",
+                        "description": "Módulo con lecciones y ejercicios",
                         "schema": {
-                            "$ref": "#/definitions/models.Module"
+                            "$ref": "#/definitions/resources.GetModuleResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid module ID",
+                        "description": "ID de módulo inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "404": {
-                        "description": "Module not found",
+                        "description": "Módulo no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     }
                 }
@@ -979,30 +965,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Updated module",
+                        "description": "Módulo actualizado correctamente",
                         "schema": {
-                            "$ref": "#/definitions/models.Module"
+                            "$ref": "#/definitions/resources.UpdateModuleResponse"
                         }
                     },
                     "400": {
-                        "description": "Validation error",
+                        "description": "ID de módulo inválido o datos incorrectos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
-                        "description": "Module not found",
+                        "description": "Módulo no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al actualizar el módulo",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1032,38 +1021,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Deleted: { success: true, message: string }",
+                        "description": "Módulo eliminado correctamente",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.DeleteModuleResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid module ID",
+                        "description": "ID de módulo inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
-                        "description": "Module not found",
+                        "description": "Módulo no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al eliminar el módulo",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1090,26 +1074,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of lessons",
+                        "description": "Lecciones del módulo",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Lesson"
-                            }
+                            "$ref": "#/definitions/resources.ListLessonsResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid module ID",
+                        "description": "ID de módulo inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al obtener las lecciones",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1151,31 +1130,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Linked: { success: true, message: string }",
+                        "description": "Lección vinculada al módulo correctamente",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.LinkLessonResponse"
                         }
                     },
                     "400": {
-                        "description": "Validation error",
+                        "description": "ID de módulo inválido o datos incorrectos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
-                        "description": "Module or Lesson not found",
+                        "description": "Módulo o lección no encontrados",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al vincular la lección",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1198,26 +1179,21 @@ const docTemplate = `{
                 "summary": "Get my learning progress",
                 "responses": {
                     "200": {
-                        "description": "User progress records",
+                        "description": "Registros de progreso del usuario",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.UserProgress"
-                            }
+                            "$ref": "#/definitions/resources.ListProgressResponse"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized — token missing or invalid",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al obtener el progreso",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1252,37 +1228,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Updated progress record",
+                        "description": "Progreso actualizado — lección completada",
                         "schema": {
-                            "$ref": "#/definitions/models.UserProgress"
+                            "$ref": "#/definitions/resources.CompleteProgressResponse"
                         }
                     },
                     "400": {
-                        "description": "Validation error",
+                        "description": "Datos inválidos — lesson_id requerido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized — token missing or invalid",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
-                        "description": "Lesson not found",
+                        "description": "Lección no encontrada",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al completar la lección",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1308,10 +1280,9 @@ const docTemplate = `{
                 "summary": "[TODO] Create a reaction (emoji/like) during live sessions",
                 "responses": {
                     "501": {
-                        "description": "Not Implemented — endpoint not yet active",
+                        "description": "Funcionalidad no implementada aún",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotImplementedResponse"
                         }
                     }
                 }
@@ -1329,19 +1300,15 @@ const docTemplate = `{
                 "summary": "List all educational tracks",
                 "responses": {
                     "200": {
-                        "description": "List of all tracks",
+                        "description": "Lista de todos los tracks",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Track"
-                            }
+                            "$ref": "#/definitions/resources.ListTracksResponse"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al obtener los tracks",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1376,23 +1343,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created track",
+                        "description": "Track creado correctamente",
                         "schema": {
-                            "$ref": "#/definitions/models.Track"
+                            "$ref": "#/definitions/resources.CreateTrackResponse"
                         }
                     },
                     "400": {
-                        "description": "Validation error",
+                        "description": "Datos inválidos — el título es requerido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al crear el track",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1419,23 +1390,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Track details with nested content",
+                        "description": "Track con módulos, lecciones y ejercicios",
                         "schema": {
-                            "$ref": "#/definitions/models.Track"
+                            "$ref": "#/definitions/resources.GetTrackResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid track ID",
+                        "description": "ID de track inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "404": {
-                        "description": "Track not found",
+                        "description": "Track no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     }
                 }
@@ -1477,30 +1446,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Updated track",
+                        "description": "Track actualizado correctamente",
                         "schema": {
-                            "$ref": "#/definitions/models.Track"
+                            "$ref": "#/definitions/resources.UpdateTrackResponse"
                         }
                     },
                     "400": {
-                        "description": "Validation error",
+                        "description": "ID de track inválido o datos incorrectos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
-                        "description": "Track not found",
+                        "description": "Track no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al actualizar el track",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1530,24 +1502,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Deleted: { success: true, message: string }",
+                        "description": "Track eliminado correctamente",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.DeleteTrackResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID de track inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
-                        "description": "Track not found",
+                        "description": "Track no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al eliminar el track",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1574,26 +1555,21 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "List of modules",
+                        "description": "Módulos del track",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Module"
-                            }
+                            "$ref": "#/definitions/resources.ListModulesResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid track ID",
+                        "description": "ID de track inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al obtener los módulos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1628,30 +1604,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Upload result",
+                        "description": "Avatar actualizado correctamente",
                         "schema": {
-                            "$ref": "#/definitions/controllers.UploadResponse"
+                            "$ref": "#/definitions/resources.UploadFileResponse"
                         }
                     },
                     "400": {
-                        "description": "Missing file or too large",
+                        "description": "Archivo faltante o excede el tamaño máximo",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "500": {
-                        "description": "Upload or database error",
+                        "description": "Error al subir o procesar el avatar",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1693,37 +1666,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Upload result",
+                        "description": "Imagen subida correctamente",
                         "schema": {
-                            "$ref": "#/definitions/controllers.UploadResponse"
+                            "$ref": "#/definitions/resources.UploadFileResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid lesson ID or missing file",
+                        "description": "ID de lección inválido o archivo faltante",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
-                        "description": "Forbidden — admin only",
+                        "description": "Solo administradores pueden subir imágenes",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "500": {
-                        "description": "Upload or database error",
+                        "description": "Error al subir o procesar la imagen",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1765,37 +1734,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Upload result",
+                        "description": "Imagen subida correctamente",
                         "schema": {
-                            "$ref": "#/definitions/controllers.UploadResponse"
+                            "$ref": "#/definitions/resources.UploadFileResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid module ID or missing file",
+                        "description": "ID de módulo inválido o archivo faltante",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
-                        "description": "Forbidden — admin only",
+                        "description": "Solo administradores pueden subir imágenes",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "500": {
-                        "description": "Upload or database error",
+                        "description": "Error al subir o procesar la imagen",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1837,37 +1802,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Upload result",
+                        "description": "Imagen subida correctamente",
                         "schema": {
-                            "$ref": "#/definitions/controllers.UploadResponse"
+                            "$ref": "#/definitions/resources.UploadFileResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid track ID or missing file",
+                        "description": "ID de track inválido o archivo faltante",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
-                        "description": "Forbidden — admin only",
+                        "description": "Solo administradores pueden subir imágenes",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "500": {
-                        "description": "Upload or database error",
+                        "description": "Error al subir o procesar la imagen",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1890,33 +1851,27 @@ const docTemplate = `{
                 "summary": "List all users (admin)",
                 "responses": {
                     "200": {
-                        "description": "List of users",
+                        "description": "Lista de todos los usuarios",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/services.AdminUserData"
-                            }
+                            "$ref": "#/definitions/resources.ListUsersResponse"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
-                        "description": "Forbidden — admin only",
+                        "description": "Solo administradores pueden listar usuarios",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al obtener los usuarios",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1948,30 +1903,27 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "User details",
+                        "description": "Datos del usuario",
                         "schema": {
-                            "$ref": "#/definitions/services.AdminUserData"
+                            "$ref": "#/definitions/resources.GetUserResponse"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
-                        "description": "Forbidden — admin only",
+                        "description": "Solo administradores pueden ver usuarios",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "404": {
-                        "description": "User not found",
+                        "description": "Usuario no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     }
                 }
@@ -2013,44 +1965,39 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Updated user",
+                        "description": "Usuario actualizado correctamente",
                         "schema": {
-                            "$ref": "#/definitions/services.AdminUserData"
+                            "$ref": "#/definitions/resources.UpdateUserResponse"
                         }
                     },
                     "400": {
-                        "description": "Invalid request",
+                        "description": "Datos inválidos en la solicitud",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
-                        "description": "Forbidden — admin only",
+                        "description": "Solo administradores pueden modificar usuarios",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "404": {
-                        "description": "User not found",
+                        "description": "Usuario no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al actualizar el usuario",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -2080,38 +2027,33 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Deleted confirmation",
+                        "description": "Usuario eliminado correctamente",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.DeleteUserResponse"
                         }
                     },
                     "401": {
-                        "description": "Unauthorized",
+                        "description": "Token no proporcionado o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
-                        "description": "Forbidden — admin only",
+                        "description": "Solo administradores pueden eliminar usuarios",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "404": {
-                        "description": "User not found",
+                        "description": "Usuario no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al eliminar el usuario",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -2139,6 +2081,167 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "analyzer.AnalyzeResponse": {
+            "type": "object",
+            "properties": {
+                "feedback": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filler_words": {
+                    "type": "integer"
+                },
+                "gibberish_detected": {
+                    "type": "boolean"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "oov_ratio": {
+                    "type": "number"
+                },
+                "paragraphs": {
+                    "$ref": "#/definitions/analyzer.Paragraphs"
+                },
+                "readability": {
+                    "$ref": "#/definitions/analyzer.Readability"
+                },
+                "requirements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/analyzer.RequirementResult"
+                    }
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "score_breakdown": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/analyzer.ScoreBreakdownItem"
+                    }
+                },
+                "sentence_analysis": {
+                    "$ref": "#/definitions/analyzer.SentenceAnalysis"
+                },
+                "sentence_count": {
+                    "type": "integer"
+                },
+                "sentence_length": {
+                    "$ref": "#/definitions/analyzer.SentenceLength"
+                },
+                "vocabulary_richness": {
+                    "type": "number"
+                },
+                "word_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "analyzer.Paragraphs": {
+            "type": "object",
+            "properties": {
+                "has_conclusion": {
+                    "type": "boolean"
+                },
+                "has_introduction": {
+                    "type": "boolean"
+                },
+                "paragraph_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "analyzer.Readability": {
+            "type": "object",
+            "properties": {
+                "fernandez_huerta": {
+                    "type": "number"
+                },
+                "flesch": {
+                    "type": "number"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "analyzer.RequirementResult": {
+            "type": "object",
+            "properties": {
+                "keywords_found": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "matched": {
+                    "type": "boolean"
+                },
+                "requirement": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "number"
+                }
+            }
+        },
+        "analyzer.ScoreBreakdownItem": {
+            "type": "object",
+            "properties": {
+                "feedbacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "weight": {
+                    "type": "number"
+                }
+            }
+        },
+        "analyzer.SentenceAnalysis": {
+            "type": "object",
+            "properties": {
+                "avg_length": {
+                    "type": "number"
+                },
+                "connector_ratio": {
+                    "type": "number"
+                },
+                "sentence_count": {
+                    "type": "integer"
+                },
+                "std_length": {
+                    "type": "number"
+                }
+            }
+        },
+        "analyzer.SentenceLength": {
+            "type": "object",
+            "properties": {
+                "avg": {
+                    "type": "number"
+                },
+                "max": {
+                    "type": "integer"
+                },
+                "min": {
+                    "type": "integer"
+                },
+                "std": {
+                    "type": "number"
+                }
+            }
+        },
         "controllers.AnalyzeTextInput": {
             "type": "object",
             "properties": {
@@ -2279,27 +2382,6 @@ const docTemplate = `{
                 }
             }
         },
-        "controllers.RequirementCatalogItem": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string",
-                    "example": "Cobertura del contenido"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "intro"
-                },
-                "order": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "text": {
-                    "type": "string",
-                    "example": "Incluir una introducción clara del tema"
-                }
-            }
-        },
         "controllers.UpdateLessonRequest": {
             "description": "Request body for updating an existing lesson",
             "type": "object",
@@ -2351,15 +2433,6 @@ const docTemplate = `{
                 "title": {
                     "type": "string",
                     "example": "Oratoria Avanzada"
-                }
-            }
-        },
-        "controllers.UploadResponse": {
-            "type": "object",
-            "properties": {
-                "url": {
-                    "type": "string",
-                    "example": "https://storage.example.com/uploads/track-1.webp"
                 }
             }
         },
@@ -2517,6 +2590,27 @@ const docTemplate = `{
                 }
             }
         },
+        "models.RequirementCatalogItem": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "Cobertura del contenido"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "intro"
+                },
+                "order": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "text": {
+                    "type": "string",
+                    "example": "Incluir una introducción clara del tema"
+                }
+            }
+        },
         "models.Track": {
             "type": "object",
             "properties": {
@@ -2575,6 +2669,640 @@ const docTemplate = `{
                 }
             }
         },
+        "resources.AnalyzeTextResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/analyzer.AnalyzeResponse"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.BadRequestError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Solicitud inválida — verifique los campos enviados"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.CompleteProgressResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.UserProgress"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ConflictError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "El recurso ya existe — conflicto con datos existentes"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.CreateExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Exercise"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.CreateLessonResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Lesson"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.CreateModuleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Module"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.CreateTrackResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Track"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.DeleteExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.DeleteLessonResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.DeleteModuleResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.DeleteTrackResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.DeleteUserResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ForbiddenError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "No tiene permisos para realizar esta acción"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.GetExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Exercise"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.GetLessonResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Lesson"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.GetModuleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Module"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.GetTrackResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Track"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.GetUserResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/services.AdminUserData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.InternalServerError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Error interno del servidor"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.LinkLessonResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ListExercisesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Exercise"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ListLessonsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Lesson"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ListModulesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Module"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ListProgressResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserProgress"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ListTracksResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Track"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ListUsersResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.AdminUserData"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.LoginResponseData": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string",
+                    "example": "2026-01-02T00:00:00Z"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzA2NzU4NDAwfQ.signature"
+                },
+                "user": {
+                    "$ref": "#/definitions/services.UserData"
+                }
+            }
+        },
+        "resources.LogoutResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.NotFoundError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Recurso no encontrado"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.NotImplementedResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "not implemented"
+                }
+            }
+        },
+        "resources.RegisterResponseData": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string",
+                    "example": "2026-01-02T00:00:00Z"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzA2NzU4NDAwfQ.signature"
+                },
+                "user": {
+                    "$ref": "#/definitions/services.UserData"
+                }
+            }
+        },
+        "resources.RequirementCatalogResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.RequirementCatalogItem"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ServiceUnavailableError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Servicio temporalmente no disponible — intente más tarde"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.UnauthorizedError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Token de autenticación no proporcionado o inválido"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.UpdateLessonResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Lesson"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UpdateModuleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Module"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UpdateTrackResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Track"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UpdateUserResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/services.AdminUserData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UploadFileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "example": "https://storage.voxlab.com/uploads/track-1.webp"
+                        }
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UserProfileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/services.UserData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "services.AdminUserData": {
             "type": "object",
             "properties": {
@@ -2630,22 +3358,6 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "example": "password123"
-                }
-            }
-        },
-        "services.LoginResponse": {
-            "type": "object",
-            "properties": {
-                "expires_at": {
-                    "type": "string",
-                    "example": "2026-01-02T00:00:00Z"
-                },
-                "token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzA2NzU4NDAwfQ.signature"
-                },
-                "user": {
-                    "$ref": "#/definitions/services.UserData"
                 }
             }
         },

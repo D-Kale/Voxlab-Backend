@@ -35,11 +35,11 @@ func NewUploadController(service *services.UploadService) *UploadController {
 // @Security     BearerAuth
 // @Param        id   path      int    true  "Track ID"
 // @Param        file formData  file   true  "Image file (JPEG/PNG, max 2MB)"
-// @Success      200  {object}  UploadResponse  "Upload result"
-// @Failure      400  {object}  map[string]interface{}  "Invalid track ID or missing file"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
-// @Failure      403  {object}  map[string]interface{}  "Forbidden — admin only"
-// @Failure      500  {object}  map[string]interface{}  "Upload or database error"
+// @Success      200  {object}  resources.UploadFileResponse  "Imagen subida correctamente"
+// @Failure      400  {object}  resources.BadRequestError     "ID de track inválido o archivo faltante"
+// @Failure      401  {object}  resources.UnauthorizedError   "Token no proporcionado o inválido"
+// @Failure      403  {object}  resources.ForbiddenError      "Solo administradores pueden subir imágenes"
+// @Failure      500  {object}  resources.InternalServerError "Error al subir o procesar la imagen"
 // @Router       /api/v1/upload/track/{id} [post]
 func (h *UploadController) UploadTrackImage(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -78,11 +78,11 @@ func (h *UploadController) UploadTrackImage(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        id   path      int    true  "Module ID"
 // @Param        file formData  file   true  "Image file (JPEG/PNG, max 2MB)"
-// @Success      200  {object}  UploadResponse  "Upload result"
-// @Failure      400  {object}  map[string]interface{}  "Invalid module ID or missing file"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
-// @Failure      403  {object}  map[string]interface{}  "Forbidden — admin only"
-// @Failure      500  {object}  map[string]interface{}  "Upload or database error"
+// @Success      200  {object}  resources.UploadFileResponse  "Imagen subida correctamente"
+// @Failure      400  {object}  resources.BadRequestError     "ID de módulo inválido o archivo faltante"
+// @Failure      401  {object}  resources.UnauthorizedError   "Token no proporcionado o inválido"
+// @Failure      403  {object}  resources.ForbiddenError      "Solo administradores pueden subir imágenes"
+// @Failure      500  {object}  resources.InternalServerError "Error al subir o procesar la imagen"
 // @Router       /api/v1/upload/module/{id} [post]
 func (h *UploadController) UploadModuleImage(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -121,11 +121,11 @@ func (h *UploadController) UploadModuleImage(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        id   path      int    true  "Lesson ID"
 // @Param        file formData  file   true  "Image file (JPEG/PNG, max 2MB)"
-// @Success      200  {object}  UploadResponse  "Upload result"
-// @Failure      400  {object}  map[string]interface{}  "Invalid lesson ID or missing file"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
-// @Failure      403  {object}  map[string]interface{}  "Forbidden — admin only"
-// @Failure      500  {object}  map[string]interface{}  "Upload or database error"
+// @Success      200  {object}  resources.UploadFileResponse  "Imagen subida correctamente"
+// @Failure      400  {object}  resources.BadRequestError     "ID de lección inválido o archivo faltante"
+// @Failure      401  {object}  resources.UnauthorizedError   "Token no proporcionado o inválido"
+// @Failure      403  {object}  resources.ForbiddenError      "Solo administradores pueden subir imágenes"
+// @Failure      500  {object}  resources.InternalServerError "Error al subir o procesar la imagen"
 // @Router       /api/v1/upload/lesson/{id} [post]
 func (h *UploadController) UploadLessonImage(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -164,10 +164,10 @@ func (h *UploadController) UploadLessonImage(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        file formData  file   true  "Avatar image (JPEG/PNG, max 2MB)"
-// @Success      200  {object}  UploadResponse  "Upload result"
-// @Failure      400  {object}  map[string]interface{}  "Missing file or too large"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
-// @Failure      500  {object}  map[string]interface{}  "Upload or database error"
+// @Success      200  {object}  resources.UploadFileResponse  "Avatar actualizado correctamente"
+// @Failure      400  {object}  resources.BadRequestError     "Archivo faltante o excede el tamaño máximo"
+// @Failure      401  {object}  resources.UnauthorizedError   "Token no proporcionado o inválido"
+// @Failure      500  {object}  resources.InternalServerError "Error al subir o procesar el avatar"
 // @Router       /api/v1/upload/avatar [post]
 func (h *UploadController) UploadAvatar(c *gin.Context) {
 	userID, exists := c.Get("user_id")

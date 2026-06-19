@@ -28,8 +28,8 @@ func NewHealthController() *HealthController {
 // @Description  Returns current version and service-level health for each dependency.
 // @Tags         System
 // @Produce      json
-// @Success      200  {object}  controllers.HealthResponse  "System health status"
-// @Failure      503  {object}  map[string]interface{}      "Service unhealthy"
+// @Success      200  {object}  controllers.HealthResponse  "Estado del sistema — ok"
+// @Failure      503  {object}  resources.ServiceUnavailableError  "Servicio no saludable — postgres o redis caídos"
 // @Router       /api/v1/health [get]
 func (h *HealthController) HealthCheck(c *gin.Context) {
 	db := database.GetDB()

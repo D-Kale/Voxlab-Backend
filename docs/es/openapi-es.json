@@ -45,21 +45,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/services.LoginResponse"
+                            "$ref": "#/definitions/resources.LoginResponseData"
                         }
                     },
                     "400": {
                         "description": "Solicitud incorrecta",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     }
                 }
@@ -84,15 +82,13 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.LogoutResponse"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     }
                 }
@@ -117,21 +113,25 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/services.UserData"
+                            "$ref": "#/definitions/resources.UserProfileResponse"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -156,21 +156,25 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/services.UserData"
+                            "$ref": "#/definitions/resources.UserProfileResponse"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -207,28 +211,25 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/services.UserData"
+                            "$ref": "#/definitions/resources.UserProfileResponse"
                         }
                     },
                     "400": {
                         "description": "Solicitud incorrecta",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -262,21 +263,19 @@
                     "201": {
                         "description": "Creado",
                         "schema": {
-                            "$ref": "#/definitions/services.LoginResponse"
+                            "$ref": "#/definitions/resources.RegisterResponseData"
                         }
                     },
                     "400": {
                         "description": "Solicitud incorrecta",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "409": {
                         "description": "Conflicto",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ConflictError"
                         }
                     }
                 }
@@ -345,21 +344,19 @@
                     "201": {
                         "description": "Creado",
                         "schema": {
-                            "$ref": "#/definitions/models.Exercise"
+                            "$ref": "#/definitions/resources.CreateExerciseResponse"
                         }
                     },
                     "400": {
                         "description": "Error de validación",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     }
                 }
@@ -398,22 +395,25 @@
                     "200": {
                         "description": "Éxito: { success: true, data: AnalyzeResponse }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.AnalyzeTextResponse"
                         }
                     },
                     "400": {
                         "description": "Error de validación",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Token no proporcionado o inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "502": {
                         "description": "Analizador no disponible",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ServiceUnavailableError"
                         }
                     }
                 }
@@ -433,10 +433,7 @@
                     "200": {
                         "description": "Éxito: { success: true, data: RequirementCatalogItem[] }",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/controllers.RequirementCatalogItem"
-                            }
+                            "$ref": "#/definitions/resources.RequirementCatalogResponse"
                         }
                     }
                 }
@@ -465,21 +462,19 @@
                     "200": {
                         "description": "Éxito: { success: true, data: Exercise }",
                         "schema": {
-                            "$ref": "#/definitions/models.Exercise"
+                            "$ref": "#/definitions/resources.GetExerciseResponse"
                         }
                     },
                     "400": {
                         "description": "UUID de ejercicio inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "404": {
                         "description": "Ejercicio no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     }
                 }
@@ -511,36 +506,31 @@
                     "200": {
                         "description": "Eliminado: { success: true, message: string }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.DeleteExerciseResponse"
                         }
                     },
                     "400": {
                         "description": "UUID de ejercicio inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
                         "description": "Ejercicio no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -566,8 +556,7 @@
                     "503": {
                         "description": "Servicio no saludable",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ServiceUnavailableError"
                         }
                     }
                 }
@@ -606,21 +595,25 @@
                     "201": {
                         "description": "Creado: { success: true, data: Lesson }",
                         "schema": {
-                            "$ref": "#/definitions/models.Lesson"
+                            "$ref": "#/definitions/resources.CreateLessonResponse"
                         }
                     },
                     "400": {
                         "description": "Error de validación",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al crear la lección",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -649,21 +642,19 @@
                     "200": {
                         "description": "Éxito: { success: true, data: Lesson }",
                         "schema": {
-                            "$ref": "#/definitions/models.Lesson"
+                            "$ref": "#/definitions/resources.GetLessonResponse"
                         }
                     },
                     "400": {
                         "description": "ID de lección inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "404": {
                         "description": "Lección no encontrada",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     }
                 }
@@ -707,28 +698,31 @@
                     "200": {
                         "description": "Actualizado: { success: true, data: Lesson }",
                         "schema": {
-                            "$ref": "#/definitions/models.Lesson"
+                            "$ref": "#/definitions/resources.UpdateLessonResponse"
                         }
                     },
                     "400": {
                         "description": "Error de validación",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
                         "description": "Lección no encontrada",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al actualizar la lección",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -760,36 +754,31 @@
                     "200": {
                         "description": "Eliminado: { success: true, message: string }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.DeleteLessonResponse"
                         }
                     },
                     "400": {
                         "description": "ID de lección inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
                         "description": "Lección no encontrada",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -818,24 +807,19 @@
                     "200": {
                         "description": "Éxito: { success: true, data: Exercise[] }",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Exercise"
-                            }
+                            "$ref": "#/definitions/resources.ListExercisesResponse"
                         }
                     },
                     "400": {
                         "description": "ID de lección inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "500": {
                         "description": "Server error",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -874,21 +858,25 @@
                     "201": {
                         "description": "Creado: { success: true, data: Module }",
                         "schema": {
-                            "$ref": "#/definitions/models.Module"
+                            "$ref": "#/definitions/resources.CreateModuleResponse"
                         }
                     },
                     "400": {
                         "description": "Error de validación",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al crear el módulo",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -917,21 +905,19 @@
                     "200": {
                         "description": "Éxito: { success: true, data: Module }",
                         "schema": {
-                            "$ref": "#/definitions/models.Module"
+                            "$ref": "#/definitions/resources.GetModuleResponse"
                         }
                     },
                     "400": {
                         "description": "ID de módulo inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "404": {
                         "description": "Módulo no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     }
                 }
@@ -975,28 +961,31 @@
                     "200": {
                         "description": "Actualizado: { success: true, data: Module }",
                         "schema": {
-                            "$ref": "#/definitions/models.Module"
+                            "$ref": "#/definitions/resources.UpdateModuleResponse"
                         }
                     },
                     "400": {
                         "description": "Error de validación",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
                         "description": "Módulo no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al actualizar el módulo",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1028,36 +1017,31 @@
                     "200": {
                         "description": "Eliminado: { success: true, message: string }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.DeleteModuleResponse"
                         }
                     },
                     "400": {
                         "description": "ID de módulo inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
                         "description": "Módulo no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1086,24 +1070,19 @@
                     "200": {
                         "description": "Éxito: { success: true, data: ModuleLesson[] }",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Lesson"
-                            }
+                            "$ref": "#/definitions/resources.ListLessonsResponse"
                         }
                     },
                     "400": {
                         "description": "ID de módulo inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1147,29 +1126,31 @@
                     "200": {
                         "description": "Vinculado: { success: true, message: string }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.LinkLessonResponse"
                         }
                     },
                     "400": {
                         "description": "Error de validación",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
                         "description": "Módulo o lección no encontrados",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al vincular la lección",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1194,24 +1175,19 @@
                     "200": {
                         "description": "Éxito: { success: true, data: UserProgress[] }",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.UserProgress"
-                            }
+                            "$ref": "#/definitions/resources.ListProgressResponse"
                         }
                     },
                     "401": {
                         "description": "No autorizado — token faltante o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1248,35 +1224,31 @@
                     "200": {
                         "description": "Completado: { success: true, data: UserProgress }",
                         "schema": {
-                            "$ref": "#/definitions/models.UserProgress"
+                            "$ref": "#/definitions/resources.CompleteProgressResponse"
                         }
                     },
                     "400": {
                         "description": "Error de validación",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado — token faltante o inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
                         "description": "Lección no encontrada",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1304,8 +1276,7 @@
                     "501": {
                         "description": "No implementado — endpoint aún no activo",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotImplementedResponse"
                         }
                     }
                 }
@@ -1325,17 +1296,13 @@
                     "200": {
                         "description": "Éxito: { success: true, data: Track[] }",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Track"
-                            }
+                            "$ref": "#/definitions/resources.ListTracksResponse"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1372,21 +1339,25 @@
                     "201": {
                         "description": "Creado: { success: true, data: Track }",
                         "schema": {
-                            "$ref": "#/definitions/models.Track"
+                            "$ref": "#/definitions/resources.CreateTrackResponse"
                         }
                     },
                     "400": {
                         "description": "Error de validación",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al crear el track",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1415,21 +1386,19 @@
                     "200": {
                         "description": "Éxito: { success: true, data: Track }",
                         "schema": {
-                            "$ref": "#/definitions/models.Track"
+                            "$ref": "#/definitions/resources.GetTrackResponse"
                         }
                     },
                     "400": {
                         "description": "ID de track inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "404": {
                         "description": "Track no encontrada",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     }
                 }
@@ -1473,28 +1442,31 @@
                     "200": {
                         "description": "Actualizado: { success: true, data: Track }",
                         "schema": {
-                            "$ref": "#/definitions/models.Track"
+                            "$ref": "#/definitions/resources.UpdateTrackResponse"
                         }
                     },
                     "400": {
                         "description": "Error de validación",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
                         "description": "Track no encontrada",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al actualizar el track",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1526,22 +1498,31 @@
                     "200": {
                         "description": "Eliminado: { success: true, message: string }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.DeleteTrackResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID de track inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "404": {
                         "description": "Track no encontrada",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al eliminar el track",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1570,24 +1551,19 @@
                     "200": {
                         "description": "Éxito: { success: true, data: Module[] }",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/models.Module"
-                            }
+                            "$ref": "#/definitions/resources.ListModulesResponse"
                         }
                     },
                     "400": {
                         "description": "ID de track inválido",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1624,28 +1600,25 @@
                     "200": {
                         "description": "Éxito: { success: true, data: { url: string } }",
                         "schema": {
-                            "$ref": "#/definitions/controllers.UploadResponse"
+                            "$ref": "#/definitions/resources.UploadFileResponse"
                         }
                     },
                     "400": {
                         "description": "Archivo faltante o demasiado grande",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "500": {
                         "description": "Error de carga o de base de datos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1689,35 +1662,31 @@
                     "200": {
                         "description": "Éxito: { success: true, data: { url: string } }",
                         "schema": {
-                            "$ref": "#/definitions/controllers.UploadResponse"
+                            "$ref": "#/definitions/resources.UploadFileResponse"
                         }
                     },
                     "400": {
                         "description": "ID de lección inválido o archivo faltante",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
                         "description": "Prohibido — solo administradores",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "500": {
                         "description": "Error de carga o de base de datos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1761,35 +1730,31 @@
                     "200": {
                         "description": "Éxito: { success: true, data: { url: string } }",
                         "schema": {
-                            "$ref": "#/definitions/controllers.UploadResponse"
+                            "$ref": "#/definitions/resources.UploadFileResponse"
                         }
                     },
                     "400": {
                         "description": "ID de módulo inválido o archivo faltante",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
                         "description": "Prohibido — solo administradores",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "500": {
                         "description": "Error de carga o de base de datos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1833,35 +1798,31 @@
                     "200": {
                         "description": "Éxito: { success: true, data: { url: string } }",
                         "schema": {
-                            "$ref": "#/definitions/controllers.UploadResponse"
+                            "$ref": "#/definitions/resources.UploadFileResponse"
                         }
                     },
                     "400": {
                         "description": "ID de track inválido o archivo faltante",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
                         "description": "Prohibido — solo administradores",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "500": {
                         "description": "Error de carga o de base de datos",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1886,31 +1847,25 @@
                     "200": {
                         "description": "Éxito: { success: true, data: User[] }",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/services.AdminUserData"
-                            }
+                            "$ref": "#/definitions/resources.ListUsersResponse"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
                         "description": "Prohibido — solo administradores",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1944,28 +1899,25 @@
                     "200": {
                         "description": "Éxito: { success: true, data: User }",
                         "schema": {
-                            "$ref": "#/definitions/services.AdminUserData"
+                            "$ref": "#/definitions/resources.GetUserResponse"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
                         "description": "Prohibido — solo administradores",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "404": {
                         "description": "Usuario no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     }
                 }
@@ -2009,42 +1961,37 @@
                     "200": {
                         "description": "Actualizado: { success: true, data: User }",
                         "schema": {
-                            "$ref": "#/definitions/services.AdminUserData"
+                            "$ref": "#/definitions/resources.UpdateUserResponse"
                         }
                     },
                     "400": {
                         "description": "Solicitud inválida",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
                         "description": "Prohibido — solo administradores",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "404": {
                         "description": "Usuario no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -2076,36 +2023,31 @@
                     "200": {
                         "description": "Eliminado: { success: true, message: string }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.DeleteUserResponse"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.UnauthorizedError"
                         }
                     },
                     "403": {
                         "description": "Prohibido — solo administradores",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.ForbiddenError"
                         }
                     },
                     "404": {
                         "description": "Usuario no encontrado",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.NotFoundError"
                         }
                     },
                     "500": {
                         "description": "Error del servidor",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -2133,6 +2075,167 @@
         }
     },
     "definitions": {
+        "analyzer.AnalyzeResponse": {
+            "type": "object",
+            "properties": {
+                "feedback": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "filler_words": {
+                    "type": "integer"
+                },
+                "gibberish_detected": {
+                    "type": "boolean"
+                },
+                "keywords": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "oov_ratio": {
+                    "type": "number"
+                },
+                "paragraphs": {
+                    "$ref": "#/definitions/analyzer.Paragraphs"
+                },
+                "readability": {
+                    "$ref": "#/definitions/analyzer.Readability"
+                },
+                "requirements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/analyzer.RequirementResult"
+                    }
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "score_breakdown": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/analyzer.ScoreBreakdownItem"
+                    }
+                },
+                "sentence_analysis": {
+                    "$ref": "#/definitions/analyzer.SentenceAnalysis"
+                },
+                "sentence_count": {
+                    "type": "integer"
+                },
+                "sentence_length": {
+                    "$ref": "#/definitions/analyzer.SentenceLength"
+                },
+                "vocabulary_richness": {
+                    "type": "number"
+                },
+                "word_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "analyzer.Paragraphs": {
+            "type": "object",
+            "properties": {
+                "has_conclusion": {
+                    "type": "boolean"
+                },
+                "has_introduction": {
+                    "type": "boolean"
+                },
+                "paragraph_count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "analyzer.Readability": {
+            "type": "object",
+            "properties": {
+                "fernandez_huerta": {
+                    "type": "number"
+                },
+                "flesch": {
+                    "type": "number"
+                },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "analyzer.RequirementResult": {
+            "type": "object",
+            "properties": {
+                "keywords_found": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "matched": {
+                    "type": "boolean"
+                },
+                "requirement": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "number"
+                }
+            }
+        },
+        "analyzer.ScoreBreakdownItem": {
+            "type": "object",
+            "properties": {
+                "feedbacks": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "score": {
+                    "type": "integer"
+                },
+                "weight": {
+                    "type": "number"
+                }
+            }
+        },
+        "analyzer.SentenceAnalysis": {
+            "type": "object",
+            "properties": {
+                "avg_length": {
+                    "type": "number"
+                },
+                "connector_ratio": {
+                    "type": "number"
+                },
+                "sentence_count": {
+                    "type": "integer"
+                },
+                "std_length": {
+                    "type": "number"
+                }
+            }
+        },
+        "analyzer.SentenceLength": {
+            "type": "object",
+            "properties": {
+                "avg": {
+                    "type": "number"
+                },
+                "max": {
+                    "type": "integer"
+                },
+                "min": {
+                    "type": "integer"
+                },
+                "std": {
+                    "type": "number"
+                }
+            }
+        },
         "controllers.AnalyzeTextInput": {
             "type": "object",
             "properties": {
@@ -2273,27 +2376,6 @@
                 }
             }
         },
-        "controllers.RequirementCatalogItem": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string",
-                    "example": "Cobertura del contenido"
-                },
-                "id": {
-                    "type": "string",
-                    "example": "intro"
-                },
-                "order": {
-                    "type": "integer",
-                    "example": 1
-                },
-                "text": {
-                    "type": "string",
-                    "example": "Incluir una introducción clara del tema"
-                }
-            }
-        },
         "controllers.UpdateLessonRequest": {
             "description": "Cuerpo de la solicitud para actualizar una lección existente",
             "type": "object",
@@ -2345,15 +2427,6 @@
                 "title": {
                     "type": "string",
                     "example": "Oratoria Avanzada"
-                }
-            }
-        },
-        "controllers.UploadResponse": {
-            "type": "object",
-            "properties": {
-                "url": {
-                    "type": "string",
-                    "example": "https://storage.example.com/uploads/track-1.webp"
                 }
             }
         },
@@ -2511,6 +2584,27 @@
                 }
             }
         },
+        "models.RequirementCatalogItem": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "Cobertura del contenido"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "intro"
+                },
+                "order": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "text": {
+                    "type": "string",
+                    "example": "Incluir una introducción clara del tema"
+                }
+            }
+        },
         "models.Track": {
             "type": "object",
             "properties": {
@@ -2569,6 +2663,640 @@
                 }
             }
         },
+        "resources.AnalyzeTextResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/analyzer.AnalyzeResponse"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.BadRequestError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Solicitud inválida — verifique los campos enviados"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.CompleteProgressResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.UserProgress"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ConflictError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "El recurso ya existe — conflicto con datos existentes"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.CreateExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Exercise"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.CreateLessonResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Lesson"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.CreateModuleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Module"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.CreateTrackResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Track"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.DeleteExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.DeleteLessonResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.DeleteModuleResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.DeleteTrackResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.DeleteUserResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ForbiddenError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "No tiene permisos para realizar esta acción"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.GetExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Exercise"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.GetLessonResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Lesson"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.GetModuleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Module"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.GetTrackResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Track"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.GetUserResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/services.AdminUserData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.InternalServerError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Error interno del servidor"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.LinkLessonResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ListExercisesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Exercise"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ListLessonsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Lesson"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ListModulesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Module"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ListProgressResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserProgress"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ListTracksResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Track"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ListUsersResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/services.AdminUserData"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.LoginResponseData": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string",
+                    "example": "2026-01-02T00:00:00Z"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzA2NzU4NDAwfQ.signature"
+                },
+                "user": {
+                    "$ref": "#/definitions/services.UserData"
+                }
+            }
+        },
+        "resources.LogoutResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.NotFoundError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Recurso no encontrado"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.NotImplementedResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "not implemented"
+                }
+            }
+        },
+        "resources.RegisterResponseData": {
+            "type": "object",
+            "properties": {
+                "expires_at": {
+                    "type": "string",
+                    "example": "2026-01-02T00:00:00Z"
+                },
+                "token": {
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzA2NzU4NDAwfQ.signature"
+                },
+                "user": {
+                    "$ref": "#/definitions/services.UserData"
+                }
+            }
+        },
+        "resources.RequirementCatalogResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.RequirementCatalogItem"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ServiceUnavailableError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Servicio temporalmente no disponible — intente más tarde"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.UnauthorizedError": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "Token de autenticación no proporcionado o inválido"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "resources.UpdateLessonResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Lesson"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UpdateModuleResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Module"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UpdateTrackResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.Track"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UpdateUserResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/services.AdminUserData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UploadFileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object",
+                    "properties": {
+                        "url": {
+                            "type": "string",
+                            "example": "https://storage.voxlab.com/uploads/track-1.webp"
+                        }
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UserProfileResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/services.UserData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "services.AdminUserData": {
             "type": "object",
             "properties": {
@@ -2624,22 +3352,6 @@
                 "password": {
                     "type": "string",
                     "example": "password123"
-                }
-            }
-        },
-        "services.LoginResponse": {
-            "type": "object",
-            "properties": {
-                "expires_at": {
-                    "type": "string",
-                    "example": "2026-01-02T00:00:00Z"
-                },
-                "token": {
-                    "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzA2NzU4NDAwfQ.signature"
-                },
-                "user": {
-                    "$ref": "#/definitions/services.UserData"
                 }
             }
         },

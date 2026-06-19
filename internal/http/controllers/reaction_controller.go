@@ -25,7 +25,7 @@ func NewReactionController(service *services.CommunityService) *ReactionControll
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Success      501  {object}  map[string]interface{}  "Not Implemented — endpoint not yet active"
+// @Success      501  {object}  resources.NotImplementedResponse  "Funcionalidad no implementada aún"
 // @Router       /api/v1/reactions [post]
 func (h *ReactionController) CreateReaction(c *gin.Context) {
 	c.JSON(501, gin.H{"message": "not implemented"})

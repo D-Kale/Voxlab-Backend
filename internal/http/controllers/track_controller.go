@@ -43,8 +43,8 @@ type UpdateTrackRequest struct {
 // @Description  🔓 Public — no authentication required.
 // @Tags         Tracks (Educational Content)
 // @Produce      json
-// @Success      200  {array}   models.Track  "List of all tracks"
-// @Failure      500  {object}  map[string]interface{}  "Server error"
+// @Success      200  {object}  resources.ListTracksResponse   "Lista de todos los tracks"
+// @Failure      500  {object}  resources.InternalServerError   "Error al obtener los tracks"
 // @Router       /api/v1/tracks [get]
 func (h *TrackController) GetTracks(c *gin.Context) {
 	tracks, err := h.service.GetAll()
@@ -72,9 +72,9 @@ func (h *TrackController) GetTracks(c *gin.Context) {
 // @Tags         Tracks (Educational Content)
 // @Produce      json
 // @Param        id   path      int  true  "Track ID (e.g. 1)"
-// @Success      200  {object}  models.Track  "Track details with nested content"
-// @Failure      400  {object}  map[string]interface{}  "Invalid track ID"
-// @Failure      404  {object}  map[string]interface{}  "Track not found"
+// @Success      200  {object}  resources.GetTrackResponse      "Track con módulos, lecciones y ejercicios"
+// @Failure      400  {object}  resources.BadRequestError       "ID de track inválido"
+// @Failure      404  {object}  resources.NotFoundError         "Track no encontrado"
 // @Router       /api/v1/tracks/{id} [get]
 func (h *TrackController) GetTrack(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -106,9 +106,10 @@ func (h *TrackController) GetTrack(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request  body      CreateTrackRequest  true  "Track data"
-// @Success      201  {object}  models.Track  "Created track"
-// @Failure      400  {object}  map[string]interface{}  "Validation error"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
+// @Success      201  {object}  resources.CreateTrackResponse   "Track creado correctamente"
+// @Failure      400  {object}  resources.BadRequestError       "Datos inválidos — el título es requerido"
+// @Failure      401  {object}  resources.UnauthorizedError     "Token no proporcionado o inválido"
+// @Failure      500  {object}  resources.InternalServerError   "Error al crear el track"
 // @Router       /api/v1/tracks [post]
 func (h *TrackController) CreateTrack(c *gin.Context) {
 	var track models.Track
@@ -145,10 +146,11 @@ func (h *TrackController) CreateTrack(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        id       path    int                 true  "Track ID (e.g. 1)"
 // @Param        request  body    UpdateTrackRequest  true  "Track fields to update"
-// @Success      200  {object}  models.Track  "Updated track"
-// @Failure      400  {object}  map[string]interface{}  "Validation error"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
-// @Failure      404  {object}  map[string]interface{}  "Track not found"
+// @Success      200  {object}  resources.UpdateTrackResponse   "Track actualizado correctamente"
+// @Failure      400  {object}  resources.BadRequestError       "ID de track inválido o datos incorrectos"
+// @Failure      401  {object}  resources.UnauthorizedError     "Token no proporcionado o inválido"
+// @Failure      404  {object}  resources.NotFoundError         "Track no encontrado"
+// @Failure      500  {object}  resources.InternalServerError   "Error al actualizar el track"
 // @Router       /api/v1/tracks/{id} [put]
 func (h *TrackController) UpdateTrack(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -200,9 +202,11 @@ func (h *TrackController) UpdateTrack(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id   path      int  true  "Track ID (e.g. 1)"
-// @Success      200  {object}  map[string]interface{}  "Deleted: { success: true, message: string }"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
-// @Failure      404  {object}  map[string]interface{}  "Track not found"
+// @Success      200  {object}  resources.DeleteTrackResponse   "Track eliminado correctamente"
+// @Failure      400  {object}  resources.BadRequestError       "ID de track inválido"
+// @Failure      401  {object}  resources.UnauthorizedError     "Token no proporcionado o inválido"
+// @Failure      404  {object}  resources.NotFoundError         "Track no encontrado"
+// @Failure      500  {object}  resources.InternalServerError   "Error al eliminar el track"
 // @Router       /api/v1/tracks/{id} [delete]
 func (h *TrackController) DeleteTrack(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))

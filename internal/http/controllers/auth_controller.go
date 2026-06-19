@@ -24,9 +24,9 @@ func NewAuthController(service *services.AuthService) *AuthController {
 // @Accept       json
 // @Produce      json
 // @Param        request  body      services.LoginRequest  true  "Login credentials"
-// @Success      200     {object}  services.LoginResponse
-// @Failure      400     {object}  map[string]interface{}
-// @Failure      401     {object}  map[string]interface{}
+// @Success      200  {object}  resources.LoginResponseData  "Login exitoso — token + datos del usuario"
+// @Failure      400  {object}  resources.BadRequestError   "Credenciales inválidas o formato incorrecto"
+// @Failure      401  {object}  resources.UnauthorizedError "Email o contraseña incorrectos"
 // @Router       /api/v1/auth/login [post]
 func (h *AuthController) Login(c *gin.Context) {
 	var req services.LoginRequest
@@ -54,9 +54,9 @@ func (h *AuthController) Login(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Param        request  body      services.RegisterRequest  true  "Registration data"
-// @Success      201     {object}  services.LoginResponse
-// @Failure      400     {object}  map[string]interface{}
-// @Failure      409     {object}  map[string]interface{}
+// @Success      201  {object}  resources.RegisterResponseData  "Usuario creado — auto-login con token"
+// @Failure      400  {object}  resources.BadRequestError       "Datos de registro inválidos"
+// @Failure      409  {object}  resources.ConflictError         "El email ya está registrado"
 // @Router       /api/v1/auth/register [post]
 func (h *AuthController) Register(c *gin.Context) {
 	var req services.RegisterRequest
@@ -87,8 +87,8 @@ func (h *AuthController) Register(c *gin.Context) {
 // @Tags         Auth
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  map[string]interface{}
-// @Failure      401  {object}  map[string]interface{}
+// @Success      200  {object}  resources.LogoutResponse       "Sesión cerrada correctamente"
+// @Failure      401  {object}  resources.UnauthorizedError    "Token no proporcionado o inválido"
 // @Router       /api/v1/auth/logout [post]
 func (h *AuthController) Logout(c *gin.Context) {
 	authHeader := c.GetHeader("Authorization")
@@ -117,9 +117,10 @@ func (h *AuthController) Logout(c *gin.Context) {
 // @Tags         Auth
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  services.UserData  "Current user profile"
-// @Failure      401  {object}  map[string]interface{}
-// @Failure      500  {object}  map[string]interface{}  "Server error"
+// @Success      200  {object}  resources.UserProfileResponse  "Perfil del usuario autenticado"
+// @Failure      401  {object}  resources.UnauthorizedError    "Token no proporcionado o inválido"
+// @Failure      404  {object}  resources.NotFoundError        "Usuario no encontrado"
+// @Failure      500  {object}  resources.InternalServerError  "Error al obtener el perfil"
 // @Router       /api/v1/auth/me [get]
 func (h *AuthController) Me(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -155,9 +156,10 @@ func (h *AuthController) Me(c *gin.Context) {
 // @Tags         Auth
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  services.UserData  "Extended user profile"
-// @Failure      401  {object}  map[string]interface{}
-// @Failure      500  {object}  map[string]interface{}  "Server error"
+// @Success      200  {object}  resources.UserProfileResponse  "Perfil extendido del usuario"
+// @Failure      401  {object}  resources.UnauthorizedError    "Token no proporcionado o inválido"
+// @Failure      404  {object}  resources.NotFoundError        "Usuario no encontrado"
+// @Failure      500  {object}  resources.InternalServerError  "Error al obtener el perfil"
 // @Router       /api/v1/auth/profile [get]
 func (h *AuthController) GetProfile(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -184,10 +186,10 @@ func (h *AuthController) GetProfile(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request  body      services.UpdateProfileRequest  true  "Profile fields to update"
-// @Success      200  {object}  services.UserData  "Updated user profile"
-// @Failure      400  {object}  map[string]interface{}
-// @Failure      401  {object}  map[string]interface{}
-// @Failure      500  {object}  map[string]interface{}  "Server error"
+// @Success      200  {object}  resources.UserProfileResponse  "Perfil actualizado correctamente"
+// @Failure      400  {object}  resources.BadRequestError      "Datos inválidos en la solicitud"
+// @Failure      401  {object}  resources.UnauthorizedError    "Token no proporcionado o inválido"
+// @Failure      500  {object}  resources.InternalServerError  "Error al actualizar el perfil"
 // @Router       /api/v1/auth/profile [put]
 func (h *AuthController) UpdateProfile(c *gin.Context) {
 	userID, exists := c.Get("user_id")

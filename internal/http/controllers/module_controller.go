@@ -47,9 +47,9 @@ type linkLessonRequest struct {
 // @Tags         Modules
 // @Produce      json
 // @Param        id   path      int  true  "Track ID (e.g. 1)"
-// @Success      200  {array}   models.Module  "List of modules"
-// @Failure      400  {object}  map[string]interface{}  "Invalid track ID"
-// @Failure      500  {object}  map[string]interface{}  "Server error"
+// @Success      200  {object}  resources.ListModulesResponse   "Módulos del track"
+// @Failure      400  {object}  resources.BadRequestError       "ID de track inválido"
+// @Failure      500  {object}  resources.InternalServerError   "Error al obtener los módulos"
 // @Router       /api/v1/tracks/{id}/modules [get]
 func (h *ModuleController) GetModulesByTrack(c *gin.Context) {
 	trackID, err := strconv.Atoi(c.Param("id"))
@@ -78,9 +78,9 @@ func (h *ModuleController) GetModulesByTrack(c *gin.Context) {
 // @Tags         Modules
 // @Produce      json
 // @Param        id   path      int  true  "Module ID (e.g. 1)"
-// @Success      200  {object}  models.Module  "Module details"
-// @Failure      400  {object}  map[string]interface{}  "Invalid module ID"
-// @Failure      404  {object}  map[string]interface{}  "Module not found"
+// @Success      200  {object}  resources.GetModuleResponse     "Módulo con lecciones y ejercicios"
+// @Failure      400  {object}  resources.BadRequestError       "ID de módulo inválido"
+// @Failure      404  {object}  resources.NotFoundError         "Módulo no encontrado"
 // @Router       /api/v1/modules/{id} [get]
 func (h *ModuleController) GetModule(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -112,9 +112,10 @@ func (h *ModuleController) GetModule(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request  body  CreateModuleRequest  true  "Module data"
-// @Success      201  {object}  models.Module  "Created module"
-// @Failure      400  {object}  map[string]interface{}  "Validation error"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
+// @Success      201  {object}  resources.CreateModuleResponse  "Módulo creado correctamente"
+// @Failure      400  {object}  resources.BadRequestError       "Datos inválidos — título y track_id requeridos"
+// @Failure      401  {object}  resources.UnauthorizedError     "Token no proporcionado o inválido"
+// @Failure      500  {object}  resources.InternalServerError   "Error al crear el módulo"
 // @Router       /api/v1/modules [post]
 func (h *ModuleController) CreateModule(c *gin.Context) {
 	var module models.Module
@@ -150,10 +151,11 @@ func (h *ModuleController) CreateModule(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        id       path    int                 true  "Module ID (e.g. 1)"
 // @Param        request  body    UpdateModuleRequest true  "Fields to update"
-// @Success      200  {object}  models.Module  "Updated module"
-// @Failure      400  {object}  map[string]interface{}  "Validation error"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
-// @Failure      404  {object}  map[string]interface{}  "Module not found"
+// @Success      200  {object}  resources.UpdateModuleResponse  "Módulo actualizado correctamente"
+// @Failure      400  {object}  resources.BadRequestError       "ID de módulo inválido o datos incorrectos"
+// @Failure      401  {object}  resources.UnauthorizedError     "Token no proporcionado o inválido"
+// @Failure      404  {object}  resources.NotFoundError         "Módulo no encontrado"
+// @Failure      500  {object}  resources.InternalServerError   "Error al actualizar el módulo"
 // @Router       /api/v1/modules/{id} [put]
 func (h *ModuleController) UpdateModule(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -206,11 +208,11 @@ func (h *ModuleController) UpdateModule(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id   path      int  true  "Module ID (e.g. 1)"
-// @Success      200  {object}  map[string]interface{}  "Deleted: { success: true, message: string }"
-// @Failure      400  {object}  map[string]interface{}  "Invalid module ID"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
-// @Failure      404  {object}  map[string]interface{}  "Module not found"
-// @Failure      500  {object}  map[string]interface{}  "Server error"
+// @Success      200  {object}  resources.DeleteModuleResponse  "Módulo eliminado correctamente"
+// @Failure      400  {object}  resources.BadRequestError       "ID de módulo inválido"
+// @Failure      401  {object}  resources.UnauthorizedError     "Token no proporcionado o inválido"
+// @Failure      404  {object}  resources.NotFoundError         "Módulo no encontrado"
+// @Failure      500  {object}  resources.InternalServerError   "Error al eliminar el módulo"
 // @Router       /api/v1/modules/{id} [delete]
 func (h *ModuleController) DeleteModule(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -247,10 +249,11 @@ func (h *ModuleController) DeleteModule(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        id       path  int  true  "Module ID (e.g. 1)"
 // @Param        request  body  linkLessonRequest  true  "Lesson ID to link"
-// @Success      200  {object}  map[string]interface{}  "Linked: { success: true, message: string }"
-// @Failure      400  {object}  map[string]interface{}  "Validation error"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized"
-// @Failure      404  {object}  map[string]interface{}  "Module or Lesson not found"
+// @Success      200  {object}  resources.LinkLessonResponse    "Lección vinculada al módulo correctamente"
+// @Failure      400  {object}  resources.BadRequestError       "ID de módulo inválido o datos incorrectos"
+// @Failure      401  {object}  resources.UnauthorizedError     "Token no proporcionado o inválido"
+// @Failure      404  {object}  resources.NotFoundError         "Módulo o lección no encontrados"
+// @Failure      500  {object}  resources.InternalServerError   "Error al vincular la lección"
 // @Router       /api/v1/modules/{id}/lessons [post]
 func (h *ModuleController) LinkLesson(c *gin.Context) {
 	moduleID, err := strconv.Atoi(c.Param("id"))

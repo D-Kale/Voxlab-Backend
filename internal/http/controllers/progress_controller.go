@@ -26,9 +26,9 @@ func NewProgressController(service *services.ProgressService) *ProgressControlle
 // @Tags         Progress
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {array}   models.UserProgress  "User progress records"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized — token missing or invalid"
-// @Failure      500  {object}  map[string]interface{}  "Server error"
+// @Success      200  {object}  resources.ListProgressResponse    "Registros de progreso del usuario"
+// @Failure      401  {object}  resources.UnauthorizedError       "Token no proporcionado o inválido"
+// @Failure      500  {object}  resources.InternalServerError     "Error al obtener el progreso"
 // @Router       /api/v1/progress [get]
 func (h *ProgressController) GetMyProgress(c *gin.Context) {
 	userIDStr, exists := c.Get("user_id")
@@ -76,11 +76,11 @@ type completeLessonRequest struct {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request  body  completeLessonRequest  true  "Lesson completion data"
-// @Success      200  {object}  models.UserProgress  "Updated progress record"
-// @Failure      400  {object}  map[string]interface{}  "Validation error"
-// @Failure      401  {object}  map[string]interface{}  "Unauthorized — token missing or invalid"
-// @Failure      404  {object}  map[string]interface{}  "Lesson not found"
-// @Failure      500  {object}  map[string]interface{}  "Server error"
+// @Success      200  {object}  resources.CompleteProgressResponse  "Progreso actualizado — lección completada"
+// @Failure      400  {object}  resources.BadRequestError            "Datos inválidos — lesson_id requerido"
+// @Failure      401  {object}  resources.UnauthorizedError          "Token no proporcionado o inválido"
+// @Failure      404  {object}  resources.NotFoundError              "Lección no encontrada"
+// @Failure      500  {object}  resources.InternalServerError        "Error al completar la lección"
 // @Router       /api/v1/progress [post]
 func (h *ProgressController) CompleteLesson(c *gin.Context) {
 	userIDStr, exists := c.Get("user_id")
