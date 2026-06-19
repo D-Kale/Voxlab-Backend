@@ -309,6 +309,30 @@
             }
         },
         "/api/v1/exercises": {
+            "get": {
+                "description": "Devuelve todos los ejercicios del sistema (lista global). Los ejercicios son reutilizables\nentre lecciones — usa GET /lessons/:id para ver qué ejercicios pertenecen a una lección.\n\n🔓 Público — no requiere autenticación.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ejercicios"
+                ],
+                "summary": "Listar todos los ejercicios",
+                "responses": {
+                    "200": {
+                        "description": "Todos los ejercicios",
+                        "schema": {
+                            "$ref": "#/definitions/resources.ListExercisesResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al obtener los ejercicios",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -317,15 +341,12 @@
                 ],
                 "description": "Crea un ejercicio dentro de una lección. El campo \"type\" determina la estructura del campo JSONB \"content\".\n\n📝 Tipos de ejercicios soportados y su estructura de contenido:\n\n**quiz** — Preguntas de opción múltiple (multi-pregunta):\n```json\n{\n\"type\": \"quiz\",\n\"content\": {\n\"questions\": [\n{\n\"question\": \"What is public speaking?\",\n\"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n\"correct_index\": 0,\n\"explanation\": \"Option A is correct because...\"\n}\n],\n\"points_per_question\": 10\n}\n}\n```\n\n**reading** — Pasaje de lectura:\n```json\n{\n\"type\": \"reading\",\n\"content\": {\n\"title\": \"The Art of Speech\",\n\"content\": \"Full reading text here...\",\n\"reading_time_seconds\": 120,\n\"points\": 5\n}\n}\n```\n\n**oratory_minigame** — Desafío de oratoria con requisitos:\n```json\n{\n\"type\": \"oratory_minigame\",\n\"content\": {\n\"prompt\": \"Record a 30-second speech about...\",\n\"topic\": \"Leadership\",\n\"duration_seconds\": 30,\n\"min_duration_seconds\": 15,\n\"requirements\": [\"Clear introduction\", \"Use at least 3 key points\", \"Strong conclusion\"],\n\"points\": 20\n}\n}\n```\n\n**writing** — Ejercicio de escritura con requisitos:\n```json\n{\n\"type\": \"writing\",\n\"content\": {\n\"prompt\": \"Write a 200-word essay about leadership\",\n\"min_words\": 100,\n\"max_words\": 500,\n\"requirements\": [\"Include a thesis\", \"Support with examples\"],\n\"points\": 20\n}\n}\n```\n\n**audio** — Ejercicio de grabación de audio:\n```json\n{\n\"type\": \"audio\",\n\"content\": {\n\"prompt\": \"Read this paragraph aloud...\",\n\"duration_seconds\": 60,\n\"points\": 15\n}\n}\n```\n\n**video** — Ejercicio de grabación de video:\n```json\n{\n\"type\": \"video\",\n\"content\": {\n\"prompt\": \"Record a video introducing yourself...\",\n\"duration_seconds\": 120,\n\"points\": 25\n}\n}\n```\n\n🔒 Requiere disqualquier token JWT (Authorization: Bearer <token>)\nCrea un ejercicio dentro de una lección. El campo \"type\" determina la estructura del campo JSONB \"content\".\n\n📝 Tipos de ejercicios soportados y su estructura de contenido:\n\n**quiz** — Preguntas de opción múltiple (multi-pregunta):\n```json\n{\n\"type\": \"quiz\",\n\"content\": {\n\"questions\": [\n{\n\"question\": \"What is public speaking?\",\n\"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n\"correct_index\": 0,\n\"explanation\": \"Option A is correct because...\"\n}\n],\n\"points_per_question\": 10\n}\n}\n```\n\n**reading** — Pasaje de lectura:\n```json\n{\n\"type\": \"reading\",\n\"content\": {\n\"title\": \"The Art of Speech\",\n\"content\": \"Full reading text here...\",\n\"reading_time_seconds\": 120,\n\"points\": 5\n}\n}\n```\n\n**oratory_minigame** — Desafío de oratoria con requisitos:\n```json\n{\n\"type\": \"oratory_minigame\",\n\"content\": {\n\"prompt\": \"Record a 30-second speech about...\",\n\"topic\": \"Leadership\",\n\"duration_seconds\": 30,\n\"min_duration_seconds\": 15,\n\"requirements\": [\"Clear introduction\", \"Use at least 3 key points\", \"Strong conclusion\"],\n\"points\": 20\n}\n}\n```\n\n**writing** — Ejercicio de escritura con requisitos:\n```json\n{\n\"type\": \"writing\",\n\"content\": {\n\"prompt\": \"Write a 200-word essay about leadership\",\n\"min_words\": 100,\n\"max_words\": 500,\n\"requirements\": [\"Include a thesis\", \"Support with examples\"],\n\"points\": 20\n}\n}\n```\n\n**audio** — Ejercicio de grabación de audio:\n```json\n{\n\"type\": \"audio\",\n\"content\": {\n\"prompt\": \"Read this paragraph aloud...\",\n\"duration_seconds\": 60,\n\"points\": 15\n}\n}\n```\n\n**video** — Ejercicio de grabación de video:\n```json\n{\n\"type\": \"video\",\n\"content\": {\n\"prompt\": \"Record a video introducing yourself...\",\n\"duration_seconds\": 120,\n\"points\": 25\n}\n}\n```\n\n🔒 Requiere token JWT (Authorization: Bearer <token>)",
                 "consumes": [
-                    "application/json",
                     "application/json"
                 ],
                 "produces": [
-                    "application/json",
                     "application/json"
                 ],
                 "tags": [
-                    "Ejercicios",
                     "Ejercicios"
                 ],
                 "summary": "Crear un nuevo ejercicio",
@@ -784,40 +805,203 @@
                 }
             }
         },
-        "/api/v1/lessons/{id}/exercises": {
-            "get": {
-                "description": "Devuelve todos los ejercicios de una lección, ordenados por order_index.\nCada ejercicio tiene un campo \"type\" que define la estructura JSON de su campo \"content\".\nConsulta las descripciones del campo \"content\" a continuación para cada tipo de ejercicio.\n\n🔓 Público — no requiere autenticación.",
+        "/api/v1/lessons/{lessonId}/exercises": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Agrega un ejercicio existente a una lección mediante la tabla pivote.\nEl ejercicio se añade al final del orden de ejercicios de la lección.\nEl mismo ejercicio puede vincularse a múltiples lecciones.\n\n🔒 Requiere JWT token (Authorization: Bearer <token>)",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Ejercicios"
+                    "Lecciones"
                 ],
-                "summary": "Listar ejercicios de una lección",
+                "summary": "Vincular un ejercicio a una lección",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID de la lección (ej. 1)",
-                        "name": "id",
+                        "description": "Lesson ID (e.g. 1)",
+                        "name": "lessonId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Exercise UUID to link",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "exercise_id": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ejercicio vinculado a la lección",
+                        "schema": {
+                            "$ref": "#/definitions/resources.LinkExerciseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Token no proporcionado o inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "404": {
+                        "description": "Lección o ejercicio no encontrado",
+                        "schema": {
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lessons/{lessonId}/exercises/{exerciseId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina el vínculo entre un ejercicio y una lección. El ejercicio en sí NO se elimina\n— sigue disponible para otras lecciones.\n\n🔒 Requiere JWT token (Authorization: Bearer <token>)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lecciones"
+                ],
+                "summary": "Desvincular un ejercicio de una lección",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Lesson ID (e.g. 1)",
+                        "name": "lessonId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)",
+                        "name": "exerciseId",
                         "in": "path",
                         "required": true
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Éxito: { success: true, data: Exercise[] }",
+                        "description": "Ejercicio desvinculado de la lección",
                         "schema": {
-                            "$ref": "#/definitions/resources.ListExercisesResponse"
+                            "$ref": "#/definitions/resources.UnlinkExerciseResponse"
                         }
                     },
                     "400": {
-                        "description": "ID de lección inválido",
+                        "description": "Datos inválidos",
                         "schema": {
                             "$ref": "#/definitions/resources.BadRequestError"
                         }
                     },
+                    "401": {
+                        "description": "Token no proporcionado o inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
                     "500": {
-                        "description": "Server error",
+                        "description": "Error al desvincular el ejercicio",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lessons/{lessonId}/exercises/{exerciseId}/reorder": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza el orden de visualización de un ejercicio dentro de una lección.\nLos valores más bajos de order_index aparecen primero.\n\n🔒 Requiere JWT token (Authorization: Bearer <token>)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lecciones"
+                ],
+                "summary": "Reordenar un ejercicio dentro de una lección",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Lesson ID (e.g. 1)",
+                        "name": "lessonId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)",
+                        "name": "exerciseId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "New order position",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "order_index": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Orden actualizado",
+                        "schema": {
+                            "$ref": "#/definitions/resources.ReorderExerciseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Token no proporcionado o inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al reordenar el ejercicio",
                         "schema": {
                             "$ref": "#/definitions/resources.InternalServerError"
                         }
@@ -2272,15 +2456,10 @@
                     "description": "Exercise content (JSONB structure varies by type)",
                     "type": "object"
                 },
-                "lesson_id": {
-                    "description": "Lesson ID where the exercise will be created",
-                    "type": "integer",
-                    "example": 1
-                },
-                "order_index": {
-                    "description": "Order index for sequencing",
-                    "type": "integer",
-                    "example": 1
+                "name": {
+                    "description": "Exercise name (helps identify when reusing across lessons)",
+                    "type": "string",
+                    "example": "Quiz de liderazgo"
                 },
                 "type": {
                     "description": "Exercise type: quiz, reading, oratory_minigame, audio, video, writing",
@@ -2464,11 +2643,9 @@
                 "id": {
                     "type": "string"
                 },
-                "lesson_id": {
-                    "type": "integer"
-                },
-                "order_index": {
-                    "type": "integer"
+                "name": {
+                    "type": "string",
+                    "example": "Quiz de liderazgo"
                 },
                 "type": {
                     "$ref": "#/definitions/models.ExerciseType"
@@ -2512,7 +2689,7 @@
                 "exercises": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/models.Exercise"
+                        "$ref": "#/definitions/models.LessonExercise"
                     }
                 },
                 "id": {
@@ -2526,6 +2703,23 @@
                 },
                 "updated_at": {
                     "type": "string"
+                }
+            }
+        },
+        "models.LessonExercise": {
+            "type": "object",
+            "properties": {
+                "exercise": {
+                    "$ref": "#/definitions/models.Exercise"
+                },
+                "exercise_id": {
+                    "type": "string"
+                },
+                "lesson_id": {
+                    "type": "integer"
+                },
+                "order_index": {
+                    "type": "integer"
                 }
             }
         },
@@ -2956,6 +3150,19 @@
                 }
             }
         },
+        "resources.LinkExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "resources.LinkLessonResponse": {
             "type": "object",
             "properties": {
@@ -3150,6 +3357,19 @@
                 }
             }
         },
+        "resources.ReorderExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "resources.RequirementCatalogResponse": {
             "type": "object",
             "properties": {
@@ -3192,6 +3412,19 @@
                 "success": {
                     "type": "boolean",
                     "example": false
+                }
+            }
+        },
+        "resources.UnlinkExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },

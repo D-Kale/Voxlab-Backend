@@ -134,14 +134,10 @@ definitions:
       content:
         description: Exercise content (JSONB structure varies by type)
         type: object
-      lesson_id:
-        description: Lesson ID where the exercise will be created
-        example: 1
-        type: integer
-      order_index:
-        description: Order index for sequencing
-        example: 1
-        type: integer
+      name:
+        description: Exercise name (helps identify when reusing across lessons)
+        example: Quiz de liderazgo
+        type: string
       type:
         allOf:
         - $ref: '#/definitions/models.ExerciseType'
@@ -271,10 +267,9 @@ definitions:
         type: string
       id:
         type: string
-      lesson_id:
-        type: integer
-      order_index:
-        type: integer
+      name:
+        example: Quiz de liderazgo
+        type: string
       type:
         $ref: '#/definitions/models.ExerciseType'
       updated_at:
@@ -306,7 +301,7 @@ definitions:
         type: integer
       exercises:
         items:
-          $ref: '#/definitions/models.Exercise'
+          $ref: '#/definitions/models.LessonExercise'
         type: array
       id:
         type: integer
@@ -316,6 +311,17 @@ definitions:
         type: string
       updated_at:
         type: string
+    type: object
+  models.LessonExercise:
+    properties:
+      exercise:
+        $ref: '#/definitions/models.Exercise'
+      exercise_id:
+        type: string
+      lesson_id:
+        type: integer
+      order_index:
+        type: integer
     type: object
   models.Module:
     properties:
@@ -608,6 +614,15 @@ definitions:
         example: false
         type: boolean
     type: object
+  resources.LinkExerciseResponse:
+    properties:
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
   resources.LinkLessonResponse:
     properties:
       message:
@@ -741,6 +756,15 @@ definitions:
       user:
         $ref: '#/definitions/services.UserData'
     type: object
+  resources.ReorderExerciseResponse:
+    properties:
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
   resources.RequirementCatalogResponse:
     properties:
       data:
@@ -770,6 +794,15 @@ definitions:
         type: string
       success:
         example: false
+        type: boolean
+    type: object
+  resources.UnlinkExerciseResponse:
+    properties:
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
         type: boolean
     type: object
   resources.UpdateLessonResponse:
@@ -1161,38 +1194,34 @@ paths:
       tags:
       - Docs
   /api/v1/exercises:
+    get:
+      description: "Returns all exercises in the system (global list). Exercises are
+        reusable\nacross lessons — use GET /lessons/:id to see which exercises belong
+        to a lesson.\n\n\U0001F513 Public — no authentication required."
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Todos los ejercicios
+          schema:
+            $ref: '#/definitions/resources.ListExercisesResponse'
+        "500":
+          description: Error al obtener los ejercicios
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
+      summary: List all exercises
+      tags:
+      - Exercises
     post:
       consumes:
       - application/json
-      - application/json
-      description: "Creates an exercise inside a lesson. The \"type\" field determines
-        the JSONB \"content\" structure.\n\n\U0001F4DD Supported exercise types and
-        their content structure:\n\n**quiz** — Multiple choice questions (multi-pregunta):\n```json\n{\n\"type\":
-        \"quiz\",\n\"content\": {\n\"questions\": [\n{\n\"question\": \"What is public
-        speaking?\",\n\"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option
-        D\"],\n\"correct_index\": 0,\n\"explanation\": \"Option A is correct because...\"\n}\n],\n\"points_per_question\":
-        10\n}\n}\n```\n\n**reading** — Reading passage:\n```json\n{\n\"type\": \"reading\",\n\"content\":
-        {\n\"title\": \"The Art of Speech\",\n\"content\": \"Full reading text here...\",\n\"reading_time_seconds\":
-        120,\n\"points\": 5\n}\n}\n```\n\n**oratory_minigame** — Oratory challenge
-        with requirements:\n```json\n{\n\"type\": \"oratory_minigame\",\n\"content\":
-        {\n\"prompt\": \"Record a 30-second speech about...\",\n\"topic\": \"Leadership\",\n\"duration_seconds\":
-        30,\n\"min_duration_seconds\": 15,\n\"requirements\": [\"Clear introduction\",
-        \"Use at least 3 key points\", \"Strong conclusion\"],\n\"points\": 20\n}\n}\n```\n\n**writing**
-        — Writing exercise with requirements:\n```json\n{\n\"type\": \"writing\",\n\"content\":
-        {\n\"prompt\": \"Write a 200-word essay about leadership\",\n\"min_words\":
-        100,\n\"max_words\": 500,\n\"requirements\": [\"Include a thesis\", \"Support
-        with examples\"],\n\"points\": 20\n}\n}\n```\n\n**audio** — Audio recording
-        exercise:\n```json\n{\n\"type\": \"audio\",\n\"content\": {\n\"prompt\": \"Read
-        this paragraph aloud...\",\n\"duration_seconds\": 60,\n\"points\": 15\n}\n}\n```\n\n**video**
-        — Video recording exercise:\n```json\n{\n\"type\": \"video\",\n\"content\":
-        {\n\"prompt\": \"Record a video introducing yourself...\",\n\"duration_seconds\":
-        120,\n\"points\": 25\n}\n}\n```\n\n\U0001F512 Requires JWT token (Authorization:
-        Bearer <token>)\nCreates an exercise inside a lesson. The \"type\" field determines
-        the JSONB \"content\" structure.\n\n\U0001F4DD Supported exercise types and
-        their content structure:\n\n**quiz** — Multiple choice questions (multi-pregunta):\n```json\n{\n\"type\":
-        \"quiz\",\n\"content\": {\n\"questions\": [\n{\n\"question\": \"What is public
-        speaking?\",\n\"options\": [\"Option A\", \"Option B\", \"Option C\", \"Option
-        D\"],\n\"correct_index\": 0,\n\"explanation\": \"Option A is correct because...\"\n}\n],\n\"points_per_question\":
+      description: "Creates an exercise that can later be linked to one or more lessons.\nThe
+        \"type\" field determines the JSONB \"content\" structure.\n\n\U0001F4DD Supported
+        exercise types and their content structure:\n\n**quiz** — Multiple choice
+        questions (multi-pregunta):\n```json\n{\n\"type\": \"quiz\",\n\"content\":
+        {\n\"questions\": [\n{\n\"question\": \"What is public speaking?\",\n\"options\":
+        [\"Option A\", \"Option B\", \"Option C\", \"Option D\"],\n\"correct_index\":
+        0,\n\"explanation\": \"Option A is correct because...\"\n}\n],\n\"points_per_question\":
         10\n}\n}\n```\n\n**reading** — Reading passage:\n```json\n{\n\"type\": \"reading\",\n\"content\":
         {\n\"title\": \"The Art of Speech\",\n\"content\": \"Full reading text here...\",\n\"reading_time_seconds\":
         120,\n\"points\": 5\n}\n}\n```\n\n**oratory_minigame** — Oratory challenge
@@ -1219,14 +1248,13 @@ paths:
           $ref: '#/definitions/controllers.CreateExerciseRequest'
       produces:
       - application/json
-      - application/json
       responses:
         "201":
           description: Ejercicio creado correctamente
           schema:
             $ref: '#/definitions/resources.CreateExerciseResponse'
         "400":
-          description: Datos inválidos — tipo y lesson_id requeridos
+          description: Datos inválidos — tipo requerido
           schema:
             $ref: '#/definitions/resources.BadRequestError'
         "401":
@@ -1238,12 +1266,11 @@ paths:
       summary: Create a new exercise
       tags:
       - Exercises
-      - Exercises
   /api/v1/exercises/{id}:
     delete:
-      description: "Permanently removes an exercise from the lesson.\n⚠️ This action
-        cannot be undone.\n\n\U0001F512 Requires JWT token (Authorization: Bearer
-        <token>)"
+      description: "Permanently removes an exercise. This also removes all links to
+        lessons.\n⚠️ This action cannot be undone.\n\n\U0001F512 Requires JWT token
+        (Authorization: Bearer <token>)"
       parameters:
       - description: Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)
         in: path
@@ -1535,36 +1562,144 @@ paths:
       summary: Update a lesson
       tags:
       - Lessons
-  /api/v1/lessons/{id}/exercises:
-    get:
-      description: "Returns all exercises in a lesson, ordered by order_index.\nEach
-        exercise has a \"type\" field that defines the JSON structure of its \"content\"
-        field.\nSee the \"content\" field descriptions below for each exercise type.\n\n\U0001F513
-        Public — no authentication required."
+  /api/v1/lessons/{lessonId}/exercises:
+    post:
+      consumes:
+      - application/json
+      description: "Adds an existing exercise to a lesson via the pivot table.\nThe
+        exercise is appended at the end of the lesson's exercise order.\nThe same
+        exercise can be linked to multiple lessons.\n\n\U0001F512 Requires JWT token
+        (Authorization: Bearer <token>)"
       parameters:
       - description: Lesson ID (e.g. 1)
         in: path
-        name: id
+        name: lessonId
         required: true
         type: integer
+      - description: Exercise UUID to link
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            exercise_id:
+              type: string
+          type: object
       produces:
       - application/json
       responses:
         "200":
-          description: Ejercicios de la lección
+          description: Ejercicio vinculado a la lección
           schema:
-            $ref: '#/definitions/resources.ListExercisesResponse'
+            $ref: '#/definitions/resources.LinkExerciseResponse'
         "400":
-          description: ID de lección inválido
+          description: Datos inválidos
           schema:
             $ref: '#/definitions/resources.BadRequestError'
+        "401":
+          description: Token no proporcionado o inválido
+          schema:
+            $ref: '#/definitions/resources.UnauthorizedError'
+        "404":
+          description: Lección o ejercicio no encontrado
+          schema:
+            $ref: '#/definitions/resources.NotFoundError'
+      security:
+      - BearerAuth: []
+      summary: Link an exercise to a lesson
+      tags:
+      - Lessons
+  /api/v1/lessons/{lessonId}/exercises/{exerciseId}:
+    delete:
+      description: "Removes the link between an exercise and a lesson. The exercise
+        itself is NOT deleted\n— it remains available for other lessons.\n\n\U0001F512
+        Requires JWT token (Authorization: Bearer <token>)"
+      parameters:
+      - description: Lesson ID (e.g. 1)
+        in: path
+        name: lessonId
+        required: true
+        type: integer
+      - description: Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)
+        in: path
+        name: exerciseId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Ejercicio desvinculado de la lección
+          schema:
+            $ref: '#/definitions/resources.UnlinkExerciseResponse'
+        "400":
+          description: Datos inválidos
+          schema:
+            $ref: '#/definitions/resources.BadRequestError'
+        "401":
+          description: Token no proporcionado o inválido
+          schema:
+            $ref: '#/definitions/resources.UnauthorizedError'
         "500":
-          description: Error al obtener los ejercicios
+          description: Error al desvincular el ejercicio
           schema:
             $ref: '#/definitions/resources.InternalServerError'
-      summary: List exercises for a lesson
+      security:
+      - BearerAuth: []
+      summary: Unlink an exercise from a lesson
       tags:
-      - Exercises
+      - Lessons
+  /api/v1/lessons/{lessonId}/exercises/{exerciseId}/reorder:
+    put:
+      consumes:
+      - application/json
+      description: "Updates the display order of an exercise inside a lesson.\nLower
+        order_index values appear first.\n\n\U0001F512 Requires JWT token (Authorization:
+        Bearer <token>)"
+      parameters:
+      - description: Lesson ID (e.g. 1)
+        in: path
+        name: lessonId
+        required: true
+        type: integer
+      - description: Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)
+        in: path
+        name: exerciseId
+        required: true
+        type: string
+      - description: New order position
+        in: body
+        name: request
+        required: true
+        schema:
+          properties:
+            order_index:
+              type: integer
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Orden actualizado
+          schema:
+            $ref: '#/definitions/resources.ReorderExerciseResponse'
+        "400":
+          description: Datos inválidos
+          schema:
+            $ref: '#/definitions/resources.BadRequestError'
+        "401":
+          description: Token no proporcionado o inválido
+          schema:
+            $ref: '#/definitions/resources.UnauthorizedError'
+        "500":
+          description: Error al reordenar el ejercicio
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
+      security:
+      - BearerAuth: []
+      summary: Reorder an exercise within a lesson
+      tags:
+      - Lessons
   /api/v1/modules:
     post:
       consumes:
