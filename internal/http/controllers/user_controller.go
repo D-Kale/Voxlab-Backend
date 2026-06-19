@@ -21,9 +21,10 @@ func NewUserController(service *services.UserService) *UserController {
 // @Tags         Users
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: User[] }"
+// @Success      200  {array}   services.AdminUserData  "List of users"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      403  {object}  map[string]interface{}  "Forbidden — admin only"
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/users [get]
 func (h *UserController) GetUsers(c *gin.Context) {
 	users, err := h.service.ListUsers()
@@ -41,7 +42,7 @@ func (h *UserController) GetUsers(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id   path      string  true  "User ID (UUID)"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: User }"
+// @Success      200  {object}  services.AdminUserData  "User details"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      403  {object}  map[string]interface{}  "Forbidden — admin only"
 // @Failure      404  {object}  map[string]interface{}  "User not found"
@@ -65,10 +66,12 @@ func (h *UserController) GetUser(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        id       path  string                      true  "User ID (UUID)"
 // @Param        request  body  services.UpdateUserRequest   true  "Fields to update"
-// @Success      200  {object}  map[string]interface{}  "Updated: { success: true, data: User }"
+// @Success      200  {object}  services.AdminUserData  "Updated user"
 // @Failure      400  {object}  map[string]interface{}  "Invalid request"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      403  {object}  map[string]interface{}  "Forbidden — admin only"
+// @Failure      404  {object}  map[string]interface{}  "User not found"
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/users/{id} [put]
 func (h *UserController) UpdateUser(c *gin.Context) {
 	id := c.Param("id")
@@ -94,9 +97,11 @@ func (h *UserController) UpdateUser(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id   path      string  true  "User ID (UUID)"
-// @Success      200  {object}  map[string]interface{}  "Deleted: { success: true, message: string }"
+// @Success      200  {object}  map[string]interface{}  "Deleted confirmation"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      403  {object}  map[string]interface{}  "Forbidden — admin only"
+// @Failure      404  {object}  map[string]interface{}  "User not found"
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/users/{id} [delete]
 func (h *UserController) DeleteUser(c *gin.Context) {
 	id := c.Param("id")

@@ -117,8 +117,9 @@ func (h *AuthController) Logout(c *gin.Context) {
 // @Tags         Auth
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  map[string]interface{}
+// @Success      200  {object}  services.UserData  "Current user profile"
 // @Failure      401  {object}  map[string]interface{}
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/auth/me [get]
 func (h *AuthController) Me(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -154,8 +155,9 @@ func (h *AuthController) Me(c *gin.Context) {
 // @Tags         Auth
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  map[string]interface{}
+// @Success      200  {object}  services.UserData  "Extended user profile"
 // @Failure      401  {object}  map[string]interface{}
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/auth/profile [get]
 func (h *AuthController) GetProfile(c *gin.Context) {
 	userID, exists := c.Get("user_id")
@@ -182,9 +184,10 @@ func (h *AuthController) GetProfile(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request  body      services.UpdateProfileRequest  true  "Profile fields to update"
-// @Success      200  {object}  map[string]interface{}
+// @Success      200  {object}  services.UserData  "Updated user profile"
 // @Failure      400  {object}  map[string]interface{}
 // @Failure      401  {object}  map[string]interface{}
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/auth/profile [put]
 func (h *AuthController) UpdateProfile(c *gin.Context) {
 	userID, exists := c.Get("user_id")

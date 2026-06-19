@@ -17,6 +17,22 @@ func NewLessonController(service *services.LessonService) *LessonController {
 	return &LessonController{service: service}
 }
 
+// CreateLessonRequest represents the request body for creating a lesson
+// @Description Request body for creating a new lesson
+type CreateLessonRequest struct {
+	Title               string `json:"title" example:"Respiración Diafragmática"`
+	Description         string `json:"description" example:"Aprende a respirar desde el diafragma para proyectar tu voz"`
+	EstimatedTimeSeconds int    `json:"estimated_time_seconds" example:"300"`
+}
+
+// UpdateLessonRequest represents the request body for updating a lesson
+// @Description Request body for updating an existing lesson
+type UpdateLessonRequest struct {
+	Title                *string `json:"title,omitempty" example:"Respiración Avanzada"`
+	Description          *string `json:"description,omitempty" example:"Técnicas avanzadas de control respiratorio"`
+	EstimatedTimeSeconds *int    `json:"estimated_time_seconds,omitempty" example:"600"`
+}
+
 // GetLessonsByModule godoc
 // @Summary      List lessons in a module
 // @Description  Returns all lessons linked to a specific module, with their exercises.
@@ -26,8 +42,9 @@ func NewLessonController(service *services.LessonService) *LessonController {
 // @Tags         Lessons
 // @Produce      json
 // @Param        id   path      int  true  "Module ID (e.g. 1)"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: ModuleLesson[] }"
-// @Failure      404  {object}  map[string]interface{}  "Module not found"
+// @Success      200  {array}   models.Lesson  "List of lessons"
+// @Failure      400  {object}  map[string]interface{}  "Invalid module ID"
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/modules/{id}/lessons [get]
 func (h *LessonController) GetLessonsByModule(c *gin.Context) {
 	moduleID, err := strconv.Atoi(c.Param("id"))
@@ -57,7 +74,8 @@ func (h *LessonController) GetLessonsByModule(c *gin.Context) {
 // @Tags         Lessons
 // @Produce      json
 // @Param        id   path      int  true  "Lesson ID (e.g. 1)"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: Lesson }"
+// @Success      200  {object}  models.Lesson  "Lesson details with exercises"
+// @Failure      400  {object}  map[string]interface{}  "Invalid lesson ID"
 // @Failure      404  {object}  map[string]interface{}  "Lesson not found"
 // @Router       /api/v1/lessons/{id} [get]
 func (h *LessonController) GetLesson(c *gin.Context) {
@@ -89,8 +107,8 @@ func (h *LessonController) GetLesson(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body  object{title=string,description=string,estimated_time_seconds=int}  true  "Lesson data"
-// @Success      201  {object}  map[string]interface{}  "Created: { success: true, data: Lesson }"
+// @Param        request  body  CreateLessonRequest  true  "Lesson data"
+// @Success      201  {object}  models.Lesson  "Created lesson"
 // @Failure      400  {object}  map[string]interface{}  "Validation error"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Router       /api/v1/lessons [post]
@@ -126,9 +144,9 @@ func (h *LessonController) CreateLesson(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id       path  int  true  "Lesson ID (e.g. 1)"
-// @Param        request  body  object{title=string,description=string,estimated_time_seconds=int}  true  "Fields to update"
-// @Success      200  {object}  map[string]interface{}  "Updated: { success: true, data: Lesson }"
+// @Param        id       path            int                 true  "Lesson ID (e.g. 1)"
+// @Param        request  body            UpdateLessonRequest true  "Fields to update"
+// @Success      200  {object}  models.Lesson  "Updated lesson"
 // @Failure      400  {object}  map[string]interface{}  "Validation error"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      404  {object}  map[string]interface{}  "Lesson not found"
@@ -184,8 +202,10 @@ func (h *LessonController) UpdateLesson(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        id   path      int  true  "Lesson ID (e.g. 1)"
 // @Success      200  {object}  map[string]interface{}  "Deleted: { success: true, message: string }"
+// @Failure      400  {object}  map[string]interface{}  "Invalid lesson ID"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      404  {object}  map[string]interface{}  "Lesson not found"
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/lessons/{id} [delete]
 func (h *LessonController) DeleteLesson(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))

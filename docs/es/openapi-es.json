@@ -117,12 +117,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/services.UserData"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -150,12 +156,18 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/services.UserData"
                         }
                     },
                     "401": {
                         "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -195,8 +207,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/services.UserData"
                         }
                     },
                     "400": {
@@ -208,6 +219,13 @@
                     },
                     "401": {
                         "description": "No autorizado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -256,6 +274,33 @@
                     },
                     "409": {
                         "description": "Conflicto",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/docs/es/spec": {
+            "get": {
+                "description": "Returns the full OpenAPI 2.0 specification translated to Spanish.\nFalls back to the English spec if the translation file is missing.\nThis endpoint is consumed by the Swagger UI at /docs/es.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Documentación"
+                ],
+                "summary": "Obtener la especificación OpenAPI en español",
+                "responses": {
+                    "200": {
+                        "description": "Especificación OpenAPI traducida",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "No se pudo leer el archivo de especificación",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -388,8 +433,10 @@
                     "200": {
                         "description": "Éxito: { success: true, data: RequirementCatalogItem[] }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/controllers.RequirementCatalogItem"
+                            }
                         }
                     }
                 }
@@ -417,6 +464,12 @@
                 "responses": {
                     "200": {
                         "description": "Éxito: { success: true, data: Exercise }",
+                        "schema": {
+                            "$ref": "#/definitions/models.Exercise"
+                        }
+                    },
+                    "400": {
+                        "description": "UUID de ejercicio inválido",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -462,6 +515,13 @@
                             "additionalProperties": true
                         }
                     },
+                    "400": {
+                        "description": "UUID de ejercicio inválido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
@@ -471,6 +531,13 @@
                     },
                     "404": {
                         "description": "Ejercicio no encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -492,6 +559,12 @@
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.HealthResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Servicio no saludable",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -525,18 +598,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "estimated_time_seconds": {
-                                    "type": "integer"
-                                },
-                                "title": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.CreateLessonRequest"
                         }
                     }
                 ],
@@ -544,8 +606,7 @@
                     "201": {
                         "description": "Creado: { success: true, data: Lesson }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Lesson"
                         }
                     },
                     "400": {
@@ -587,6 +648,12 @@
                 "responses": {
                     "200": {
                         "description": "Éxito: { success: true, data: Lesson }",
+                        "schema": {
+                            "$ref": "#/definitions/models.Lesson"
+                        }
+                    },
+                    "400": {
+                        "description": "ID de lección inválido",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -632,18 +699,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "estimated_time_seconds": {
-                                    "type": "integer"
-                                },
-                                "title": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.UpdateLessonRequest"
                         }
                     }
                 ],
@@ -651,8 +707,7 @@
                     "200": {
                         "description": "Actualizado: { success: true, data: Lesson }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Lesson"
                         }
                     },
                     "400": {
@@ -709,6 +764,13 @@
                             "additionalProperties": true
                         }
                     },
+                    "400": {
+                        "description": "ID de lección inválido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
@@ -718,6 +780,13 @@
                     },
                     "404": {
                         "description": "Lección no encontrada",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -749,12 +818,21 @@
                     "200": {
                         "description": "Éxito: { success: true, data: Exercise[] }",
                         "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Exercise"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "ID de lección inválido",
+                        "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
-                    "404": {
-                        "description": "Lección no encontrada",
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -788,21 +866,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "order_index": {
-                                    "type": "integer"
-                                },
-                                "title": {
-                                    "type": "string"
-                                },
-                                "track_id": {
-                                    "type": "integer"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.CreateModuleRequest"
                         }
                     }
                 ],
@@ -810,8 +874,7 @@
                     "201": {
                         "description": "Creado: { success: true, data: Module }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Module"
                         }
                     },
                     "400": {
@@ -853,6 +916,12 @@
                 "responses": {
                     "200": {
                         "description": "Éxito: { success: true, data: Module }",
+                        "schema": {
+                            "$ref": "#/definitions/models.Module"
+                        }
+                    },
+                    "400": {
+                        "description": "ID de módulo inválido",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -898,18 +967,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "order_index": {
-                                    "type": "integer"
-                                },
-                                "title": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.UpdateModuleRequest"
                         }
                     }
                 ],
@@ -917,8 +975,7 @@
                     "200": {
                         "description": "Actualizado: { success: true, data: Module }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Module"
                         }
                     },
                     "400": {
@@ -975,6 +1032,13 @@
                             "additionalProperties": true
                         }
                     },
+                    "400": {
+                        "description": "ID de módulo inválido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "401": {
                         "description": "No autorizado",
                         "schema": {
@@ -984,6 +1048,13 @@
                     },
                     "404": {
                         "description": "Módulo no encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1015,12 +1086,21 @@
                     "200": {
                         "description": "Éxito: { success: true, data: ModuleLesson[] }",
                         "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Lesson"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "ID de módulo inválido",
+                        "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
-                    "404": {
-                        "description": "Módulo no encontrado",
+                    "500": {
+                        "description": "Error del servidor",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1114,12 +1194,21 @@
                     "200": {
                         "description": "Éxito: { success: true, data: UserProgress[] }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.UserProgress"
+                            }
                         }
                     },
                     "401": {
                         "description": "No autorizado — token faltante o inválido",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1159,8 +1248,7 @@
                     "200": {
                         "description": "Completado: { success: true, data: UserProgress }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.UserProgress"
                         }
                     },
                     "400": {
@@ -1183,6 +1271,42 @@
                             "type": "object",
                             "additionalProperties": true
                         }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reactions": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "⚠️ AÚN NO IMPLEMENTADO — endpoint de marcador de posición.\nPermitirá a los usuarios enviar reacciones (emojis/likes) durante\nsesiones de práctica en vivo. Las reacciones se almacenan con un TTL de 30 días\ny se limpian automáticamente por pg_cron.\n\n🔒 Requiere token JWT (Authorization: Bearer <token>)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reacciones"
+                ],
+                "summary": "[PENDIENTE] Crear una reacción (emoji/like) durante sesiones en vivo",
+                "responses": {
+                    "501": {
+                        "description": "No implementado — endpoint aún no activo",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
                     }
                 }
             }
@@ -1201,8 +1325,10 @@
                     "200": {
                         "description": "Éxito: { success: true, data: Track[] }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Track"
+                            }
                         }
                     },
                     "500": {
@@ -1238,18 +1364,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "icon_url": {
-                                    "type": "string"
-                                },
-                                "title": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.CreateTrackRequest"
                         }
                     }
                 ],
@@ -1257,8 +1372,7 @@
                     "201": {
                         "description": "Creado: { success: true, data: Track }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Track"
                         }
                     },
                     "400": {
@@ -1300,6 +1414,12 @@
                 "responses": {
                     "200": {
                         "description": "Éxito: { success: true, data: Track }",
+                        "schema": {
+                            "$ref": "#/definitions/models.Track"
+                        }
+                    },
+                    "400": {
+                        "description": "ID de track inválido",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1345,18 +1465,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "icon_url": {
-                                    "type": "string"
-                                },
-                                "title": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.UpdateTrackRequest"
                         }
                     }
                 ],
@@ -1364,8 +1473,7 @@
                     "200": {
                         "description": "Actualizado: { success: true, data: Track }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Track"
                         }
                     },
                     "400": {
@@ -1462,12 +1570,21 @@
                     "200": {
                         "description": "Éxito: { success: true, data: Module[] }",
                         "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Module"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "ID de track inválido",
+                        "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
-                    "404": {
-                        "description": "Track no encontrada",
+                    "500": {
+                        "description": "Error del servidor",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1478,6 +1595,11 @@
         },
         "/api/v1/upload/avatar": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Sube y establece la imagen de avatar del usuario autenticado. Optimizado a WebP, máx. 2MB, 400x400.\nEl avatar anterior se elimina del almacenamiento automáticamente.",
                 "consumes": [
                     "multipart/form-data"
@@ -1502,8 +1624,7 @@
                     "200": {
                         "description": "Éxito: { success: true, data: { url: string } }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/controllers.UploadResponse"
                         }
                     },
                     "400": {
@@ -1532,6 +1653,11 @@
         },
         "/api/v1/upload/lesson/{id}": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Igual que la carga de track pero para el image_url de una lección. Optimizado a WebP, máx. 2MB, 1920x1080.",
                 "consumes": [
                     "multipart/form-data"
@@ -1563,8 +1689,7 @@
                     "200": {
                         "description": "Éxito: { success: true, data: { url: string } }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/controllers.UploadResponse"
                         }
                     },
                     "400": {
@@ -1600,6 +1725,11 @@
         },
         "/api/v1/upload/module/{id}": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Igual que la carga de track pero para el image_url de un módulo. Optimizado a WebP, máx. 2MB, 1920x1080.",
                 "consumes": [
                     "multipart/form-data"
@@ -1631,8 +1761,7 @@
                     "200": {
                         "description": "Éxito: { success: true, data: { url: string } }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/controllers.UploadResponse"
                         }
                     },
                     "400": {
@@ -1668,6 +1797,11 @@
         },
         "/api/v1/upload/track/{id}": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Acepta un archivo de imagen (JPEG/PNG), lo optimiza a WebP (calidad 80) y lo sube a MinIO.\nEl icon_url de la track se actualiza automáticamente. La imagen anterior se elimina del almacenamiento.\nTamaño máximo de archivo: 2MB. La imagen se redimensiona para ajustarse a 1920x1080 preservando la relación de aspecto.",
                 "consumes": [
                     "multipart/form-data"
@@ -1699,8 +1833,7 @@
                     "200": {
                         "description": "Éxito: { success: true, data: { url: string } }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/controllers.UploadResponse"
                         }
                     },
                     "400": {
@@ -1753,8 +1886,10 @@
                     "200": {
                         "description": "Éxito: { success: true, data: User[] }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.AdminUserData"
+                            }
                         }
                     },
                     "401": {
@@ -1766,6 +1901,13 @@
                     },
                     "403": {
                         "description": "Prohibido — solo administradores",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1802,8 +1944,7 @@
                     "200": {
                         "description": "Éxito: { success: true, data: User }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/services.AdminUserData"
                         }
                     },
                     "401": {
@@ -1868,8 +2009,7 @@
                     "200": {
                         "description": "Actualizado: { success: true, data: User }",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/services.AdminUserData"
                         }
                     },
                     "400": {
@@ -1888,6 +2028,20 @@
                     },
                     "403": {
                         "description": "Prohibido — solo administradores",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1939,6 +2093,40 @@
                             "type": "object",
                             "additionalProperties": true
                         }
+                    },
+                    "404": {
+                        "description": "Usuario no encontrado",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Error del servidor",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/docs/es": {
+            "get": {
+                "description": "Sirve una página interactiva de Swagger UI configurada para cargar la\nespecificación OpenAPI traducida al español desde /api/v1/docs/es/spec.\nEste es el portal de documentación en español de la API de Voxlab.",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "Documentación"
+                ],
+                "summary": "Servir Swagger UI en español",
+                "responses": {
+                    "200": {
+                        "description": "Página HTML con Swagger UI",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
@@ -1949,19 +2137,27 @@
             "type": "object",
             "properties": {
                 "max_words": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 500
                 },
                 "min_words": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 100
                 },
                 "requirements": {
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "Incluir una introducción clara",
+                        "Dar ejemplos concretos",
+                        "Usar vocabulario técnico"
+                    ]
                 },
                 "text": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "El liderazgo es una habilidad fundamental para cualquier profesional que busque destacar en su carrera. A lo largo de este ensayo, exploraremos las características clave de un líder efectivo y cómo desarrollarlas en el día a día."
                 }
             }
         },
@@ -1991,6 +2187,173 @@
                         }
                     ],
                     "example": "quiz"
+                }
+            }
+        },
+        "controllers.CreateLessonRequest": {
+            "description": "Cuerpo de la solicitud para crear una nueva lección",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Aprende a respirar desde el diafragma para proyectar tu voz"
+                },
+                "estimated_time_seconds": {
+                    "type": "integer",
+                    "example": 300
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Respiración Diafragmática"
+                }
+            }
+        },
+        "controllers.CreateModuleRequest": {
+            "description": "Cuerpo de la solicitud para crear un nuevo módulo",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Técnicas para proyectar la voz sin esfuerzo"
+                },
+                "order_index": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Voz y Proyección"
+                },
+                "track_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "controllers.CreateTrackRequest": {
+            "description": "Cuerpo de la solicitud para crear un nuevo track educativo",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Aprende a comunicarte con impacto en el escenario"
+                },
+                "icon_url": {
+                    "type": "string",
+                    "example": "https://cdn.voxlab.com/icons/leadership.webp"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Oratoria para Líderes"
+                }
+            }
+        },
+        "controllers.HealthResponse": {
+            "description": "Respuesta del health check del sistema",
+            "type": "object",
+            "properties": {
+                "services": {
+                    "description": "e.g. {\"postgres\": \"ok\", \"redis\": \"ok\"}",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2026-06-18T12:00:00Z"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        },
+        "controllers.RequirementCatalogItem": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "Cobertura del contenido"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "intro"
+                },
+                "order": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "text": {
+                    "type": "string",
+                    "example": "Incluir una introducción clara del tema"
+                }
+            }
+        },
+        "controllers.UpdateLessonRequest": {
+            "description": "Cuerpo de la solicitud para actualizar una lección existente",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Técnicas avanzadas de control respiratorio"
+                },
+                "estimated_time_seconds": {
+                    "type": "integer",
+                    "example": 600
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Respiración Avanzada"
+                }
+            }
+        },
+        "controllers.UpdateModuleRequest": {
+            "description": "Cuerpo de la solicitud para actualizar un módulo existente",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Técnicas avanzadas de vocalización"
+                },
+                "order_index": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Voz y Dicción"
+                }
+            }
+        },
+        "controllers.UpdateTrackRequest": {
+            "description": "Cuerpo de la solicitud para actualizar un track existente",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Técnicas avanzadas para audiencias grandes"
+                },
+                "icon_url": {
+                    "type": "string",
+                    "example": "https://cdn.voxlab.com/icons/advanced.webp"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Oratoria Avanzada"
+                }
+            }
+        },
+        "controllers.UploadResponse": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "example": "https://storage.example.com/uploads/track-1.webp"
                 }
             }
         },
@@ -2061,6 +2424,192 @@
                 "ExerciseTypeWriting"
             ]
         },
+        "models.Lesson": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "estimated_time_seconds": {
+                    "type": "integer"
+                },
+                "exercises": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Exercise"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Module": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "lessons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ModuleLesson"
+                    }
+                },
+                "order_index": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "track_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ModuleLesson": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "lesson": {
+                    "$ref": "#/definitions/models.Lesson"
+                },
+                "lesson_id": {
+                    "type": "integer"
+                },
+                "module_id": {
+                    "type": "integer"
+                },
+                "order_index": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Track": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "modules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Module"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserProgress": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "lesson_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "xp_earned": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.AdminUserData": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-06-01T12:00:00Z"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "lives": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "streak_days": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2026-06-18T12:00:00Z"
+                },
+                "xp": {
+                    "type": "integer",
+                    "example": 850
+                }
+            }
+        },
         "services.LoginRequest": {
             "type": "object",
             "required": [
@@ -2082,10 +2631,12 @@
             "type": "object",
             "properties": {
                 "expires_at": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2026-01-02T00:00:00Z"
                 },
                 "token": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzA2NzU4NDAwfQ.signature"
                 },
                 "user": {
                     "$ref": "#/definitions/services.UserData"
@@ -2119,7 +2670,8 @@
             "type": "object",
             "properties": {
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Jane Doe"
                 }
             }
         },
@@ -2127,13 +2679,16 @@
             "type": "object",
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "jane@example.com"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Jane Doe"
                 },
                 "role": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "admin"
                 }
             }
         },
@@ -2141,25 +2696,32 @@
             "type": "object",
             "properties": {
                 "avatar_url": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "https://storage.voxlab.com/avatars/abc123.webp"
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "john@example.com"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "John Doe"
                 },
                 "role": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "user"
                 },
                 "streak_days": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 7
                 },
                 "xp": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1250
                 }
             }
         }
@@ -2171,5 +2733,51 @@
             "name": "Authorization",
             "in": "header"
         }
-    }
+    },
+    "tags": [
+        {
+            "description": "Endpoints de autenticación y perfil de usuario",
+            "name": "Autenticación"
+        },
+        {
+            "description": "Endpoints de gestión de tracks (cursos)",
+            "name": "Tracks"
+        },
+        {
+            "description": "Endpoints de gestión de módulos dentro de tracks",
+            "name": "Módulos"
+        },
+        {
+            "description": "Endpoints de gestión de lecciones dentro de módulos",
+            "name": "Lecciones"
+        },
+        {
+            "description": "Gestión de ejercicios dentro de lecciones + análisis de texto",
+            "name": "Ejercicios"
+        },
+        {
+            "description": "Seguimiento del progreso del usuario (completado de lecciones, XP)",
+            "name": "Progreso"
+        },
+        {
+            "description": "Endpoints para cargar archivos (imágenes, avatares)",
+            "name": "Carga de archivos"
+        },
+        {
+            "description": "Endpoints de administración de usuarios",
+            "name": "Usuarios"
+        },
+        {
+            "description": "Retroalimentación y reacciones en ejercicios",
+            "name": "Reacciones"
+        },
+        {
+            "description": "Health check y endpoints del sistema",
+            "name": "Sistema"
+        },
+        {
+            "description": "Endpoints de documentación Swagger",
+            "name": "Documentación"
+        }
+    ]
 }

@@ -1,6 +1,9 @@
 package http
 
 import (
+	"net/http/httputil"
+	"net/url"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -87,6 +90,13 @@ func (r *Router) initEngine() {
 	api := r.engine.Group("/api/v1")
 	{
 		api.GET("/health", r.health.HealthCheck)
+
+		analyzerURL, _ := url.Parse("http://localhost:8001")
+		analyzerProxy := httputil.NewSingleHostReverseProxy(analyzerURL)
+		api.GET("/analyzer/openapi.json", func(c *gin.Context) {
+			c.Request.URL.Path = "/openapi.json"
+			analyzerProxy.ServeHTTP(c.Writer, c.Request)
+		})
 
 		auth := api.Group("/auth")
 		{

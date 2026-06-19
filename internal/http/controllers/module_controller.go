@@ -17,6 +17,27 @@ func NewModuleController(service *services.ModuleService) *ModuleController {
 	return &ModuleController{service: service}
 }
 
+// CreateModuleRequest represents the request body for creating a module
+// @Description Request body for creating a new module
+type CreateModuleRequest struct {
+	TrackID     int    `json:"track_id" example:"1"`
+	Title       string `json:"title" example:"Voz y Proyección"`
+	Description string `json:"description" example:"Técnicas para proyectar la voz sin esfuerzo"`
+	OrderIndex  int    `json:"order_index" example:"1"`
+}
+
+// UpdateModuleRequest represents the request body for updating a module
+// @Description Request body for updating an existing module
+type UpdateModuleRequest struct {
+	Title       *string `json:"title,omitempty" example:"Voz y Dicción"`
+	Description *string `json:"description,omitempty" example:"Técnicas avanzadas de vocalización"`
+	OrderIndex  *int    `json:"order_index,omitempty" example:"2"`
+}
+
+type linkLessonRequest struct {
+	LessonID int `json:"lesson_id" example:"1"`
+}
+
 // GetModulesByTrack godoc
 // @Summary      List modules for a track
 // @Description  Returns all modules belonging to a specific track, ordered by order_index.
@@ -26,8 +47,9 @@ func NewModuleController(service *services.ModuleService) *ModuleController {
 // @Tags         Modules
 // @Produce      json
 // @Param        id   path      int  true  "Track ID (e.g. 1)"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: Module[] }"
-// @Failure      404  {object}  map[string]interface{}  "Track not found"
+// @Success      200  {array}   models.Module  "List of modules"
+// @Failure      400  {object}  map[string]interface{}  "Invalid track ID"
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/tracks/{id}/modules [get]
 func (h *ModuleController) GetModulesByTrack(c *gin.Context) {
 	trackID, err := strconv.Atoi(c.Param("id"))
@@ -56,7 +78,8 @@ func (h *ModuleController) GetModulesByTrack(c *gin.Context) {
 // @Tags         Modules
 // @Produce      json
 // @Param        id   path      int  true  "Module ID (e.g. 1)"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: Module }"
+// @Success      200  {object}  models.Module  "Module details"
+// @Failure      400  {object}  map[string]interface{}  "Invalid module ID"
 // @Failure      404  {object}  map[string]interface{}  "Module not found"
 // @Router       /api/v1/modules/{id} [get]
 func (h *ModuleController) GetModule(c *gin.Context) {
@@ -88,8 +111,8 @@ func (h *ModuleController) GetModule(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body  object{track_id=int,title=string,description=string,order_index=int}  true  "Module data"
-// @Success      201  {object}  map[string]interface{}  "Created: { success: true, data: Module }"
+// @Param        request  body  CreateModuleRequest  true  "Module data"
+// @Success      201  {object}  models.Module  "Created module"
 // @Failure      400  {object}  map[string]interface{}  "Validation error"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Router       /api/v1/modules [post]
@@ -125,9 +148,9 @@ func (h *ModuleController) CreateModule(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id       path    int  true  "Module ID (e.g. 1)"
-// @Param        request  body    object{title=string,description=string,order_index=int}  true  "Fields to update"
-// @Success      200  {object}  map[string]interface{}  "Updated: { success: true, data: Module }"
+// @Param        id       path    int                 true  "Module ID (e.g. 1)"
+// @Param        request  body    UpdateModuleRequest true  "Fields to update"
+// @Success      200  {object}  models.Module  "Updated module"
 // @Failure      400  {object}  map[string]interface{}  "Validation error"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      404  {object}  map[string]interface{}  "Module not found"
@@ -184,8 +207,10 @@ func (h *ModuleController) UpdateModule(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        id   path      int  true  "Module ID (e.g. 1)"
 // @Success      200  {object}  map[string]interface{}  "Deleted: { success: true, message: string }"
+// @Failure      400  {object}  map[string]interface{}  "Invalid module ID"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      404  {object}  map[string]interface{}  "Module not found"
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/modules/{id} [delete]
 func (h *ModuleController) DeleteModule(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
@@ -208,10 +233,6 @@ func (h *ModuleController) DeleteModule(c *gin.Context) {
 		"success": true,
 		"message": "Module deleted successfully",
 	})
-}
-
-type linkLessonRequest struct {
-	LessonID int `json:"lesson_id" example:"1"`
 }
 
 // LinkLesson     godoc

@@ -35,19 +35,19 @@ type RegisterRequest struct {
 }
 
 type LoginResponse struct {
-	Token     string   `json:"token"`
-	ExpiresAt time.Time `json:"expires_at"`
-	User      UserData `json:"user"`
+	Token     string    `json:"token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzA2NzU4NDAwfQ.signature"`
+	ExpiresAt time.Time `json:"expires_at" example:"2026-01-02T00:00:00Z"`
+	User      UserData  `json:"user"`
 }
 
 type UserData struct {
-	ID         uuid.UUID `json:"id"`
-	Name       string    `json:"name"`
-	Email      string    `json:"email"`
-	Role       string    `json:"role"`
-	AvatarURL  string    `json:"avatar_url"`
-	XP         int       `json:"xp"`
-	StreakDays int       `json:"streak_days"`
+	ID         uuid.UUID `json:"id" swaggertype:"string" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Name       string    `json:"name" example:"John Doe"`
+	Email      string    `json:"email" example:"john@example.com"`
+	Role       string    `json:"role" example:"user"`
+	AvatarURL  string    `json:"avatar_url" example:"https://storage.voxlab.com/avatars/abc123.webp"`
+	XP         int       `json:"xp" example:"1250"`
+	StreakDays int       `json:"streak_days" example:"7"`
 }
 
 func NewAuthService(userRepo *repositories.UserRepository, jwtSecret string) *AuthService {
@@ -165,7 +165,7 @@ func (s *AuthService) GetProfile(userID string) (*UserData, error) {
 }
 
 type UpdateProfileRequest struct {
-	Name string `json:"name,omitempty"`
+	Name string `json:"name,omitempty" example:"Jane Doe"`
 }
 
 func (s *AuthService) UpdateProfile(userID string, req UpdateProfileRequest) (*UserData, error) {

@@ -75,6 +75,8 @@ docker compose logs -f backend
 | API | http://localhost:3000 | — |
 | Swagger (English) | http://localhost:3000/swagger/index.html | — |
 | Swagger (Español) | http://localhost:3000/docs/es | — |
+| Analyzer Docs | http://localhost:8001/docs | — |
+| Analyzer OpenAPI | http://localhost:3000/api/v1/analyzer/openapi.json (proxy) | — |
 | pgAdmin | http://localhost:5050 | `admin@voxlab.com` / `admin` |
 | MinIO Console | http://localhost:9001 | `voxlab_minio_admin` / `voxlab_minio_pass_2024` |
 

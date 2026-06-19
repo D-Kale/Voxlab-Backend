@@ -17,6 +17,22 @@ func NewTrackController(service *services.TrackService) *TrackController {
 	return &TrackController{service: service}
 }
 
+// CreateTrackRequest represents the request body for creating a track
+// @Description Request body for creating a new educational track
+type CreateTrackRequest struct {
+	Title       string `json:"title" example:"Oratoria para Líderes"`
+	Description string `json:"description" example:"Aprende a comunicarte con impacto en el escenario"`
+	IconURL     string `json:"icon_url,omitempty" example:"https://cdn.voxlab.com/icons/leadership.webp"`
+}
+
+// UpdateTrackRequest represents the request body for updating a track
+// @Description Request body for updating an existing track
+type UpdateTrackRequest struct {
+	Title       *string `json:"title,omitempty" example:"Oratoria Avanzada"`
+	Description *string `json:"description,omitempty" example:"Técnicas avanzadas para audiencias grandes"`
+	IconURL     *string `json:"icon_url,omitempty" example:"https://cdn.voxlab.com/icons/advanced.webp"`
+}
+
 // GetTracks      godoc
 // @Summary      List all educational tracks
 // @Description  Returns ALL available tracks with their modules, lessons, and exercises nested inside.
@@ -27,7 +43,7 @@ func NewTrackController(service *services.TrackService) *TrackController {
 // @Description  🔓 Public — no authentication required.
 // @Tags         Tracks (Educational Content)
 // @Produce      json
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: Track[] }"
+// @Success      200  {array}   models.Track  "List of all tracks"
 // @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/tracks [get]
 func (h *TrackController) GetTracks(c *gin.Context) {
@@ -56,7 +72,8 @@ func (h *TrackController) GetTracks(c *gin.Context) {
 // @Tags         Tracks (Educational Content)
 // @Produce      json
 // @Param        id   path      int  true  "Track ID (e.g. 1)"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: Track }"
+// @Success      200  {object}  models.Track  "Track details with nested content"
+// @Failure      400  {object}  map[string]interface{}  "Invalid track ID"
 // @Failure      404  {object}  map[string]interface{}  "Track not found"
 // @Router       /api/v1/tracks/{id} [get]
 func (h *TrackController) GetTrack(c *gin.Context) {
@@ -88,8 +105,8 @@ func (h *TrackController) GetTrack(c *gin.Context) {
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        request  body      object{title=string,description=string,icon_url=string}  true  "Track data"
-// @Success      201  {object}  map[string]interface{}  "Created: { success: true, data: Track }"
+// @Param        request  body      CreateTrackRequest  true  "Track data"
+// @Success      201  {object}  models.Track  "Created track"
 // @Failure      400  {object}  map[string]interface{}  "Validation error"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Router       /api/v1/tracks [post]
@@ -119,16 +136,16 @@ func (h *TrackController) CreateTrack(c *gin.Context) {
 // UpdateTrack    godoc
 // @Summary      Update an existing track
 // @Description  Modifies the title, description, or icon of a track.
-// @Description  Send only the fields you want to update.
+// @Description  Send only the fields you want to change.
 // @Description
 // @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
 // @Tags         Tracks (Educational Content)
 // @Accept       json
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id       path    int                                     true  "Track ID (e.g. 1)"
-// @Param        request  body    object{title=string,description=string,icon_url=string}  true  "Track fields to update"
-// @Success      200  {object}  map[string]interface{}  "Updated: { success: true, data: Track }"
+// @Param        id       path    int                 true  "Track ID (e.g. 1)"
+// @Param        request  body    UpdateTrackRequest  true  "Track fields to update"
+// @Success      200  {object}  models.Track  "Updated track"
 // @Failure      400  {object}  map[string]interface{}  "Validation error"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      404  {object}  map[string]interface{}  "Track not found"

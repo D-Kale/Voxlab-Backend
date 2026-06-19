@@ -7,6 +7,15 @@ import (
 	"github.com/voxlab/voxlab-backend/internal/database"
 )
 
+// HealthResponse represents the system health status
+// @Description System health check response
+type HealthResponse struct {
+	Status    string            `json:"status" example:"ok"`
+	Timestamp string            `json:"timestamp" example:"2026-06-18T12:00:00Z"`
+	Version   string            `json:"version" example:"1.0.0"`
+	Services  map[string]string `json:"services"` // e.g. {"postgres": "ok", "redis": "ok"}
+}
+
 type HealthController struct{}
 
 func NewHealthController() *HealthController {
@@ -15,10 +24,12 @@ func NewHealthController() *HealthController {
 
 // HealthCheck godoc
 // @Summary      Health Check
-// @Description  Verifies API status, database and Redis connectivity
+// @Description  Verifies API status, database and Redis connectivity.
+// @Description  Returns current version and service-level health for each dependency.
 // @Tags         System
 // @Produce      json
-// @Success      200  {object}  map[string]interface{}
+// @Success      200  {object}  controllers.HealthResponse  "System health status"
+// @Failure      503  {object}  map[string]interface{}      "Service unhealthy"
 // @Router       /api/v1/health [get]
 func (h *HealthController) HealthCheck(c *gin.Context) {
 	db := database.GetDB()

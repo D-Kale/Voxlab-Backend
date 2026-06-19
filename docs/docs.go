@@ -121,14 +121,20 @@ const docTemplate = `{
                 "summary": "Get Current User",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Current user profile",
+                        "schema": {
+                            "$ref": "#/definitions/services.UserData"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -154,14 +160,20 @@ const docTemplate = `{
                 "summary": "Get user profile",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Extended user profile",
+                        "schema": {
+                            "$ref": "#/definitions/services.UserData"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -199,10 +211,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Updated user profile",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/services.UserData"
                         }
                     },
                     "400": {
@@ -214,6 +225,13 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -270,6 +288,33 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/docs/es/spec": {
+            "get": {
+                "description": "Returns the full OpenAPI 2.0 specification translated to Spanish.\nFalls back to the English spec if the translation file is missing.\nThis endpoint is consumed by the Swagger UI at /docs/es.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Docs"
+                ],
+                "summary": "Get Spanish OpenAPI specification",
+                "responses": {
+                    "200": {
+                        "description": "Translated OpenAPI specification",
+                        "schema": {
+                            "type": "object"
+                        }
+                    },
+                    "500": {
+                        "description": "Failed to read spec file",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/exercises": {
             "post": {
                 "security": [
@@ -304,7 +349,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created",
+                        "description": "Created exercise",
                         "schema": {
                             "$ref": "#/definitions/models.Exercise"
                         }
@@ -392,10 +437,12 @@ const docTemplate = `{
                 "summary": "Get requirement catalog for writing exercises",
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: RequirementCatalogItem[] }",
+                        "description": "List of catalog items",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/controllers.RequirementCatalogItem"
+                            }
                         }
                     }
                 }
@@ -422,7 +469,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: Exercise }",
+                        "description": "Exercise details",
+                        "schema": {
+                            "$ref": "#/definitions/models.Exercise"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid exercise UUID",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -443,7 +496,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Permanently removes an exercise from a lesson.\n⚠️ This action cannot be undone.\n\n🔒 Requires JWT token (Authorization: Bearer \u003ctoken\u003e)",
+                "description": "Permanently removes an exercise from the lesson.\n⚠️ This action cannot be undone.\n\n🔒 Requires JWT token (Authorization: Bearer \u003ctoken\u003e)",
                 "produces": [
                     "application/json"
                 ],
@@ -468,6 +521,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "400": {
+                        "description": "Invalid exercise UUID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -481,13 +541,20 @@ const docTemplate = `{
                             "type": "object",
                             "additionalProperties": true
                         }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
                     }
                 }
             }
         },
         "/api/v1/health": {
             "get": {
-                "description": "Verifies API status, database and Redis connectivity",
+                "description": "Verifies API status, database and Redis connectivity.\nReturns current version and service-level health for each dependency.",
                 "produces": [
                     "application/json"
                 ],
@@ -497,7 +564,13 @@ const docTemplate = `{
                 "summary": "Health Check",
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "System health status",
+                        "schema": {
+                            "$ref": "#/definitions/controllers.HealthResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service unhealthy",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -531,27 +604,15 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "estimated_time_seconds": {
-                                    "type": "integer"
-                                },
-                                "title": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.CreateLessonRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created: { success: true, data: Lesson }",
+                        "description": "Created lesson",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Lesson"
                         }
                     },
                     "400": {
@@ -592,7 +653,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: Lesson }",
+                        "description": "Lesson details with exercises",
+                        "schema": {
+                            "$ref": "#/definitions/models.Lesson"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid lesson ID",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -638,27 +705,15 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "estimated_time_seconds": {
-                                    "type": "integer"
-                                },
-                                "title": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.UpdateLessonRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Updated: { success: true, data: Lesson }",
+                        "description": "Updated lesson",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Lesson"
                         }
                     },
                     "400": {
@@ -715,6 +770,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "400": {
+                        "description": "Invalid lesson ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -724,6 +786,13 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Lesson not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -753,14 +822,23 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: Exercise[] }",
+                        "description": "List of exercises",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Exercise"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid lesson ID",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
-                    "404": {
-                        "description": "Lesson not found",
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -794,30 +872,15 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "order_index": {
-                                    "type": "integer"
-                                },
-                                "title": {
-                                    "type": "string"
-                                },
-                                "track_id": {
-                                    "type": "integer"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.CreateModuleRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created: { success: true, data: Module }",
+                        "description": "Created module",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Module"
                         }
                     },
                     "400": {
@@ -858,7 +921,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: Module }",
+                        "description": "Module details",
+                        "schema": {
+                            "$ref": "#/definitions/models.Module"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid module ID",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -904,27 +973,15 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "order_index": {
-                                    "type": "integer"
-                                },
-                                "title": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.UpdateModuleRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Updated: { success: true, data: Module }",
+                        "description": "Updated module",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Module"
                         }
                     },
                     "400": {
@@ -981,6 +1038,13 @@ const docTemplate = `{
                             "additionalProperties": true
                         }
                     },
+                    "400": {
+                        "description": "Invalid module ID",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -990,6 +1054,13 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Module not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1019,14 +1090,23 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: ModuleLesson[] }",
+                        "description": "List of lessons",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Lesson"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid module ID",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
-                    "404": {
-                        "description": "Module not found",
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1118,14 +1198,23 @@ const docTemplate = `{
                 "summary": "Get my learning progress",
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: UserProgress[] }",
+                        "description": "User progress records",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.UserProgress"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized — token missing or invalid",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized — token missing or invalid",
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1163,10 +1252,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Completed: { success: true, data: UserProgress }",
+                        "description": "Updated progress record",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.UserProgress"
                         }
                     },
                     "400": {
@@ -1189,6 +1277,42 @@ const docTemplate = `{
                             "type": "object",
                             "additionalProperties": true
                         }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reactions": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "⚠️ NOT YET IMPLEMENTED — placeholder endpoint.\nThis will allow users to send reactions (emojis/likes) during\nlive practice sessions. Reactions are stored with a 30-day TTL\nand automatically cleaned up by pg_cron.\n\n🔒 Requires JWT token (Authorization: Bearer \u003ctoken\u003e)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Reactions"
+                ],
+                "summary": "[TODO] Create a reaction (emoji/like) during live sessions",
+                "responses": {
+                    "501": {
+                        "description": "Not Implemented — endpoint not yet active",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
                     }
                 }
             }
@@ -1205,10 +1329,12 @@ const docTemplate = `{
                 "summary": "List all educational tracks",
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: Track[] }",
+                        "description": "List of all tracks",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Track"
+                            }
                         }
                     },
                     "500": {
@@ -1244,27 +1370,15 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "icon_url": {
-                                    "type": "string"
-                                },
-                                "title": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.CreateTrackRequest"
                         }
                     }
                 ],
                 "responses": {
                     "201": {
-                        "description": "Created: { success: true, data: Track }",
+                        "description": "Created track",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Track"
                         }
                     },
                     "400": {
@@ -1305,7 +1419,13 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: Track }",
+                        "description": "Track details with nested content",
+                        "schema": {
+                            "$ref": "#/definitions/models.Track"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid track ID",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1326,7 +1446,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Modifies the title, description, or icon of a track.\nSend only the fields you want to update.\n\n🔒 Requires JWT token (Authorization: Bearer \u003ctoken\u003e)",
+                "description": "Modifies the title, description, or icon of a track.\nSend only the fields you want to change.\n\n🔒 Requires JWT token (Authorization: Bearer \u003ctoken\u003e)",
                 "consumes": [
                     "application/json"
                 ],
@@ -1351,27 +1471,15 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "type": "object",
-                            "properties": {
-                                "description": {
-                                    "type": "string"
-                                },
-                                "icon_url": {
-                                    "type": "string"
-                                },
-                                "title": {
-                                    "type": "string"
-                                }
-                            }
+                            "$ref": "#/definitions/controllers.UpdateTrackRequest"
                         }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Updated: { success: true, data: Track }",
+                        "description": "Updated track",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/models.Track"
                         }
                     },
                     "400": {
@@ -1466,14 +1574,23 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: Module[] }",
+                        "description": "List of modules",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Module"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid track ID",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
                         }
                     },
-                    "404": {
-                        "description": "Track not found",
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1484,6 +1601,11 @@ const docTemplate = `{
         },
         "/api/v1/upload/avatar": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Uploads and sets the authenticated user's avatar image. WebP optimized, max 2MB, 400x400.\nThe old avatar is deleted from storage automatically.",
                 "consumes": [
                     "multipart/form-data"
@@ -1506,10 +1628,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: { url: string } }",
+                        "description": "Upload result",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/controllers.UploadResponse"
                         }
                     },
                     "400": {
@@ -1538,6 +1659,11 @@ const docTemplate = `{
         },
         "/api/v1/upload/lesson/{id}": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Same as track upload but for a lesson's image_url. WebP optimized, max 2MB, 1920x1080.",
                 "consumes": [
                     "multipart/form-data"
@@ -1567,10 +1693,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: { url: string } }",
+                        "description": "Upload result",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/controllers.UploadResponse"
                         }
                     },
                     "400": {
@@ -1606,6 +1731,11 @@ const docTemplate = `{
         },
         "/api/v1/upload/module/{id}": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Same as track upload but for a module's image_url. WebP optimized, max 2MB, 1920x1080.",
                 "consumes": [
                     "multipart/form-data"
@@ -1635,10 +1765,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: { url: string } }",
+                        "description": "Upload result",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/controllers.UploadResponse"
                         }
                     },
                     "400": {
@@ -1674,6 +1803,11 @@ const docTemplate = `{
         },
         "/api/v1/upload/track/{id}": {
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Accepts an image file (JPEG/PNG), optimizes it to WebP (quality 80), and uploads to MinIO.\nThe track's icon_url is updated automatically. The old image is deleted from storage.\nMax file size: 2MB. Image is resized to fit 1920x1080 while preserving aspect ratio.",
                 "consumes": [
                     "multipart/form-data"
@@ -1703,10 +1837,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: { url: string } }",
+                        "description": "Upload result",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/controllers.UploadResponse"
                         }
                     },
                     "400": {
@@ -1757,10 +1890,12 @@ const docTemplate = `{
                 "summary": "List all users (admin)",
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: User[] }",
+                        "description": "List of users",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/services.AdminUserData"
+                            }
                         }
                     },
                     "401": {
@@ -1772,6 +1907,13 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden — admin only",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1806,10 +1948,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Success: { success: true, data: User }",
+                        "description": "User details",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/services.AdminUserData"
                         }
                     },
                     "401": {
@@ -1872,10 +2013,9 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Updated: { success: true, data: User }",
+                        "description": "Updated user",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/services.AdminUserData"
                         }
                     },
                     "400": {
@@ -1894,6 +2034,20 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden — admin only",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1926,7 +2080,7 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "Deleted: { success: true, message: string }",
+                        "description": "Deleted confirmation",
                         "schema": {
                             "type": "object",
                             "additionalProperties": true
@@ -1945,6 +2099,40 @@ const docTemplate = `{
                             "type": "object",
                             "additionalProperties": true
                         }
+                    },
+                    "404": {
+                        "description": "User not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/docs/es": {
+            "get": {
+                "description": "Serves an interactive Swagger UI page configured to load the\nSpanish-translated OpenAPI spec from /api/v1/docs/es/spec.\nThis is the Spanish documentation portal for the Voxlab API.",
+                "produces": [
+                    "text/html"
+                ],
+                "tags": [
+                    "Docs"
+                ],
+                "summary": "Serve Spanish Swagger UI",
+                "responses": {
+                    "200": {
+                        "description": "HTML page with Swagger UI",
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 }
             }
@@ -1955,19 +2143,27 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "max_words": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 500
                 },
                 "min_words": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 100
                 },
                 "requirements": {
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
+                    },
+                    "example": [
+                        "Incluir una introducción clara",
+                        "Dar ejemplos concretos",
+                        "Usar vocabulario técnico"
+                    ]
                 },
                 "text": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "El liderazgo es una habilidad fundamental para cualquier profesional que busque destacar en su carrera. A lo largo de este ensayo, exploraremos las características clave de un líder efectivo y cómo desarrollarlas en el día a día."
                 }
             }
         },
@@ -1997,6 +2193,173 @@ const docTemplate = `{
                         }
                     ],
                     "example": "quiz"
+                }
+            }
+        },
+        "controllers.CreateLessonRequest": {
+            "description": "Request body for creating a new lesson",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Aprende a respirar desde el diafragma para proyectar tu voz"
+                },
+                "estimated_time_seconds": {
+                    "type": "integer",
+                    "example": 300
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Respiración Diafragmática"
+                }
+            }
+        },
+        "controllers.CreateModuleRequest": {
+            "description": "Request body for creating a new module",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Técnicas para proyectar la voz sin esfuerzo"
+                },
+                "order_index": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Voz y Proyección"
+                },
+                "track_id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
+        "controllers.CreateTrackRequest": {
+            "description": "Request body for creating a new educational track",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Aprende a comunicarte con impacto en el escenario"
+                },
+                "icon_url": {
+                    "type": "string",
+                    "example": "https://cdn.voxlab.com/icons/leadership.webp"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Oratoria para Líderes"
+                }
+            }
+        },
+        "controllers.HealthResponse": {
+            "description": "System health check response",
+            "type": "object",
+            "properties": {
+                "services": {
+                    "description": "e.g. {\"postgres\": \"ok\", \"redis\": \"ok\"}",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "status": {
+                    "type": "string",
+                    "example": "ok"
+                },
+                "timestamp": {
+                    "type": "string",
+                    "example": "2026-06-18T12:00:00Z"
+                },
+                "version": {
+                    "type": "string",
+                    "example": "1.0.0"
+                }
+            }
+        },
+        "controllers.RequirementCatalogItem": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string",
+                    "example": "Cobertura del contenido"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "intro"
+                },
+                "order": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "text": {
+                    "type": "string",
+                    "example": "Incluir una introducción clara del tema"
+                }
+            }
+        },
+        "controllers.UpdateLessonRequest": {
+            "description": "Request body for updating an existing lesson",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Técnicas avanzadas de control respiratorio"
+                },
+                "estimated_time_seconds": {
+                    "type": "integer",
+                    "example": 600
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Respiración Avanzada"
+                }
+            }
+        },
+        "controllers.UpdateModuleRequest": {
+            "description": "Request body for updating an existing module",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Técnicas avanzadas de vocalización"
+                },
+                "order_index": {
+                    "type": "integer",
+                    "example": 2
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Voz y Dicción"
+                }
+            }
+        },
+        "controllers.UpdateTrackRequest": {
+            "description": "Request body for updating an existing track",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string",
+                    "example": "Técnicas avanzadas para audiencias grandes"
+                },
+                "icon_url": {
+                    "type": "string",
+                    "example": "https://cdn.voxlab.com/icons/advanced.webp"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Oratoria Avanzada"
+                }
+            }
+        },
+        "controllers.UploadResponse": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "example": "https://storage.example.com/uploads/track-1.webp"
                 }
             }
         },
@@ -2067,6 +2430,192 @@ const docTemplate = `{
                 "ExerciseTypeWriting"
             ]
         },
+        "models.Lesson": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "estimated_time_seconds": {
+                    "type": "integer"
+                },
+                "exercises": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Exercise"
+                    }
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.Module": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "image_url": {
+                    "type": "string"
+                },
+                "lessons": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ModuleLesson"
+                    }
+                },
+                "order_index": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "track_id": {
+                    "type": "integer"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.ModuleLesson": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "lesson": {
+                    "$ref": "#/definitions/models.Lesson"
+                },
+                "lesson_id": {
+                    "type": "integer"
+                },
+                "module_id": {
+                    "type": "integer"
+                },
+                "order_index": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Track": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "modules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Module"
+                    }
+                },
+                "title": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.UserProgress": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "lesson_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "xp_earned": {
+                    "type": "integer"
+                }
+            }
+        },
+        "services.AdminUserData": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2025-06-01T12:00:00Z"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "john@example.com"
+                },
+                "id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "lives": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "name": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "user"
+                },
+                "streak_days": {
+                    "type": "integer",
+                    "example": 3
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2026-06-18T12:00:00Z"
+                },
+                "xp": {
+                    "type": "integer",
+                    "example": 850
+                }
+            }
+        },
         "services.LoginRequest": {
             "type": "object",
             "required": [
@@ -2088,10 +2637,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "expires_at": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2026-01-02T00:00:00Z"
                 },
                 "token": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiNTUwZTg0MDAtZTI5Yi00MWQ0LWE3MTYtNDQ2NjU1NDQwMDAwIiwiZXhwIjoxNzA2NzU4NDAwfQ.signature"
                 },
                 "user": {
                     "$ref": "#/definitions/services.UserData"
@@ -2125,7 +2676,8 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Jane Doe"
                 }
             }
         },
@@ -2133,13 +2685,16 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "jane@example.com"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Jane Doe"
                 },
                 "role": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "admin"
                 }
             }
         },
@@ -2147,25 +2702,32 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "avatar_url": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "https://storage.voxlab.com/avatars/abc123.webp"
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "john@example.com"
                 },
                 "id": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
                 },
                 "name": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "John Doe"
                 },
                 "role": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "user"
                 },
                 "streak_days": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 7
                 },
                 "xp": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1250
                 }
             }
         }
@@ -2177,7 +2739,53 @@ const docTemplate = `{
             "name": "Authorization",
             "in": "header"
         }
-    }
+    },
+    "tags": [
+        {
+            "description": "Authentication \u0026 user profile endpoints",
+            "name": "Auth"
+        },
+        {
+            "description": "Track (course) management endpoints",
+            "name": "Tracks"
+        },
+        {
+            "description": "Module management endpoints within tracks",
+            "name": "Modules"
+        },
+        {
+            "description": "Lesson management endpoints within modules",
+            "name": "Lessons"
+        },
+        {
+            "description": "Exercise management within lessons + text analysis",
+            "name": "Exercises"
+        },
+        {
+            "description": "User progress tracking (lesson completion, XP)",
+            "name": "Progress"
+        },
+        {
+            "description": "File upload endpoints (images, avatars)",
+            "name": "Upload"
+        },
+        {
+            "description": "Admin user management endpoints",
+            "name": "Users"
+        },
+        {
+            "description": "Feedback \u0026 reactions on exercises",
+            "name": "Reactions"
+        },
+        {
+            "description": "Health check and system endpoints",
+            "name": "System"
+        },
+        {
+            "description": "Swagger documentation endpoints",
+            "name": "Docs"
+        }
+    ]
 }`
 
 // SwaggerInfo holds exported Swagger Info so clients can modify it

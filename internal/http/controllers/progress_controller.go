@@ -26,8 +26,9 @@ func NewProgressController(service *services.ProgressService) *ProgressControlle
 // @Tags         Progress
 // @Produce      json
 // @Security     BearerAuth
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: UserProgress[] }"
+// @Success      200  {array}   models.UserProgress  "User progress records"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized — token missing or invalid"
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/progress [get]
 func (h *ProgressController) GetMyProgress(c *gin.Context) {
 	userIDStr, exists := c.Get("user_id")
@@ -75,10 +76,11 @@ type completeLessonRequest struct {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request  body  completeLessonRequest  true  "Lesson completion data"
-// @Success      200  {object}  map[string]interface{}  "Completed: { success: true, data: UserProgress }"
+// @Success      200  {object}  models.UserProgress  "Updated progress record"
 // @Failure      400  {object}  map[string]interface{}  "Validation error"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized — token missing or invalid"
 // @Failure      404  {object}  map[string]interface{}  "Lesson not found"
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/progress [post]
 func (h *ProgressController) CompleteLesson(c *gin.Context) {
 	userIDStr, exists := c.Get("user_id")

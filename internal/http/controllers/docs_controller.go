@@ -162,6 +162,15 @@ func NewDocsController() *DocsController {
 	return &DocsController{}
 }
 
+// ServeSwaggerUI godoc
+// @Summary      Serve Spanish Swagger UI
+// @Description  Serves an interactive Swagger UI page configured to load the
+// @Description  Spanish-translated OpenAPI spec from /api/v1/docs/es/spec.
+// @Description  This is the Spanish documentation portal for the Voxlab API.
+// @Tags         Docs
+// @Produce      html
+// @Success      200  {string}  html  "HTML page with Swagger UI"
+// @Router       /docs/es [get]
 func (c *DocsController) ServeSwaggerUI(ctx *gin.Context) {
 	html := `<!DOCTYPE html>
 <html lang="es">
@@ -196,6 +205,16 @@ func (c *DocsController) ServeSwaggerUI(ctx *gin.Context) {
 	ctx.Writer.Write([]byte(html))
 }
 
+// ServeTranslatedSpec godoc
+// @Summary      Get Spanish OpenAPI specification
+// @Description  Returns the full OpenAPI 2.0 specification translated to Spanish.
+// @Description  Falls back to the English spec if the translation file is missing.
+// @Description  This endpoint is consumed by the Swagger UI at /docs/es.
+// @Tags         Docs
+// @Produce      json
+// @Success      200  {object}  object  "Translated OpenAPI specification"
+// @Failure      500  {object}  map[string]interface{}  "Failed to read spec file"
+// @Router       /api/v1/docs/es/spec [get]
 func (c *DocsController) ServeTranslatedSpec(ctx *gin.Context) {
 	if data, err := os.ReadFile("/app/docs/es/openapi-es.json"); err == nil {
 		ctx.Data(http.StatusOK, "application/json", data)

@@ -16,21 +16,21 @@ func NewUserService(repo *repositories.UserRepository) *UserService {
 }
 
 type AdminUserData struct {
-	ID         string    `json:"id"`
-	Name       string    `json:"name"`
-	Email      string    `json:"email"`
-	Role       string    `json:"role"`
-	XP         int       `json:"xp"`
-	StreakDays int       `json:"streak_days"`
-	Lives      int       `json:"lives"`
-	CreatedAt  time.Time `json:"created_at"`
-	UpdatedAt  time.Time `json:"updated_at"`
+	ID         string    `json:"id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Name       string    `json:"name" example:"John Doe"`
+	Email      string    `json:"email" example:"john@example.com"`
+	Role       string    `json:"role" example:"user"`
+	XP         int       `json:"xp" example:"850"`
+	StreakDays int       `json:"streak_days" example:"3"`
+	Lives      int       `json:"lives" example:"5"`
+	CreatedAt  time.Time `json:"created_at" example:"2025-06-01T12:00:00Z"`
+	UpdatedAt  time.Time `json:"updated_at" example:"2026-06-18T12:00:00Z"`
 }
 
 type UpdateUserRequest struct {
-	Name  *string `json:"name,omitempty"`
-	Email *string `json:"email,omitempty"`
-	Role  *string `json:"role,omitempty"`
+	Name  *string `json:"name,omitempty" example:"Jane Doe"`
+	Email *string `json:"email,omitempty" example:"jane@example.com"`
+	Role  *string `json:"role,omitempty" example:"admin"`
 }
 
 func (s *UserService) ListUsers() ([]AdminUserData, error) {

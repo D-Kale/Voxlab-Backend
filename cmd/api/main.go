@@ -27,6 +27,29 @@ import (
 // @in                          header
 // @name                        Authorization
 // @description                 Type "Bearer " followed by your JWT token
+
+// @tag.name         Auth
+// @tag.description  Authentication & user profile endpoints
+// @tag.name         Tracks
+// @tag.description  Track (course) management endpoints
+// @tag.name         Modules
+// @tag.description  Module management endpoints within tracks
+// @tag.name         Lessons
+// @tag.description  Lesson management endpoints within modules
+// @tag.name         Exercises
+// @tag.description  Exercise management within lessons + text analysis
+// @tag.name         Progress
+// @tag.description  User progress tracking (lesson completion, XP)
+// @tag.name         Upload
+// @tag.description  File upload endpoints (images, avatars)
+// @tag.name         Users
+// @tag.description  Admin user management endpoints
+// @tag.name         Reactions
+// @tag.description  Feedback & reactions on exercises
+// @tag.name         System
+// @tag.description  Health check and system endpoints
+// @tag.name         Docs
+// @tag.description  Swagger documentation endpoints
 func main() {
 	if err := config.LoadConfig(); err != nil {
 		log.Fatalf("Error loading config: %v", err)

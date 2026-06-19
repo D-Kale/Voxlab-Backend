@@ -43,8 +43,9 @@ func NewExerciseController(service *services.ExerciseService) *ExerciseControlle
 // @Tags         Exercises
 // @Produce      json
 // @Param        id   path      int  true  "Lesson ID (e.g. 1)"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: Exercise[] }"
-// @Failure      404  {object}  map[string]interface{}  "Lesson not found"
+// @Success      200  {array}   models.Exercise  "List of exercises"
+// @Failure      400  {object}  map[string]interface{}  "Invalid lesson ID"
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/lessons/{id}/exercises [get]
 func (h *ExerciseController) GetExercisesByLesson(c *gin.Context) {
 	lessonID, err := strconv.Atoi(c.Param("id"))
@@ -74,7 +75,8 @@ func (h *ExerciseController) GetExercisesByLesson(c *gin.Context) {
 // @Tags         Exercises
 // @Produce      json
 // @Param        id   path      string  true  "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: Exercise }"
+// @Success      200  {object}  models.Exercise  "Exercise details"
+// @Failure      400  {object}  map[string]interface{}  "Invalid exercise UUID"
 // @Failure      404  {object}  map[string]interface{}  "Exercise not found"
 // @Router       /api/v1/exercises/{id} [get]
 func (h *ExerciseController) GetExercise(c *gin.Context) {
@@ -286,7 +288,7 @@ func (h *ExerciseController) GetExercise(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        request  body  CreateExerciseRequest true  "Exercise data"
-// @Success      201  {object}  models.Exercise
+// @Success      201  {object}  models.Exercise  "Created exercise"
 // @Failure      400  {object}  map[string]interface{}  "Validation error"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Router       /api/v1/exercises [post]
@@ -332,7 +334,7 @@ func (h *ExerciseController) CreateExercise(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        id       path  string  true  "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
 // @Param        request  body  object{type=string,order_index=int,content=object}  true  "Fields to update"
-// @Success      200  {object}  map[string]interface{}  "Updated: { success: true, data: Exercise }"
+// @Success      200  {object}  models.Exercise  "Updated exercise"
 // @Failure      400  {object}  map[string]interface{}  "Validation error"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      404  {object}  map[string]interface{}  "Exercise not found"
@@ -385,17 +387,19 @@ func (h *ExerciseController) UpdateExercise(c *gin.Context) {
 
 // DeleteExercise godoc
 // @Summary      Delete an exercise
-// @Description  Permanently removes an exercise from a lesson.
+// @Description  Permanently removes an exercise from the lesson.
 // @Description  ⚠️ This action cannot be undone.
 // @Description
 // @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
 // @Tags         Exercises
 // @Produce      json
 // @Security     BearerAuth
-// @Param        id   path      string  true  "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
+// @Param        id   path  string  true  "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
 // @Success      200  {object}  map[string]interface{}  "Deleted: { success: true, message: string }"
+// @Failure      400  {object}  map[string]interface{}  "Invalid exercise UUID"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      404  {object}  map[string]interface{}  "Exercise not found"
+// @Failure      500  {object}  map[string]interface{}  "Server error"
 // @Router       /api/v1/exercises/{id} [delete]
 func (h *ExerciseController) DeleteExercise(c *gin.Context) {
 	id, err := uuid.Parse(c.Param("id"))
@@ -421,17 +425,17 @@ func (h *ExerciseController) DeleteExercise(c *gin.Context) {
 }
 
 type AnalyzeTextInput struct {
-	Text         string   `json:"text"`
-	Requirements []string `json:"requirements,omitempty"`
-	MinWords     *int     `json:"min_words,omitempty"`
-	MaxWords     *int     `json:"max_words,omitempty"`
+	Text         string   `json:"text" example:"El liderazgo es una habilidad fundamental para cualquier profesional que busque destacar en su carrera. A lo largo de este ensayo, exploraremos las características clave de un líder efectivo y cómo desarrollarlas en el día a día."`
+	Requirements []string `json:"requirements,omitempty" example:"Incluir una introducción clara,Dar ejemplos concretos,Usar vocabulario técnico"`
+	MinWords     *int     `json:"min_words,omitempty" example:"100"`
+	MaxWords     *int     `json:"max_words,omitempty" example:"500"`
 }
 
 type RequirementCatalogItem struct {
-	ID       string `json:"id"`
-	Text     string `json:"text"`
-	Category string `json:"category"`
-	Order    int    `json:"order"`
+	ID       string `json:"id" example:"intro"`
+	Text     string `json:"text" example:"Incluir una introducción clara del tema"`
+	Category string `json:"category" example:"Cobertura del contenido"`
+	Order    int    `json:"order" example:"1"`
 }
 
 // GetRequirementCatalog godoc
@@ -443,7 +447,7 @@ type RequirementCatalogItem struct {
 // @Description  🔓 Public — no authentication required.
 // @Tags         Exercises
 // @Produce      json
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: RequirementCatalogItem[] }"
+// @Success      200  {array}   RequirementCatalogItem  "List of catalog items"
 // @Router       /api/v1/exercises/requirement-catalog [get]
 func (h *ExerciseController) GetRequirementCatalog(c *gin.Context) {
 	catalog := models.GetRequirementCatalog()

@@ -12,6 +12,11 @@ import (
 
 const maxUploadSize = 2 << 20
 
+// UploadResponse is returned by upload endpoints.
+type UploadResponse struct {
+	URL string `json:"url" example:"https://storage.example.com/uploads/track-1.webp"`
+}
+
 type UploadController struct {
 	service *services.UploadService
 }
@@ -27,9 +32,10 @@ func NewUploadController(service *services.UploadService) *UploadController {
 // @Tags         Upload
 // @Accept       multipart/form-data
 // @Produce      json
+// @Security     BearerAuth
 // @Param        id   path      int    true  "Track ID"
 // @Param        file formData  file   true  "Image file (JPEG/PNG, max 2MB)"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: { url: string } }"
+// @Success      200  {object}  UploadResponse  "Upload result"
 // @Failure      400  {object}  map[string]interface{}  "Invalid track ID or missing file"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      403  {object}  map[string]interface{}  "Forbidden — admin only"
@@ -69,9 +75,10 @@ func (h *UploadController) UploadTrackImage(c *gin.Context) {
 // @Tags         Upload
 // @Accept       multipart/form-data
 // @Produce      json
+// @Security     BearerAuth
 // @Param        id   path      int    true  "Module ID"
 // @Param        file formData  file   true  "Image file (JPEG/PNG, max 2MB)"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: { url: string } }"
+// @Success      200  {object}  UploadResponse  "Upload result"
 // @Failure      400  {object}  map[string]interface{}  "Invalid module ID or missing file"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      403  {object}  map[string]interface{}  "Forbidden — admin only"
@@ -111,9 +118,10 @@ func (h *UploadController) UploadModuleImage(c *gin.Context) {
 // @Tags         Upload
 // @Accept       multipart/form-data
 // @Produce      json
+// @Security     BearerAuth
 // @Param        id   path      int    true  "Lesson ID"
 // @Param        file formData  file   true  "Image file (JPEG/PNG, max 2MB)"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: { url: string } }"
+// @Success      200  {object}  UploadResponse  "Upload result"
 // @Failure      400  {object}  map[string]interface{}  "Invalid lesson ID or missing file"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      403  {object}  map[string]interface{}  "Forbidden — admin only"
@@ -154,8 +162,9 @@ func (h *UploadController) UploadLessonImage(c *gin.Context) {
 // @Tags         Upload
 // @Accept       multipart/form-data
 // @Produce      json
+// @Security     BearerAuth
 // @Param        file formData  file   true  "Avatar image (JPEG/PNG, max 2MB)"
-// @Success      200  {object}  map[string]interface{}  "Success: { success: true, data: { url: string } }"
+// @Success      200  {object}  UploadResponse  "Upload result"
 // @Failure      400  {object}  map[string]interface{}  "Missing file or too large"
 // @Failure      401  {object}  map[string]interface{}  "Unauthorized"
 // @Failure      500  {object}  map[string]interface{}  "Upload or database error"
