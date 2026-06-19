@@ -26,6 +26,8 @@ services:
         condition: service_healthy
       minio:
         condition: service_healthy
+      analyzer:
+        condition: service_started
     restart: unless-stopped
 
   analyzer:
@@ -35,6 +37,12 @@ services:
     container_name: voxlab-analyzer
     ports:
       - "8001:8000"
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
     restart: unless-stopped
 
   postgres:
@@ -118,4 +126,3 @@ volumes:
   postgres-data:
   redis-data:
   minio-data:
-  livekit-data:

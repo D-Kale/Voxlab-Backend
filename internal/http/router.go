@@ -3,6 +3,7 @@ package http
 import (
 	"net/http/httputil"
 	"net/url"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -91,7 +92,11 @@ func (r *Router) initEngine() {
 	{
 		api.GET("/health", r.health.HealthCheck)
 
-		analyzerURL, _ := url.Parse("http://localhost:8001")
+		analyzerTarget := os.Getenv("ANALYZER_URL")
+		if analyzerTarget == "" {
+			analyzerTarget = "http://localhost:8001"
+		}
+		analyzerURL, _ := url.Parse(analyzerTarget)
 		analyzerProxy := httputil.NewSingleHostReverseProxy(analyzerURL)
 		api.GET("/analyzer/openapi.json", func(c *gin.Context) {
 			c.Request.URL.Path = "/openapi.json"
