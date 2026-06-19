@@ -811,7 +811,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/lessons/{lessonId}/exercises": {
+        "/api/v1/lessons/{id}/exercises": {
             "post": {
                 "security": [
                     {
@@ -880,7 +880,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/lessons/{lessonId}/exercises/{exerciseId}": {
+        "/api/v1/lessons/{id}/exercises/{exerciseId}": {
             "delete": {
                 "security": [
                     {
@@ -939,7 +939,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/lessons/{lessonId}/exercises/{exerciseId}/reorder": {
+        "/api/v1/lessons/{id}/exercises/{exerciseId}/reorder": {
             "put": {
                 "security": [
                     {

@@ -347,9 +347,9 @@ func (h *ExerciseController) DeleteExercise(c *gin.Context) {
 // @Failure      400  {object}  resources.BadRequestError       "Datos inválidos"
 // @Failure      401  {object}  resources.UnauthorizedError     "Token no proporcionado o inválido"
 // @Failure      404  {object}  resources.NotFoundError         "Lección o ejercicio no encontrado"
-// @Router       /api/v1/lessons/{lessonId}/exercises [post]
+// @Router       /api/v1/lessons/{id}/exercises [post]
 func (h *ExerciseController) LinkExerciseToLesson(c *gin.Context) {
-	lessonID, err := strconv.Atoi(c.Param("lessonId"))
+	lessonID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lesson ID"})
 		return
@@ -398,9 +398,9 @@ func (h *ExerciseController) LinkExerciseToLesson(c *gin.Context) {
 // @Failure      400  {object}  resources.BadRequestError          "Datos inválidos"
 // @Failure      401  {object}  resources.UnauthorizedError        "Token no proporcionado o inválido"
 // @Failure      500  {object}  resources.InternalServerError      "Error al desvincular el ejercicio"
-// @Router       /api/v1/lessons/{lessonId}/exercises/{exerciseId} [delete]
+// @Router       /api/v1/lessons/{id}/exercises/{exerciseId} [delete]
 func (h *ExerciseController) UnlinkExerciseFromLesson(c *gin.Context) {
-	lessonID, err := strconv.Atoi(c.Param("lessonId"))
+	lessonID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lesson ID"})
 		return
@@ -437,9 +437,9 @@ func (h *ExerciseController) UnlinkExerciseFromLesson(c *gin.Context) {
 // @Failure      400  {object}  resources.BadRequestError           "Datos inválidos"
 // @Failure      401  {object}  resources.UnauthorizedError         "Token no proporcionado o inválido"
 // @Failure      500  {object}  resources.InternalServerError       "Error al reordenar el ejercicio"
-// @Router       /api/v1/lessons/{lessonId}/exercises/{exerciseId}/reorder [put]
+// @Router       /api/v1/lessons/{id}/exercises/{exerciseId}/reorder [put]
 func (h *ExerciseController) ReorderExerciseInLesson(c *gin.Context) {
-	lessonID, err := strconv.Atoi(c.Param("lessonId"))
+	lessonID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lesson ID"})
 		return

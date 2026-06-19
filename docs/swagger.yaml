@@ -1562,7 +1562,7 @@ paths:
       summary: Update a lesson
       tags:
       - Lessons
-  /api/v1/lessons/{lessonId}/exercises:
+  /api/v1/lessons/{id}/exercises:
     post:
       consumes:
       - application/json
@@ -1609,7 +1609,7 @@ paths:
       summary: Link an exercise to a lesson
       tags:
       - Lessons
-  /api/v1/lessons/{lessonId}/exercises/{exerciseId}:
+  /api/v1/lessons/{id}/exercises/{exerciseId}:
     delete:
       description: "Removes the link between an exercise and a lesson. The exercise
         itself is NOT deleted\n— it remains available for other lessons.\n\n\U0001F512
@@ -1649,7 +1649,7 @@ paths:
       summary: Unlink an exercise from a lesson
       tags:
       - Lessons
-  /api/v1/lessons/{lessonId}/exercises/{exerciseId}/reorder:
+  /api/v1/lessons/{id}/exercises/{exerciseId}/reorder:
     put:
       consumes:
       - application/json

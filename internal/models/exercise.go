@@ -24,7 +24,7 @@ const (
 // Supported types: quiz, reading, oratory_minigame, audio, video, writing.
 type Exercise struct {
 	ID        uuid.UUID       `gorm:"type:uuid;primary_key" json:"id" swaggertype:"string"`
-	Name      string          `gorm:"type:varchar(255);not null" json:"name" example:"Quiz de liderazgo"`
+	Name      string          `gorm:"type:varchar(255);default:''" json:"name" example:"Quiz de liderazgo"`
 	Type      ExerciseType    `gorm:"type:varchar(50);not null" json:"type"`
 	Content   json.RawMessage `gorm:"type:jsonb;not null" json:"content" swaggertype:"object"`
 	CreatedAt time.Time       `gorm:"autoCreateTime" json:"created_at"`

@@ -143,9 +143,9 @@ func (r *Router) initEngine() {
 			lessons.PUT("/:id", middleware.AuthMiddleware(), r.lesson.UpdateLesson)
 			lessons.DELETE("/:id", middleware.AuthMiddleware(), r.lesson.DeleteLesson)
 
-			lessons.POST("/:lessonId/exercises", middleware.AuthMiddleware(), r.exercise.LinkExerciseToLesson)
-			lessons.DELETE("/:lessonId/exercises/:exerciseId", middleware.AuthMiddleware(), r.exercise.UnlinkExerciseFromLesson)
-			lessons.PUT("/:lessonId/exercises/:exerciseId/reorder", middleware.AuthMiddleware(), r.exercise.ReorderExerciseInLesson)
+			lessons.POST("/:id/exercises", middleware.AuthMiddleware(), r.exercise.LinkExerciseToLesson)
+			lessons.DELETE("/:id/exercises/:exerciseId", middleware.AuthMiddleware(), r.exercise.UnlinkExerciseFromLesson)
+			lessons.PUT("/:id/exercises/:exerciseId/reorder", middleware.AuthMiddleware(), r.exercise.ReorderExerciseInLesson)
 		}
 
 		exercises := api.Group("/exercises")

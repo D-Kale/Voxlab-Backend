@@ -27,6 +27,7 @@ RUN apk --no-cache add ca-certificates tzdata libwebp
 # Copy binary from builder
 COPY --from=builder /app/main .
 COPY --from=builder /app/docs ./docs
+COPY --from=builder /app/database ./database
 
 # Create non-root user
 RUN adduser -D -g '' appuser

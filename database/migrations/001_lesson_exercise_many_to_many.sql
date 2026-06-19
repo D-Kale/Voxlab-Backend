@@ -20,13 +20,17 @@ BEGIN
         ALTER TABLE exercises ADD COLUMN name VARCHAR(255) NOT NULL DEFAULT 'Sin nombre';
     END IF;
 
-    -- Step 2: Migrate existing data into lesson_exercises
-    -- Each existing exercise row becomes a link in the pivot table
-    INSERT INTO lesson_exercises (lesson_id, exercise_id, order_index)
-    SELECT e.lesson_id, e.id, e.order_index
-    FROM exercises e
-    WHERE e.lesson_id IS NOT NULL
-    ON CONFLICT (lesson_id, exercise_id) DO NOTHING;
+    -- Step 2: Migrate existing data into lesson_exercises (only if lesson_id still exists)
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'exercises' AND column_name = 'lesson_id'
+    ) THEN
+        INSERT INTO lesson_exercises (lesson_id, exercise_id, order_index)
+        SELECT e.lesson_id, e.id, e.order_index
+        FROM exercises e
+        WHERE e.lesson_id IS NOT NULL
+        ON CONFLICT (lesson_id, exercise_id) DO NOTHING;
+    END IF;
 
     -- Step 3: Drop old FK constraint (if exists) before dropping columns
     IF EXISTS (

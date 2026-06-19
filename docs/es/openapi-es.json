@@ -805,14 +805,14 @@
                 }
             }
         },
-        "/api/v1/lessons/{lessonId}/exercises": {
+        "/api/v1/lessons/{id}/exercises": {
             "post": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Agrega un ejercicio existente a una lección mediante la tabla pivote.\nEl ejercicio se añade al final del orden de ejercicios de la lección.\nEl mismo ejercicio puede vincularse a múltiples lecciones.\n\n🔒 Requiere JWT token (Authorization: Bearer <token>)",
+                "description": "Agrega un ejercicio existente a una lección mediante la tabla pivote.\nEl ejercicio se añade al final del orden de ejercicios de la lección.\nEl mismo ejercicio puede vincularse a múltiples lecciones.\n\n🔒 Requires JWT token (Authorization: Bearer <token>)",
                 "consumes": [
                     "application/json"
                 ],
@@ -874,14 +874,14 @@
                 }
             }
         },
-        "/api/v1/lessons/{lessonId}/exercises/{exerciseId}": {
+        "/api/v1/lessons/{id}/exercises/{exerciseId}": {
             "delete": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Elimina el vínculo entre un ejercicio y una lección. El ejercicio en sí NO se elimina\n— sigue disponible para otras lecciones.\n\n🔒 Requiere JWT token (Authorization: Bearer <token>)",
+                "description": "Elimina el vínculo entre un ejercicio y una lección. El ejercicio en sí NO se elimina\n— sigue disponible para otras lecciones.\n\n🔒 Requires JWT token (Authorization: Bearer <token>)",
                 "produces": [
                     "application/json"
                 ],
@@ -933,14 +933,14 @@
                 }
             }
         },
-        "/api/v1/lessons/{lessonId}/exercises/{exerciseId}/reorder": {
+        "/api/v1/lessons/{id}/exercises/{exerciseId}/reorder": {
             "put": {
                 "security": [
                     {
                         "BearerAuth": []
                     }
                 ],
-                "description": "Actualiza el orden de visualización de un ejercicio dentro de una lección.\nLos valores más bajos de order_index aparecen primero.\n\n🔒 Requiere JWT token (Authorization: Bearer <token>)",
+                "description": "Actualiza el orden de visualización de un ejercicio dentro de una lección.\nLos valores más bajos de order_index aparecen primero.\n\n🔒 Requires JWT token (Authorization: Bearer <token>)",
                 "consumes": [
                     "application/json"
                 ],

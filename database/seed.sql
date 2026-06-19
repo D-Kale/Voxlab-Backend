@@ -58,7 +58,6 @@ ON CONFLICT DO NOTHING;
 CREATE INDEX IF NOT EXISTS idx_user_reactions_created_at ON user_reactions(created_at);
 CREATE INDEX IF NOT EXISTS idx_user_reactions_sender ON user_reactions(sender_id);
 CREATE INDEX IF NOT EXISTS idx_user_reactions_receiver ON user_reactions(receiver_id);
-CREATE INDEX IF NOT EXISTS idx_exercises_lesson ON exercises(lesson_id);
 CREATE INDEX IF NOT EXISTS idx_module_lessons_module ON module_lessons(module_id);
 CREATE INDEX IF NOT EXISTS idx_module_lessons_lesson ON module_lessons(lesson_id);
 CREATE INDEX IF NOT EXISTS idx_user_titles_user ON user_titles(user_id);
