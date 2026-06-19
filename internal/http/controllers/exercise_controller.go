@@ -19,42 +19,31 @@ type ExerciseController struct {
 // CreateExerciseRequest represents the request body for creating an exercise
 // @Description Request body for creating an exercise
 type CreateExerciseRequest struct {
-	// Lesson ID where the exercise will be created
-	LessonID int `json:"lesson_id" example:"1"`
+	// Exercise name (helps identify when reusing across lessons)
+	Name string `json:"name" example:"Quiz de liderazgo"`
 	// Exercise type: quiz, reading, oratory_minigame, audio, video, writing
 	Type models.ExerciseType `json:"type" example:"quiz"`
 	// Exercise content (JSONB structure varies by type)
 	Content interface{} `json:"content" swaggertype:"object"`
-	// Order index for sequencing
-	OrderIndex int `json:"order_index" example:"1"`
 }
 
 func NewExerciseController(service *services.ExerciseService) *ExerciseController {
 	return &ExerciseController{service: service}
 }
 
-// GetExercisesByLesson godoc
-// @Summary      List exercises for a lesson
-// @Description  Returns all exercises in a lesson, ordered by order_index.
-// @Description  Each exercise has a "type" field that defines the JSON structure of its "content" field.
-// @Description  See the "content" field descriptions below for each exercise type.
+// ListExercises godoc
+// @Summary      List all exercises
+// @Description  Returns all exercises in the system (global list). Exercises are reusable
+// @Description  across lessons — use GET /lessons/:id to see which exercises belong to a lesson.
 // @Description
 // @Description  🔓 Public — no authentication required.
 // @Tags         Exercises
 // @Produce      json
-// @Param        id   path      int  true  "Lesson ID (e.g. 1)"
-// @Success      200  {object}  resources.ListExercisesResponse   "Ejercicios de la lección"
-// @Failure      400  {object}  resources.BadRequestError         "ID de lección inválido"
+// @Success      200  {object}  resources.ListExercisesResponse   "Todos los ejercicios"
 // @Failure      500  {object}  resources.InternalServerError     "Error al obtener los ejercicios"
-// @Router       /api/v1/lessons/{id}/exercises [get]
-func (h *ExerciseController) GetExercisesByLesson(c *gin.Context) {
-	lessonID, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lesson ID"})
-		return
-	}
-
-	exercises, err := h.service.GetAllByLesson(lessonID)
+// @Router       /api/v1/exercises [get]
+func (h *ExerciseController) ListExercises(c *gin.Context) {
+	exercises, err := h.service.GetAll()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch exercises"})
 		return
@@ -100,101 +89,8 @@ func (h *ExerciseController) GetExercise(c *gin.Context) {
 
 // CreateExercise godoc
 // @Summary      Create a new exercise
-// @Description  Creates an exercise inside a lesson. The "type" field determines the JSONB "content" structure.
-// @Description
-// @Description  📝 Supported exercise types and their content structure:
-// @Description
-// @Description  **quiz** — Multiple choice questions (multi-pregunta):
-// @Description  ```json
-// @Description  {
-// @Description    "type": "quiz",
-// @Description    "content": {
-// @Description      "questions": [
-// @Description        {
-// @Description          "question": "What is public speaking?",
-// @Description          "options": ["Option A", "Option B", "Option C", "Option D"],
-// @Description          "correct_index": 0,
-// @Description          "explanation": "Option A is correct because..."
-// @Description        }
-// @Description      ],
-// @Description      "points_per_question": 10
-// @Description    }
-// @Description  }
-// @Description  ```
-// @Description
-// @Description  **reading** — Reading passage:
-// @Description  ```json
-// @Description  {
-// @Description    "type": "reading",
-// @Description    "content": {
-// @Description      "title": "The Art of Speech",
-// @Description      "content": "Full reading text here...",
-// @Description      "reading_time_seconds": 120,
-// @Description      "points": 5
-// @Description    }
-// @Description  }
-// @Description  ```
-// @Description
-// @Description  **oratory_minigame** — Oratory challenge with requirements:
-// @Description  ```json
-// @Description  {
-// @Description    "type": "oratory_minigame",
-// @Description    "content": {
-// @Description      "prompt": "Record a 30-second speech about...",
-// @Description      "topic": "Leadership",
-// @Description      "duration_seconds": 30,
-// @Description      "min_duration_seconds": 15,
-// @Description      "requirements": ["Clear introduction", "Use at least 3 key points", "Strong conclusion"],
-// @Description      "points": 20
-// @Description    }
-// @Description  }
-// @Description  ```
-// @Description
-// @Description  **writing** — Writing exercise with requirements:
-// @Description  ```json
-// @Description  {
-// @Description    "type": "writing",
-// @Description    "content": {
-// @Description      "prompt": "Write a 200-word essay about leadership",
-// @Description      "min_words": 100,
-// @Description      "max_words": 500,
-// @Description      "requirements": ["Include a thesis", "Support with examples"],
-// @Description      "points": 20
-// @Description    }
-// @Description  }
-// @Description  ```
-// @Description
-// @Description  **audio** — Audio recording exercise:
-// @Description  ```json
-// @Description  {
-// @Description    "type": "audio",
-// @Description    "content": {
-// @Description      "prompt": "Read this paragraph aloud...",
-// @Description      "duration_seconds": 60,
-// @Description      "points": 15
-// @Description    }
-// @Description  }
-// @Description  ```
-// @Description
-// @Description  **video** — Video recording exercise:
-// @Description  ```json
-// @Description  {
-// @Description    "type": "video",
-// @Description    "content": {
-// @Description      "prompt": "Record a video introducing yourself...",
-// @Description      "duration_seconds": 120,
-// @Description      "points": 25
-// @Description    }
-// @Description  }
-// @Description  ```
-// @Description
-// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
-// @Tags         Exercises
-// @Accept       json
-// @Produce      json
-// CreateExercise godoc
-// @Summary      Create a new exercise
-// @Description  Creates an exercise inside a lesson. The "type" field determines the JSONB "content" structure.
+// @Description  Creates an exercise that can later be linked to one or more lessons.
+// @Description  The "type" field determines the JSONB "content" structure.
 // @Description
 // @Description  📝 Supported exercise types and their content structure:
 // @Description
@@ -289,27 +185,33 @@ func (h *ExerciseController) GetExercise(c *gin.Context) {
 // @Security     BearerAuth
 // @Param        request  body  CreateExerciseRequest true  "Exercise data"
 // @Success      201  {object}  resources.CreateExerciseResponse  "Ejercicio creado correctamente"
-// @Failure      400  {object}  resources.BadRequestError          "Datos inválidos — tipo y lesson_id requeridos"
+// @Failure      400  {object}  resources.BadRequestError          "Datos inválidos — tipo requerido"
 // @Failure      401  {object}  resources.UnauthorizedError        "Token no proporcionado o inválido"
 // @Router       /api/v1/exercises [post]
 func (h *ExerciseController) CreateExercise(c *gin.Context) {
-	var exercise models.Exercise
-	if err := c.ShouldBindJSON(&exercise); err != nil {
+	var req CreateExerciseRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
 		return
 	}
 
-	if exercise.Type == "" {
+	if req.Type == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Type is required. Accepted: quiz, reading, oratory_minigame, audio, video, writing"})
 		return
 	}
 
-	if exercise.LessonID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "lesson_id is required"})
+	content, err := json.Marshal(req.Content)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid content JSON"})
 		return
 	}
 
-	exercise.ID = uuid.New()
+	exercise := models.Exercise{
+		ID:      uuid.New(),
+		Name:    req.Name,
+		Type:    req.Type,
+		Content: content,
+	}
 
 	if err := h.service.Create(&exercise); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create exercise"})
@@ -324,7 +226,7 @@ func (h *ExerciseController) CreateExercise(c *gin.Context) {
 
 // UpdateExercise godoc
 // @Summary      Update an exercise
-// @Description  Modifies the type, content (JSONB), or order of an exercise.
+// @Description  Modifies the name, type, or content (JSONB) of an exercise.
 // @Description  When updating the content field, send the FULL new content object for the exercise type.
 // @Description
 // @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
@@ -333,16 +235,16 @@ func (h *ExerciseController) CreateExercise(c *gin.Context) {
 // @Produce      json
 // @Security     BearerAuth
 // @Param        id       path  string  true  "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
-// @Param        request  body  object{type=string,order_index=int,content=object}  true  "Fields to update"
+// @Param        request  body  object{name=string,type=string,content=object}  true  "Fields to update"
 // @Success      200  {object}  resources.UpdateExerciseResponse  "Ejercicio actualizado correctamente"
 // @Failure      400  {object}  resources.BadRequestError          "UUID inválido o datos incorrectos"
 // @Failure      401  {object}  resources.UnauthorizedError        "Token no proporcionado o inválido"
 // @Failure      404  {object}  resources.NotFoundError            "Ejercicio no encontrado"
 // @Router       /api/v1/exercises/{id} [put]
 type updateExerciseInput struct {
-	Type       models.ExerciseType `json:"type,omitempty"`
-	Content    json.RawMessage     `json:"content,omitempty"`
-	OrderIndex *int                `json:"order_index,omitempty"`
+	Name    *string             `json:"name,omitempty"`
+	Type    *models.ExerciseType `json:"type,omitempty"`
+	Content json.RawMessage     `json:"content,omitempty"`
 }
 
 func (h *ExerciseController) UpdateExercise(c *gin.Context) {
@@ -364,14 +266,14 @@ func (h *ExerciseController) UpdateExercise(c *gin.Context) {
 		return
 	}
 
-	if input.Type != "" {
-		existing.Type = input.Type
+	if input.Name != nil {
+		existing.Name = *input.Name
+	}
+	if input.Type != nil {
+		existing.Type = *input.Type
 	}
 	if input.Content != nil {
 		existing.Content = input.Content
-	}
-	if input.OrderIndex != nil {
-		existing.OrderIndex = *input.OrderIndex
 	}
 
 	if err := h.service.Update(existing); err != nil {
@@ -387,7 +289,7 @@ func (h *ExerciseController) UpdateExercise(c *gin.Context) {
 
 // DeleteExercise godoc
 // @Summary      Delete an exercise
-// @Description  Permanently removes an exercise from the lesson.
+// @Description  Permanently removes an exercise. This also removes all links to lessons.
 // @Description  ⚠️ This action cannot be undone.
 // @Description
 // @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
@@ -423,6 +325,151 @@ func (h *ExerciseController) DeleteExercise(c *gin.Context) {
 		"message": "Exercise deleted successfully",
 	})
 }
+
+// ============================================================================
+// Lesson ⇄ Exercise links
+// ============================================================================
+
+// LinkExerciseToLesson godoc
+// @Summary      Link an exercise to a lesson
+// @Description  Adds an existing exercise to a lesson via the pivot table.
+// @Description  The exercise is appended at the end of the lesson's exercise order.
+// @Description  The same exercise can be linked to multiple lessons.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Lessons
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        lessonId  path  int     true  "Lesson ID (e.g. 1)"
+// @Param        request   body  object{exercise_id=string}  true  "Exercise UUID to link"
+// @Success      200  {object}  resources.LinkExerciseResponse  "Ejercicio vinculado a la lección"
+// @Failure      400  {object}  resources.BadRequestError       "Datos inválidos"
+// @Failure      401  {object}  resources.UnauthorizedError     "Token no proporcionado o inválido"
+// @Failure      404  {object}  resources.NotFoundError         "Lección o ejercicio no encontrado"
+// @Router       /api/v1/lessons/{lessonId}/exercises [post]
+func (h *ExerciseController) LinkExerciseToLesson(c *gin.Context) {
+	lessonID, err := strconv.Atoi(c.Param("lessonId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lesson ID"})
+		return
+	}
+
+	var req struct {
+		ExerciseID string `json:"exercise_id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	exerciseID, err := uuid.Parse(req.ExerciseID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid exercise ID (must be a valid UUID)"})
+		return
+	}
+
+	// Verify exercise exists
+	if _, err := h.service.GetByID(exerciseID); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Exercise not found"})
+		return
+	}
+
+	if err := h.service.LinkExerciseToLesson(lessonID, exerciseID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to link exercise"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Exercise linked to lesson"})
+}
+
+// UnlinkExerciseFromLesson godoc
+// @Summary      Unlink an exercise from a lesson
+// @Description  Removes the link between an exercise and a lesson. The exercise itself is NOT deleted
+// @Description  — it remains available for other lessons.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Lessons
+// @Produce      json
+// @Security     BearerAuth
+// @Param        lessonId    path  int     true  "Lesson ID (e.g. 1)"
+// @Param        exerciseId  path  string  true  "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
+// @Success      200  {object}  resources.UnlinkExerciseResponse  "Ejercicio desvinculado de la lección"
+// @Failure      400  {object}  resources.BadRequestError          "Datos inválidos"
+// @Failure      401  {object}  resources.UnauthorizedError        "Token no proporcionado o inválido"
+// @Failure      500  {object}  resources.InternalServerError      "Error al desvincular el ejercicio"
+// @Router       /api/v1/lessons/{lessonId}/exercises/{exerciseId} [delete]
+func (h *ExerciseController) UnlinkExerciseFromLesson(c *gin.Context) {
+	lessonID, err := strconv.Atoi(c.Param("lessonId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lesson ID"})
+		return
+	}
+
+	exerciseID, err := uuid.Parse(c.Param("exerciseId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid exercise ID (must be a valid UUID)"})
+		return
+	}
+
+	if err := h.service.UnlinkExerciseFromLesson(lessonID, exerciseID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unlink exercise"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Exercise unlinked from lesson"})
+}
+
+// ReorderExerciseInLesson godoc
+// @Summary      Reorder an exercise within a lesson
+// @Description  Updates the display order of an exercise inside a lesson.
+// @Description  Lower order_index values appear first.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Lessons
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        lessonId    path  int     true  "Lesson ID (e.g. 1)"
+// @Param        exerciseId  path  string  true  "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
+// @Param        request     body  object{order_index=int}  true  "New order position"
+// @Success      200  {object}  resources.ReorderExerciseResponse  "Orden actualizado"
+// @Failure      400  {object}  resources.BadRequestError           "Datos inválidos"
+// @Failure      401  {object}  resources.UnauthorizedError         "Token no proporcionado o inválido"
+// @Failure      500  {object}  resources.InternalServerError       "Error al reordenar el ejercicio"
+// @Router       /api/v1/lessons/{lessonId}/exercises/{exerciseId}/reorder [put]
+func (h *ExerciseController) ReorderExerciseInLesson(c *gin.Context) {
+	lessonID, err := strconv.Atoi(c.Param("lessonId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lesson ID"})
+		return
+	}
+
+	exerciseID, err := uuid.Parse(c.Param("exerciseId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid exercise ID (must be a valid UUID)"})
+		return
+	}
+
+	var req struct {
+		OrderIndex int `json:"order_index" example:"1"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	if err := h.service.ReorderExerciseInLesson(lessonID, exerciseID, req.OrderIndex); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reorder exercise"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Exercise reordered"})
+}
+
+// ============================================================================
+// Text analysis (unchanged)
+// ============================================================================
 
 type AnalyzeTextInput struct {
 	Text         string   `json:"text" example:"El liderazgo es una habilidad fundamental para cualquier profesional que busque destacar en su carrera. A lo largo de este ensayo, exploraremos las características clave de un líder efectivo y cómo desarrollarlas en el día a día."`

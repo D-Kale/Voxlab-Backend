@@ -14,9 +14,9 @@ func NewExerciseRepository(db *gorm.DB) *ExerciseRepository {
 	return &ExerciseRepository{db: db}
 }
 
-func (r *ExerciseRepository) FindAllByLesson(lessonID int) ([]models.Exercise, error) {
+func (r *ExerciseRepository) FindAll() ([]models.Exercise, error) {
 	var exercises []models.Exercise
-	err := r.db.Where("lesson_id = ?", lessonID).Order("order_index asc").Find(&exercises).Error
+	err := r.db.Order("created_at desc").Find(&exercises).Error
 	return exercises, err
 }
 

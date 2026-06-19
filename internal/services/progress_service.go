@@ -42,7 +42,7 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 		return nil, errors.New("lesson not found")
 	}
 
-	exerciseCount := len(lesson.Exercises)
+	exerciseCount := len(lesson.LessonExercises)
 	xpEarned := calculateXP(exerciseCount, input.Score)
 
 	now := time.Now()

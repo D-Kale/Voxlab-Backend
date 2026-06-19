@@ -15,13 +15,13 @@ func NewTrackRepository(db *gorm.DB) *TrackRepository {
 
 func (r *TrackRepository) FindAll() ([]models.Track, error) {
 	var tracks []models.Track
-	err := r.db.Preload("Modules.Lessons.Lesson.Exercises").Find(&tracks).Error
+	err := r.db.Preload("Modules.Lessons.Lesson.LessonExercises.Exercise").Find(&tracks).Error
 	return tracks, err
 }
 
 func (r *TrackRepository) FindByID(id int) (*models.Track, error) {
 	var track models.Track
-	err := r.db.Preload("Modules.Lessons.Lesson.Exercises").First(&track, id).Error
+	err := r.db.Preload("Modules.Lessons.Lesson.LessonExercises.Exercise").First(&track, id).Error
 	if err != nil {
 		return nil, err
 	}

@@ -7,15 +7,16 @@ import (
 )
 
 type ExerciseService struct {
-	repo *repositories.ExerciseRepository
+	repo                  *repositories.ExerciseRepository
+	lessonExerciseRepo    *repositories.LessonExerciseRepository
 }
 
-func NewExerciseService(repo *repositories.ExerciseRepository) *ExerciseService {
-	return &ExerciseService{repo: repo}
+func NewExerciseService(repo *repositories.ExerciseRepository, lessonExerciseRepo *repositories.LessonExerciseRepository) *ExerciseService {
+	return &ExerciseService{repo: repo, lessonExerciseRepo: lessonExerciseRepo}
 }
 
-func (s *ExerciseService) GetAllByLesson(lessonID int) ([]models.Exercise, error) {
-	return s.repo.FindAllByLesson(lessonID)
+func (s *ExerciseService) GetAll() ([]models.Exercise, error) {
+	return s.repo.FindAll()
 }
 
 func (s *ExerciseService) GetByID(id uuid.UUID) (*models.Exercise, error) {
@@ -32,4 +33,23 @@ func (s *ExerciseService) Update(exercise *models.Exercise) error {
 
 func (s *ExerciseService) Delete(id uuid.UUID) error {
 	return s.repo.Delete(id)
+}
+
+// LinkExerciseToLesson links an existing exercise to a lesson via the pivot table.
+func (s *ExerciseService) LinkExerciseToLesson(lessonID int, exerciseID uuid.UUID) error {
+	next, err := s.lessonExerciseRepo.GetNextOrderIndex(lessonID)
+	if err != nil {
+		return err
+	}
+	return s.lessonExerciseRepo.Link(lessonID, exerciseID, next)
+}
+
+// UnlinkExerciseFromLesson removes the link between an exercise and a lesson.
+func (s *ExerciseService) UnlinkExerciseFromLesson(lessonID int, exerciseID uuid.UUID) error {
+	return s.lessonExerciseRepo.Unlink(lessonID, exerciseID)
+}
+
+// ReorderExerciseInLesson updates the order_index of an exercise within a lesson.
+func (s *ExerciseService) ReorderExerciseInLesson(lessonID int, exerciseID uuid.UUID, newOrder int) error {
+	return s.lessonExerciseRepo.UpdateOrder(lessonID, exerciseID, newOrder)
 }

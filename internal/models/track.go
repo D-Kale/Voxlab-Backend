@@ -27,14 +27,14 @@ type Module struct {
 }
 
 type Lesson struct {
-	ID                   int        `gorm:"primary_key" json:"id"`
-	Title                string     `gorm:"type:varchar(150);not null" json:"title"`
-	Description          string     `gorm:"type:text" json:"description"`
-	ImageURL             string     `gorm:"type:varchar(512)" json:"image_url"`
-	EstimatedTimeSeconds int        `gorm:"not null" json:"estimated_time_seconds"`
-	Exercises            []Exercise `gorm:"foreignKey:LessonID" json:"exercises,omitempty"`
-	CreatedAt            time.Time  `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt            time.Time  `gorm:"autoUpdateTime" json:"updated_at"`
+	ID                   int              `gorm:"primary_key" json:"id"`
+	Title                string           `gorm:"type:varchar(150);not null" json:"title"`
+	Description          string           `gorm:"type:text" json:"description"`
+	ImageURL             string           `gorm:"type:varchar(512)" json:"image_url"`
+	EstimatedTimeSeconds int              `gorm:"not null" json:"estimated_time_seconds"`
+	LessonExercises      []LessonExercise `gorm:"foreignKey:LessonID" json:"exercises,omitempty"`
+	CreatedAt            time.Time        `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt            time.Time        `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
 type ModuleLesson struct {

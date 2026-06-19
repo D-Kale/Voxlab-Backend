@@ -51,13 +51,14 @@ func (r *Router) initDependencies() {
 	moduleRepo := repositories.NewModuleRepository(db)
 	lessonRepo := repositories.NewLessonRepository(db)
 	exerciseRepo := repositories.NewExerciseRepository(db)
+	lessonExerciseRepo := repositories.NewLessonExerciseRepository(db)
 	progressRepo := repositories.NewProgressRepository(db)
 
 	authSvc := services.NewAuthService(userRepo, r.cfg.JWT.Secret)
 	trackSvc := services.NewTrackService(trackRepo)
 	moduleSvc := services.NewModuleService(moduleRepo)
 	lessonSvc := services.NewLessonService(lessonRepo)
-	exerciseSvc := services.NewExerciseService(exerciseRepo)
+	exerciseSvc := services.NewExerciseService(exerciseRepo, lessonExerciseRepo)
 	progressSvc := services.NewProgressService(progressRepo, lessonRepo, userRepo)
 
 	userSvc := services.NewUserService(userRepo)
@@ -142,11 +143,14 @@ func (r *Router) initEngine() {
 			lessons.PUT("/:id", middleware.AuthMiddleware(), r.lesson.UpdateLesson)
 			lessons.DELETE("/:id", middleware.AuthMiddleware(), r.lesson.DeleteLesson)
 
-			lessons.GET("/:id/exercises", r.exercise.GetExercisesByLesson)
+			lessons.POST("/:lessonId/exercises", middleware.AuthMiddleware(), r.exercise.LinkExerciseToLesson)
+			lessons.DELETE("/:lessonId/exercises/:exerciseId", middleware.AuthMiddleware(), r.exercise.UnlinkExerciseFromLesson)
+			lessons.PUT("/:lessonId/exercises/:exerciseId/reorder", middleware.AuthMiddleware(), r.exercise.ReorderExerciseInLesson)
 		}
 
 		exercises := api.Group("/exercises")
 		{
+			exercises.GET("", r.exercise.ListExercises)
 			exercises.GET("/requirement-catalog", r.exercise.GetRequirementCatalog)
 			exercises.GET("/:id", r.exercise.GetExercise)
 			exercises.POST("", middleware.AuthMiddleware(), r.exercise.CreateExercise)

@@ -153,6 +153,22 @@ type LinkLessonResponse struct {
 }
 
 // ============================================================================
+// LESSON ⇄ EXERCISE links — /api/v1/lessons/:lessonId/exercises
+// ============================================================================
+
+type LinkExerciseResponse struct {
+	BaseResponse
+}
+
+type UnlinkExerciseResponse struct {
+	BaseResponse
+}
+
+type ReorderExerciseResponse struct {
+	BaseResponse
+}
+
+// ============================================================================
 // LESSONS — /api/v1/lessons/* and /api/v1/modules/:id/lessons
 // ============================================================================
 

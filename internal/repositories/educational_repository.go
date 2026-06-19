@@ -15,6 +15,6 @@ func NewEducationalRepository(db *gorm.DB) *EducationalRepository {
 
 func (r *EducationalRepository) FindAllTracks() ([]models.Track, error) {
 	var tracks []models.Track
-	err := r.db.Preload("Modules.Lessons.Lesson.Exercises").Find(&tracks).Error
+	err := r.db.Preload("Modules.Lessons.Lesson.LessonExercises.Exercise").Find(&tracks).Error
 	return tracks, err
 }
