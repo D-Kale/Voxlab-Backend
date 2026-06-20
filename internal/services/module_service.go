@@ -41,3 +41,20 @@ func (s *ModuleService) LinkLesson(moduleID, lessonID int) error {
 	}
 	return s.repo.LinkLesson(moduleID, lessonID, 0)
 }
+
+func (s *ModuleService) UnlinkLesson(moduleID, lessonID int) error {
+	if moduleID <= 0 || lessonID <= 0 {
+		return fmt.Errorf("module_id and lesson_id must be positive integers")
+	}
+	return s.repo.UnlinkLesson(moduleID, lessonID)
+}
+
+func (s *ModuleService) ReorderLessons(moduleID int, items []models.ModuleLesson) error {
+	if moduleID <= 0 {
+		return fmt.Errorf("module_id must be a positive integer")
+	}
+	if len(items) == 0 {
+		return fmt.Errorf("items cannot be empty")
+	}
+	return s.repo.ReorderLessons(moduleID, items)
+}

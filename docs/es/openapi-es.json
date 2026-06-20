@@ -557,6 +557,47 @@
                 }
             }
         },
+        "/api/v1/exercises/{id}/lessons": {
+            "get": {
+                "description": "Devuelve todas las lecciones a las que pertenece un ejercicio específico, con order_index.\nÚtil para saber \"¿dónde se usa este ejercicio?\"\n\n🔓 Público — no requiere autenticación.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Ejercicios"
+                ],
+                "summary": "Obtener lecciones que contienen un ejercicio",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "UUID del ejercicio (ej. 550e8400-e29b-41d4-a716-446655440000)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lecciones que contienen este ejercicio",
+                        "schema": {
+                            "$ref": "#/definitions/resources.GetLessonsByExerciseResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "UUID inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al obtener las lecciones",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/health": {
             "get": {
                 "description": "Verifica el estado de la API, la conexión a la base de datos y a Redis",
@@ -584,6 +625,30 @@
             }
         },
         "/api/v1/lessons": {
+            "get": {
+                "description": "Devuelve TODAS las lecciones del sistema (lista global). Úsalo para llenar\nmodales de búsqueda/selección al vincular lecciones a módulos.\n\n🔓 Público — no requiere autenticación.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lecciones"
+                ],
+                "summary": "Listar todas las lecciones globalmente",
+                "responses": {
+                    "200": {
+                        "description": "Todas las lecciones",
+                        "schema": {
+                            "$ref": "#/definitions/resources.ListLessonsResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al obtener las lecciones",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -806,6 +871,45 @@
             }
         },
         "/api/v1/lessons/{id}/exercises": {
+            "get": {
+                "description": "Devuelve todos los ejercicios vinculados a una lección específica mediante la tabla pivot.\nCada resultado incluye los datos del ejercicio y su order_index de la pivot.\n\n🔓 Público — no requiere autenticación.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lecciones"
+                ],
+                "summary": "Obtener ejercicios de una lección",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lección (ej. 1)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ejercicios de la lección (con order_index)",
+                        "schema": {
+                            "$ref": "#/definitions/resources.GetExercisesByLessonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID de lección inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al obtener los ejercicios",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -869,6 +973,86 @@
                         "description": "Lección o ejercicio no encontrado",
                         "schema": {
                             "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lessons/{id}/exercises/reorder": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza el order_index de varios ejercicios en una lección de una sola vez.\nEnvía un arreglo de pares {exercise_id, order_index}.\n\n🔒 Requiere token JWT (Authorization: Bearer <token>)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lecciones"
+                ],
+                "summary": "Reordenar ejercicios dentro de una lección (en lote)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lección (ej. 1)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Arreglo de pares de orden de ejercicios",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "items": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "exercise_id": {
+                                                "type": "string"
+                                            },
+                                            "order_index": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ejercicios reordenados",
+                        "schema": {
+                            "$ref": "#/definitions/resources.ReorderExercisesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Token no proporcionado o inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al reordenar los ejercicios",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
                         }
                     }
                 }
@@ -1002,6 +1186,47 @@
                     },
                     "500": {
                         "description": "Error al reordenar el ejercicio",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/lessons/{id}/modules": {
+            "get": {
+                "description": "Devuelve todos los módulos a los que pertenece una lección específica, con order_index.\nÚtil para saber \"¿dónde se usa esta lección?\"\n\n🔓 Público — no requiere autenticación.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lecciones"
+                ],
+                "summary": "Obtener módulos que contienen una lección",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lección (ej. 1)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Módulos que contienen esta lección",
+                        "schema": {
+                            "$ref": "#/definitions/resources.GetModulesByLessonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID de lección inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al obtener los módulos",
                         "schema": {
                             "$ref": "#/definitions/resources.InternalServerError"
                         }
@@ -1333,6 +1558,145 @@
                     },
                     "500": {
                         "description": "Error al vincular la lección",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/modules/{id}/lessons/reorder": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza el order_index de varias lecciones en un módulo.\nEnvía un arreglo de pares {lesson_id, order_index}.\n\n🔒 Requiere token JWT (Authorization: Bearer <token>)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Módulos"
+                ],
+                "summary": "Reordenar lecciones dentro de un módulo (en lote)",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del módulo (ej. 1)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Arreglo de pares de orden de lecciones",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "items": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "lesson_id": {
+                                                "type": "integer"
+                                            },
+                                            "order_index": {
+                                                "type": "integer"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lecciones reordenadas",
+                        "schema": {
+                            "$ref": "#/definitions/resources.ReorderLessonsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Token no proporcionado o inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al reordenar las lecciones",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/modules/{id}/lessons/{lessonId}": {
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Elimina el vínculo entre un módulo y una lección. La lección en sí NO se elimina\n— sigue disponible para otros módulos.\n\n🔒 Requiere token JWT (Authorization: Bearer <token>)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Módulos"
+                ],
+                "summary": "Desvincular una lección de un módulo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del módulo (ej. 1)",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "ID de la lección (ej. 1)",
+                        "name": "lessonId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lección desvinculada del módulo",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UnlinkLessonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "ID de módulo o lección inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Token no proporcionado o inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al desvincular la lección",
                         "schema": {
                             "$ref": "#/definitions/resources.InternalServerError"
                         }
@@ -3073,6 +3437,25 @@
                 }
             }
         },
+        "resources.GetExercisesByLessonResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.LessonExercise"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "resources.GetLessonResponse": {
             "type": "object",
             "properties": {
@@ -3089,11 +3472,49 @@
                 }
             }
         },
+        "resources.GetLessonsByExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.LessonExercise"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "resources.GetModuleResponse": {
             "type": "object",
             "properties": {
                 "data": {
                     "$ref": "#/definitions/models.Module"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.GetModulesByLessonResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ModuleLesson"
+                    }
                 },
                 "message": {
                     "type": "string",
@@ -3370,6 +3791,32 @@
                 }
             }
         },
+        "resources.ReorderExercisesResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.ReorderLessonsResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "resources.RequirementCatalogResponse": {
             "type": "object",
             "properties": {
@@ -3416,6 +3863,19 @@
             }
         },
         "resources.UnlinkExerciseResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UnlinkLessonResponse": {
             "type": "object",
             "properties": {
                 "message": {

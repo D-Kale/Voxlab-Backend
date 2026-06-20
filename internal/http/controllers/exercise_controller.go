@@ -468,6 +468,92 @@ func (h *ExerciseController) ReorderExerciseInLesson(c *gin.Context) {
 }
 
 // ============================================================================
+// Exercise ⇄ Lesson reverse lookup + batch reorder
+// ============================================================================
+
+// GetLessonsByExercise godoc
+// @Summary      Get lessons containing an exercise
+// @Description  Returns all lessons that a specific exercise belongs to, with order_index.
+// @Description  Useful for knowing "where is this exercise used?"
+// @Description
+// @Description  🔓 Public — no authentication required.
+// @Tags         Exercises
+// @Produce      json
+// @Param        id   path  string  true  "Exercise UUID (e.g. 550e8400-e29b-41d4-a716-446655440000)"
+// @Success      200  {object}  resources.GetLessonsByExerciseResponse  "Lecciones que contienen este ejercicio"
+// @Failure      400  {object}  resources.BadRequestError                 "UUID inválido"
+// @Failure      500  {object}  resources.InternalServerError             "Error al obtener las lecciones"
+// @Router       /api/v1/exercises/{id}/lessons [get]
+func (h *ExerciseController) GetLessonsByExercise(c *gin.Context) {
+	id, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid exercise ID (must be a valid UUID)"})
+		return
+	}
+
+	links, err := h.service.GetLessonsByExercise(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch lessons"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": links})
+}
+
+// BatchReorderExercises godoc
+// @Summary      Reorder exercises within a lesson (batch)
+// @Description  Updates the order_index for multiple exercises in a lesson at once.
+// @Description  Send an array of {exercise_id, order_index} pairs.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Lessons
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id       path  int   true  "Lesson ID (e.g. 1)"
+// @Param        request  body  object{items=[]object{exercise_id=string,order_index=int}}  true  "Array of exercise order pairs"
+// @Success      200  {object}  resources.ReorderExercisesResponse  "Ejercicios reordenados"
+// @Failure      400  {object}  resources.BadRequestError            "Datos inválidos"
+// @Failure      401  {object}  resources.UnauthorizedError          "Token no proporcionado o inválido"
+// @Failure      500  {object}  resources.InternalServerError        "Error al reordenar los ejercicios"
+// @Router       /api/v1/lessons/{id}/exercises/reorder [put]
+func (h *ExerciseController) BatchReorderExercises(c *gin.Context) {
+	lessonID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lesson ID"})
+		return
+	}
+
+	var req struct {
+		Items []struct {
+			ExerciseID string `json:"exercise_id"`
+			OrderIndex int    `json:"order_index"`
+		} `json:"items"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	items := make([]models.LessonExercise, len(req.Items))
+	for i, item := range req.Items {
+		exID, err := uuid.Parse(item.ExerciseID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid exercise UUID in item " + strconv.Itoa(i)})
+			return
+		}
+		items[i] = models.LessonExercise{LessonID: lessonID, ExerciseID: exID, OrderIndex: item.OrderIndex}
+	}
+
+	if err := h.service.BatchReorderExercises(lessonID, items); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Exercises reordered"})
+}
+
+// ============================================================================
 // Text analysis (unchanged)
 // ============================================================================
 

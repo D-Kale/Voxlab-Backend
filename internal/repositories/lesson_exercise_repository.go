@@ -50,3 +50,26 @@ func (r *LessonExerciseRepository) GetNextOrderIndex(lessonID int) (int, error) 
 		Scan(&max).Error
 	return max + 1, err
 }
+
+func (r *LessonExerciseRepository) BatchReorder(lessonID int, items []models.LessonExercise) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, item := range items {
+			err := tx.Model(&models.LessonExercise{}).
+				Where("lesson_id = ? AND exercise_id = ?", lessonID, item.ExerciseID).
+				Update("order_index", item.OrderIndex).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
+func (r *LessonExerciseRepository) FindByExercise(exerciseID uuid.UUID) ([]models.LessonExercise, error) {
+	var links []models.LessonExercise
+	err := r.db.Where("exercise_id = ?", exerciseID).
+		Preload("Lesson").
+		Order("lesson_id asc").
+		Find(&links).Error
+	return links, err
+}

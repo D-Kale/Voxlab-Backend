@@ -231,3 +231,81 @@ func (h *LessonController) DeleteLesson(c *gin.Context) {
 		"message": "Lesson deleted successfully",
 	})
 }
+
+// ListLessons godoc
+// @Summary      List all lessons globally
+// @Description  Returns ALL lessons in the system (global list). Use this to populate
+// @Description  search/selection modals when linking lessons to modules.
+// @Description
+// @Description  🔓 Public — no authentication required.
+// @Tags         Lessons
+// @Produce      json
+// @Success      200  {object}  resources.ListLessonsResponse   "Todas las lecciones"
+// @Failure      500  {object}  resources.InternalServerError   "Error al obtener las lecciones"
+// @Router       /api/v1/lessons [get]
+func (h *LessonController) ListLessons(c *gin.Context) {
+	lessons, err := h.service.GetAll()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch lessons"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": lessons})
+}
+
+// GetModulesByLesson godoc
+// @Summary      Get modules containing a lesson
+// @Description  Returns all modules that a specific lesson belongs to, with order_index.
+// @Description  Useful for knowing "where is this lesson used?"
+// @Description
+// @Description  🔓 Public — no authentication required.
+// @Tags         Lessons
+// @Produce      json
+// @Param        id   path  int  true  "Lesson ID (e.g. 1)"
+// @Success      200  {object}  resources.GetModulesByLessonResponse  "Módulos que contienen esta lección"
+// @Failure      400  {object}  resources.BadRequestError              "ID de lección inválido"
+// @Failure      500  {object}  resources.InternalServerError          "Error al obtener los módulos"
+// @Router       /api/v1/lessons/{id}/modules [get]
+func (h *LessonController) GetModulesByLesson(c *gin.Context) {
+	lessonID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lesson ID"})
+		return
+	}
+
+	modules, err := h.service.GetModulesByLesson(lessonID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch modules"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": modules})
+}
+
+// GetExercisesByLesson godoc
+// @Summary      Get exercises for a lesson
+// @Description  Returns all exercises linked to a specific lesson via the pivot table.
+// @Description  Each result includes the exercise data and its order_index from the pivot.
+// @Description
+// @Description  🔓 Public — no authentication required.
+// @Tags         Lessons
+// @Produce      json
+// @Param        id   path  int  true  "Lesson ID (e.g. 1)"
+// @Success      200  {object}  resources.GetExercisesByLessonResponse  "Ejercicios de la lección (con order_index)"
+// @Failure      400  {object}  resources.BadRequestError                "ID de lección inválido"
+// @Failure      500  {object}  resources.InternalServerError            "Error al obtener los ejercicios"
+// @Router       /api/v1/lessons/{id}/exercises [get]
+func (h *LessonController) GetExercisesByLesson(c *gin.Context) {
+	lessonID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lesson ID"})
+		return
+	}
+
+	exercises, err := h.service.GetExercisesByLesson(lessonID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch exercises"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": exercises})
+}

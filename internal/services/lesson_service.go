@@ -32,3 +32,15 @@ func (s *LessonService) Update(lesson *models.Lesson) error {
 func (s *LessonService) Delete(id int) error {
 	return s.repo.Delete(id)
 }
+
+func (s *LessonService) GetAll() ([]models.Lesson, error) {
+	return s.repo.FindAll()
+}
+
+func (s *LessonService) GetModulesByLesson(lessonID int) ([]models.ModuleLesson, error) {
+	return s.repo.FindModulesByLesson(lessonID)
+}
+
+func (s *LessonService) GetExercisesByLesson(lessonID int) ([]models.LessonExercise, error) {
+	return s.repo.FindExercisesByLesson(lessonID)
+}

@@ -278,3 +278,88 @@ func (h *ModuleController) LinkLesson(c *gin.Context) {
 		"message": "Lesson linked to module successfully",
 	})
 }
+
+// UnlinkLesson godoc
+// @Summary      Unlink a lesson from a module
+// @Description  Removes the link between a module and a lesson. The lesson itself is NOT deleted
+// @Description  — it remains available for other modules.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Modules
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id        path  int  true  "Module ID (e.g. 1)"
+// @Param        lessonId  path  int  true  "Lesson ID (e.g. 1)"
+// @Success      200  {object}  resources.UnlinkLessonResponse  "Lección desvinculada del módulo"
+// @Failure      400  {object}  resources.BadRequestError        "ID de módulo o lección inválido"
+// @Failure      401  {object}  resources.UnauthorizedError      "Token no proporcionado o inválido"
+// @Failure      500  {object}  resources.InternalServerError    "Error al desvincular la lección"
+// @Router       /api/v1/modules/{id}/lessons/{lessonId} [delete]
+func (h *ModuleController) UnlinkLesson(c *gin.Context) {
+	moduleID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid module ID"})
+		return
+	}
+
+	lessonID, err := strconv.Atoi(c.Param("lessonId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lesson ID"})
+		return
+	}
+
+	if err := h.service.UnlinkLesson(moduleID, lessonID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Lesson unlinked from module"})
+}
+
+// ReorderLessons godoc
+// @Summary      Reorder lessons within a module (batch)
+// @Description  Updates the order_index for multiple lessons in a module.
+// @Description  Send an array of {lesson_id, order_index} pairs.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Modules
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id       path  int   true  "Module ID (e.g. 1)"
+// @Param        request  body  object{items=[]object{lesson_id=int,order_index=int}}  true  "Array of lesson order pairs"
+// @Success      200  {object}  resources.ReorderLessonsResponse  "Lecciones reordenadas"
+// @Failure      400  {object}  resources.BadRequestError          "Datos inválidos"
+// @Failure      401  {object}  resources.UnauthorizedError        "Token no proporcionado o inválido"
+// @Failure      500  {object}  resources.InternalServerError      "Error al reordenar las lecciones"
+// @Router       /api/v1/modules/{id}/lessons/reorder [put]
+func (h *ModuleController) ReorderLessons(c *gin.Context) {
+	moduleID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid module ID"})
+		return
+	}
+
+	var req struct {
+		Items []struct {
+			LessonID   int `json:"lesson_id"`
+			OrderIndex int `json:"order_index"`
+		} `json:"items"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	items := make([]models.ModuleLesson, len(req.Items))
+	for i, item := range req.Items {
+		items[i] = models.ModuleLesson{ModuleID: moduleID, LessonID: item.LessonID, OrderIndex: item.OrderIndex}
+	}
+
+	if err := h.service.ReorderLessons(moduleID, items); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Lessons reordered"})
+}

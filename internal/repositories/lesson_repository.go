@@ -42,3 +42,27 @@ func (r *LessonRepository) Update(lesson *models.Lesson) error {
 func (r *LessonRepository) Delete(id int) error {
 	return r.db.Delete(&models.Lesson{}, id).Error
 }
+
+func (r *LessonRepository) FindAll() ([]models.Lesson, error) {
+	var lessons []models.Lesson
+	err := r.db.Order("title asc").Find(&lessons).Error
+	return lessons, err
+}
+
+func (r *LessonRepository) FindModulesByLesson(lessonID int) ([]models.ModuleLesson, error) {
+	var links []models.ModuleLesson
+	err := r.db.Where("lesson_id = ?", lessonID).
+		Preload("Module").
+		Order("order_index asc").
+		Find(&links).Error
+	return links, err
+}
+
+func (r *LessonRepository) FindExercisesByLesson(lessonID int) ([]models.LessonExercise, error) {
+	var links []models.LessonExercise
+	err := r.db.Where("lesson_id = ?", lessonID).
+		Preload("Exercise").
+		Order("order_index asc").
+		Find(&links).Error
+	return links, err
+}

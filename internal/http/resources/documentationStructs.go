@@ -152,8 +152,16 @@ type LinkLessonResponse struct {
 	BaseResponse
 }
 
+type UnlinkLessonResponse struct {
+	BaseResponse
+}
+
+type ReorderLessonsResponse struct {
+	BaseResponse
+}
+
 // ============================================================================
-// LESSON ⇄ EXERCISE links — /api/v1/lessons/:lessonId/exercises
+// LESSON ⇄ EXERCISE links — /api/v1/lessons/:id/exercises and /api/v1/exercises/:id/lessons
 // ============================================================================
 
 type LinkExerciseResponse struct {
@@ -166,6 +174,25 @@ type UnlinkExerciseResponse struct {
 
 type ReorderExerciseResponse struct {
 	BaseResponse
+}
+
+type ReorderExercisesResponse struct {
+	BaseResponse
+}
+
+type GetModulesByLessonResponse struct {
+	BaseResponse
+	Data []models.ModuleLesson `json:"data"`
+}
+
+type GetLessonsByExerciseResponse struct {
+	BaseResponse
+	Data []models.LessonExercise `json:"data"`
+}
+
+type GetExercisesByLessonResponse struct {
+	BaseResponse
+	Data []models.LessonExercise `json:"data"`
 }
 
 // ============================================================================

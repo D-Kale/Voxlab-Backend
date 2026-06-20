@@ -7,8 +7,8 @@ import (
 )
 
 type ExerciseService struct {
-	repo                  *repositories.ExerciseRepository
-	lessonExerciseRepo    *repositories.LessonExerciseRepository
+	repo               *repositories.ExerciseRepository
+	lessonExerciseRepo *repositories.LessonExerciseRepository
 }
 
 func NewExerciseService(repo *repositories.ExerciseRepository, lessonExerciseRepo *repositories.LessonExerciseRepository) *ExerciseService {
@@ -52,4 +52,14 @@ func (s *ExerciseService) UnlinkExerciseFromLesson(lessonID int, exerciseID uuid
 // ReorderExerciseInLesson updates the order_index of an exercise within a lesson.
 func (s *ExerciseService) ReorderExerciseInLesson(lessonID int, exerciseID uuid.UUID, newOrder int) error {
 	return s.lessonExerciseRepo.UpdateOrder(lessonID, exerciseID, newOrder)
+}
+
+// BatchReorderExercises updates order_index for multiple exercises in a lesson (batch).
+func (s *ExerciseService) BatchReorderExercises(lessonID int, items []models.LessonExercise) error {
+	return s.lessonExerciseRepo.BatchReorder(lessonID, items)
+}
+
+// GetLessonsByExercise returns all LessonExercise records for a given exercise.
+func (s *ExerciseService) GetLessonsByExercise(exerciseID uuid.UUID) ([]models.LessonExercise, error) {
+	return s.lessonExerciseRepo.FindByExercise(exerciseID)
 }

@@ -48,3 +48,21 @@ func (r *ModuleRepository) LinkLesson(moduleID, lessonID, orderIndex int) error 
 	}
 	return r.db.Create(&link).Error
 }
+
+func (r *ModuleRepository) UnlinkLesson(moduleID, lessonID int) error {
+	return r.db.Delete(&models.ModuleLesson{}, "module_id = ? AND lesson_id = ?", moduleID, lessonID).Error
+}
+
+func (r *ModuleRepository) ReorderLessons(moduleID int, items []models.ModuleLesson) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, item := range items {
+			err := tx.Model(&models.ModuleLesson{}).
+				Where("module_id = ? AND lesson_id = ?", moduleID, item.LessonID).
+				Update("order_index", item.OrderIndex).Error
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}

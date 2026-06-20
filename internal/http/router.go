@@ -134,17 +134,23 @@ func (r *Router) initEngine() {
 
 			modules.POST("/:id/lessons", middleware.AuthMiddleware(), r.module.LinkLesson)
 			modules.GET("/:id/lessons", r.lesson.GetLessonsByModule)
+			modules.DELETE("/:id/lessons/:lessonId", middleware.AuthMiddleware(), r.module.UnlinkLesson)
+			modules.PUT("/:id/lessons/reorder", middleware.AuthMiddleware(), r.module.ReorderLessons)
 		}
 
 		lessons := api.Group("/lessons")
 		{
+			lessons.GET("", r.lesson.ListLessons)
 			lessons.GET("/:id", r.lesson.GetLesson)
 			lessons.POST("", middleware.AuthMiddleware(), r.lesson.CreateLesson)
 			lessons.PUT("/:id", middleware.AuthMiddleware(), r.lesson.UpdateLesson)
 			lessons.DELETE("/:id", middleware.AuthMiddleware(), r.lesson.DeleteLesson)
 
+			lessons.GET("/:id/modules", r.lesson.GetModulesByLesson)
+			lessons.GET("/:id/exercises", r.lesson.GetExercisesByLesson)
 			lessons.POST("/:id/exercises", middleware.AuthMiddleware(), r.exercise.LinkExerciseToLesson)
 			lessons.DELETE("/:id/exercises/:exerciseId", middleware.AuthMiddleware(), r.exercise.UnlinkExerciseFromLesson)
+			lessons.PUT("/:id/exercises/reorder", middleware.AuthMiddleware(), r.exercise.BatchReorderExercises)
 			lessons.PUT("/:id/exercises/:exerciseId/reorder", middleware.AuthMiddleware(), r.exercise.ReorderExerciseInLesson)
 		}
 
@@ -153,6 +159,7 @@ func (r *Router) initEngine() {
 			exercises.GET("", r.exercise.ListExercises)
 			exercises.GET("/requirement-catalog", r.exercise.GetRequirementCatalog)
 			exercises.GET("/:id", r.exercise.GetExercise)
+			exercises.GET("/:id/lessons", r.exercise.GetLessonsByExercise)
 			exercises.POST("", middleware.AuthMiddleware(), r.exercise.CreateExercise)
 			exercises.PUT("/:id", middleware.AuthMiddleware(), r.exercise.UpdateExercise)
 			exercises.DELETE("/:id", middleware.AuthMiddleware(), r.exercise.DeleteExercise)
