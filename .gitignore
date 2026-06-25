@@ -45,6 +45,12 @@ tools/translate-docs/uv.lock
 # MinIO data (local)
 .minio/
 
+# SSL certs (real ones go here when domain is set up)
+nginx/ssl/*.pem
+
+# DB backups (local)
+backups/
+
 # Redis dump (local)
 dump.rdb
 
