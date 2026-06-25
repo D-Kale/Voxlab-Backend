@@ -158,6 +158,7 @@ services:
     build:
       context: ../Frontend
       dockerfile: Dockerfile
+      network: host
     container_name: voxlab-frontend
     expose:
       - "3001"
