@@ -41,7 +41,18 @@ type ModuleLesson struct {
 	ModuleID   int       `gorm:"primary_key" json:"module_id"`
 	LessonID   int       `gorm:"primary_key" json:"lesson_id"`
 	OrderIndex int       `gorm:"not null" json:"order_index"`
-	Module     Module    `gorm:"foreignKey:ModuleID" json:"-"`
+	Module     Module    `gorm:"foreignKey:ModuleID" json:"module,omitempty"`
 	Lesson     Lesson    `gorm:"foreignKey:LessonID" json:"lesson,omitempty"`
 	CreatedAt  time.Time `gorm:"autoCreateTime" json:"created_at"`
+}
+
+type SharedLessonInfo struct {
+	LessonID     int         `json:"lesson_id"`
+	LessonTitle  string      `json:"lesson_title"`
+	OtherModules []ModuleRef `json:"other_modules"`
+}
+
+type ModuleRef struct {
+	ID    int    `json:"id"`
+	Title string `json:"title"`
 }

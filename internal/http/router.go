@@ -138,6 +138,8 @@ func (r *Router) initEngine() {
 			modules.PUT("/:id/lessons/reorder", middleware.AuthMiddleware(), r.module.ReorderLessons)
 		}
 
+		api.GET("/lessons/shared", r.lesson.GetSharedLessons)
+
 		lessons := api.Group("/lessons")
 		{
 			lessons.GET("", r.lesson.ListLessons)

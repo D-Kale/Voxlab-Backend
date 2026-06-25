@@ -281,6 +281,38 @@ func (h *LessonController) GetModulesByLesson(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": modules})
 }
 
+// GetSharedLessons godoc
+// @Summary      Get shared lessons in a module
+// @Description  Returns lessons in module X that ALSO belong to other modules,
+// @Description  including the names of those other modules.
+// @Description
+// @Description  🔓 Public — no authentication required.
+// @Tags         Lessons
+// @Produce      json
+// @Param        module_id  query  int  true  "Module ID (e.g. 1)"
+// @Success      200  {object}  resources.SuccessResponse "Lecciones compartidas con otros módulos"
+// @Failure      400  {object}  resources.BadRequestError "module_id requerido"
+// @Failure      500  {object}  resources.InternalServerError "Error al obtener lecciones compartidas"
+// @Router       /api/v1/lessons/shared [get]
+func (h *LessonController) GetSharedLessons(c *gin.Context) {
+	moduleID, err := strconv.Atoi(c.Query("module_id"))
+	if err != nil || moduleID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid or missing module_id"})
+		return
+	}
+
+	lessons, err := h.service.GetSharedLessons(moduleID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch shared lessons"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    lessons,
+	})
+}
+
 // GetExercisesByLesson godoc
 // @Summary      Get exercises for a lesson
 // @Description  Returns all exercises linked to a specific lesson via the pivot table.

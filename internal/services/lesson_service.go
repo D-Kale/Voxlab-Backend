@@ -41,6 +41,10 @@ func (s *LessonService) GetModulesByLesson(lessonID int) ([]models.ModuleLesson,
 	return s.repo.FindModulesByLesson(lessonID)
 }
 
+func (s *LessonService) GetSharedLessons(moduleID int) ([]models.SharedLessonInfo, error) {
+	return s.repo.FindSharedLessons(moduleID)
+}
+
 func (s *LessonService) GetExercisesByLesson(lessonID int) ([]models.LessonExercise, error) {
 	return s.repo.FindExercisesByLesson(lessonID)
 }
