@@ -7,26 +7,34 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
+
+    # Este paso convierte tu usuario "D-Kale" a minúsculas "d-kale"
+    - name: Convert owner to lowercase
+      id: repo_owner
+      run: echo "owner=${OWNER,,}" >> $GITHUB_OUTPUT
+      env:
+        OWNER: ${{ github.repository_owner }}
+
     - uses: docker/login-action@v3
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    # Compila la API de Go (Raíz del proyecto)
+    # Compila la API de Go usando el dueño en minúsculas
     - name: Build Go API
       uses: docker/build-push-action@v5
       with:
         context: .
         file: Dockerfile
         push: true
-        tags: ghcr.io/${{ github.repository_owner }}/voxlab-backend:latest
+        tags: ghcr.io/${{ steps.repo_owner.outputs.owner }}/voxlab-backend:latest
 
-    # Compila el Analyzer (Subcarpeta ./analyzer)
+    # Compila el Analyzer usando el dueño en minúsculas
     - name: Build Python Analyzer
       uses: docker/build-push-action@v5
       with:
         context: ./analyzer
         file: ./analyzer/Dockerfile
         push: true
-        tags: ghcr.io/${{ github.repository_owner }}/voxlab-analyzer:latest
+        tags: ghcr.io/${{ steps.repo_owner.outputs.owner }}/voxlab-analyzer:latest
