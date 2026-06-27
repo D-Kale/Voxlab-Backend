@@ -1,7 +1,7 @@
 name: Deploy Backend & Analyzer
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "master" ]
 jobs:
   build-services:
     runs-on: ubuntu-latest
