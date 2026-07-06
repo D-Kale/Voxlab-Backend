@@ -52,6 +52,6 @@ jobs:
         script: |
           cd /opt/voxlab 
           docker compose pull
-          docker compose up -d --no-deps --force-recreate voxlab-backend voxlab-analyzer
+          docker compose up -d --no-deps --force-recreate backend analyzer
           sleep 5
           curl -sf http://localhost:3000/api/v1/health || exit 1
