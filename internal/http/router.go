@@ -173,6 +173,7 @@ func (r *Router) initEngine() {
 		{
 			progress.GET("", r.progress.GetMyProgress)
 			progress.POST("", r.progress.CompleteLesson)
+			progress.PATCH("/:lesson_id", r.progress.UpdateProgress)
 		}
 
 		users := api.Group("/users")

@@ -43,14 +43,28 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 	}
 
 	exerciseCount := len(lesson.LessonExercises)
-	xpEarned := calculateXP(exerciseCount, input.Score)
+	newXP := calculateXP(exerciseCount, input.Score)
 
 	now := time.Now()
+
+	existing, err := s.repo.FindByUserAndLesson(userID, input.LessonID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	diff := newXP
+	if existing != nil {
+		diff = newXP - existing.XPEarned
+		if diff < 0 {
+			diff = 0
+		}
+	}
+
 	progress := &models.UserProgress{
 		UserID:      userID,
 		LessonID:    input.LessonID,
 		Status:      "completed",
-		XPEarned:    xpEarned,
+		XPEarned:    newXP,
 		CompletedAt: &now,
 	}
 
@@ -58,9 +72,64 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 		return nil, err
 	}
 
-	_ = s.userRepo.AddXP(userID.String(), xpEarned)
+	if diff > 0 {
+		_ = s.userRepo.AddXP(userID.String(), diff)
+	}
 
 	return progress, nil
+}
+
+type UpdateProgressInput struct {
+	Score int `json:"score"`
+}
+
+func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input UpdateProgressInput) (*models.UserProgress, error) {
+	lesson, err := s.lessonRepo.FindByID(lessonID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("lesson not found")
+		}
+		return nil, errors.New("lesson not found")
+	}
+
+	exerciseCount := len(lesson.LessonExercises)
+	newXP := calculateXP(exerciseCount, input.Score)
+
+	existing, err := s.repo.FindByUserAndLesson(userID, lessonID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			progress := &models.UserProgress{
+				UserID:   userID,
+				LessonID: lessonID,
+				Status:   "in_progress",
+				XPEarned: newXP,
+			}
+			if err := s.repo.Upsert(progress); err != nil {
+				return nil, err
+			}
+			_ = s.userRepo.AddXP(userID.String(), newXP)
+			return progress, nil
+		}
+		return nil, err
+	}
+
+	diff := newXP - existing.XPEarned
+	if diff < 0 {
+		diff = 0
+	}
+
+	existing.XPEarned = newXP
+	existing.UpdatedAt = time.Now()
+
+	if err := s.repo.Update(existing); err != nil {
+		return nil, err
+	}
+
+	if diff > 0 {
+		_ = s.userRepo.AddXP(userID.String(), diff)
+	}
+
+	return existing, nil
 }
 
 func calculateXP(exerciseCount, score int) int {

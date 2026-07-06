@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -109,6 +110,72 @@ func (h *ProgressController) CompleteLesson(c *gin.Context) {
 	progress, err := h.service.CompleteLesson(userID, services.CompleteLessonInput{
 		LessonID: req.LessonID,
 		Score:    req.Score,
+	})
+	if err != nil {
+		status := http.StatusInternalServerError
+		if err.Error() == "lesson not found" {
+			status = http.StatusNotFound
+		}
+		c.JSON(status, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    progress,
+	})
+}
+
+type updateProgressRequest struct {
+	Score int `json:"score" example:"85"`
+}
+
+// UpdateProgress godoc
+// @Summary      Update lesson progress
+// @Description  Incrementally updates the XP earned for a lesson without marking it as completed.
+// @Description  Calculates the XP diff from the previous value and grants only the delta (never double-counts).
+// @Description  If no progress record exists yet, creates one in "in_progress" status.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Progress
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        lesson_id  path  int  true  "Lesson ID"
+// @Param        request    body  updateProgressRequest  true  "Updated score"
+// @Success      200  {object}  resources.UpdateProgressResponse  "Progreso actualizado"
+// @Failure      400  {object}  resources.BadRequestError          "Datos inválidos"
+// @Failure      401  {object}  resources.UnauthorizedError        "Token no proporcionado o inválido"
+// @Failure      404  {object}  resources.NotFoundError            "Lección no encontrada"
+// @Failure      500  {object}  resources.InternalServerError      "Error al actualizar el progreso"
+// @Router       /api/v1/progress/{lesson_id} [patch]
+func (h *ProgressController) UpdateProgress(c *gin.Context) {
+	userIDStr, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in token"})
+		return
+	}
+
+	lessonID, err := strconv.Atoi(c.Param("lesson_id"))
+	if err != nil || lessonID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid lesson_id"})
+		return
+	}
+
+	var req updateProgressRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	progress, err := h.service.UpdateProgress(userID, lessonID, services.UpdateProgressInput{
+		Score: req.Score,
 	})
 	if err != nil {
 		status := http.StatusInternalServerError

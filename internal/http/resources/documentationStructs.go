@@ -275,6 +275,11 @@ type CompleteProgressResponse struct {
 	Data models.UserProgress `json:"data"`
 }
 
+type UpdateProgressResponse struct {
+	BaseResponse
+	Data models.UserProgress `json:"data"`
+}
+
 // ============================================================================
 // USERS — /api/v1/users/*
 // ============================================================================

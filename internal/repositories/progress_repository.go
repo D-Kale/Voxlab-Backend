@@ -27,6 +27,11 @@ func (r *ProgressRepository) Upsert(progress *models.UserProgress) error {
 	}).Create(progress).Error
 }
 
+func (r *ProgressRepository) Update(progress *models.UserProgress) error {
+	progress.UpdatedAt = time.Now()
+	return r.db.Save(progress).Error
+}
+
 func (r *ProgressRepository) FindByUserAndLesson(userID uuid.UUID, lessonID int) (*models.UserProgress, error) {
 	var progress models.UserProgress
 	err := r.db.Where("user_id = ? AND lesson_id = ?", userID, lessonID).First(&progress).Error
