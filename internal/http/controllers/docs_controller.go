@@ -191,7 +191,7 @@ func (c *DocsController) ServeSwaggerUI(ctx *gin.Context) {
   <script>
     window.onload = function() {
       SwaggerUIBundle({
-        url: "/api/v1/docs/es/spec",
+        url: "/api/v1/swagger/doc.json",
         dom_id: '#swagger-ui',
         presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
         layout: "BaseLayout",
