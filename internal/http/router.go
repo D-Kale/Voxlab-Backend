@@ -85,7 +85,7 @@ func (r *Router) initEngine() {
 	r.engine.Use(gin.Recovery())
 	r.engine.Use(middleware.CORSMiddleware())
 
-	r.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	r.engine.GET("/api/v1/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	r.engine.GET("/docs/es", r.docs.ServeSwaggerUI)
 	r.engine.GET("/api/v1/docs/es/spec", r.docs.ServeTranslatedSpec)
 

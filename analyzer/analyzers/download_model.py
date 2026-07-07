@@ -6,7 +6,7 @@ Uso:
 
 Descarga:
     - spaCy: es_core_news_md (modelo de lenguaje español)
-    - sentence-transformers: paraphrase-multilingual-MiniLM-L12-v2
+    - fastembed: paraphrase-multilingual-MiniLM-L12-v2 (embeddings ONNX)
 """
 
 import subprocess
@@ -23,11 +23,10 @@ def download_spacy_model():
 
 
 def download_embedding_model():
-    print("Descargando modelo de embeddings MiniLM multilingüe...")
-    from sentence_transformers import SentenceTransformer
-    SentenceTransformer(
-        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-        device="cpu",
+    print("Descargando modelo de embeddings MiniLM multilingüe (ONNX)...")
+    from fastembed import TextEmbedding
+    TextEmbedding(
+        model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
     )
     print("Embeddings: OK")
 

@@ -216,12 +216,35 @@ func (c *DocsController) ServeSwaggerUI(ctx *gin.Context) {
 // @Failure      500  {object}  map[string]interface{}  "Failed to read spec file"
 // @Router       /api/v1/docs/es/spec [get]
 func (c *DocsController) ServeTranslatedSpec(ctx *gin.Context) {
-	if data, err := os.ReadFile("/app/docs/es/openapi-es.json"); err == nil {
-		ctx.Data(http.StatusOK, "application/json", data)
-		return
+	specPaths := []string{
+		"docs/es/openapi-es.json",
+		"./docs/es/openapi-es.json",
+		"/app/docs/es/openapi-es.json",
 	}
 
-	data, err := os.ReadFile("/app/docs/swagger.json")
+	var data []byte
+	var err error
+	for _, path := range specPaths {
+		data, err = os.ReadFile(path)
+		if err == nil {
+			ctx.Data(http.StatusOK, "application/json", data)
+			return
+		}
+	}
+
+	fallbackPaths := []string{
+		"docs/swagger.json",
+		"./docs/swagger.json",
+		"/app/docs/swagger.json",
+	}
+
+	for _, path := range fallbackPaths {
+		data, err = os.ReadFile(path)
+		if err == nil {
+			break
+		}
+	}
+
 	if err != nil {
 		http.Error(ctx.Writer, err.Error(), http.StatusInternalServerError)
 		return

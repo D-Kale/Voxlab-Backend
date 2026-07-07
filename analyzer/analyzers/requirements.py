@@ -1,25 +1,27 @@
 from typing import List, Optional
 
+import numpy as np
+
 _MODEL = None
 
 
 def _load_model():
     """Carga el modelo de embeddings lazy (una sola vez).
 
-    Usa sentence-transformers con el modelo multilingüe MiniLM.
+    Usa fastembed (ONNX Runtime) con el mismo modelo multilingüe MiniLM.
+    Sin PyTorch, ~20MB de dependencias vs ~1GB de sentence-transformers.
     El modelo se descarga automáticamente en la primera carga
     si no está cacheado (~130MB). Se cachea en memoria después.
 
     Returns:
-        El modelo SentenceTransformer, o None si falla la carga.
+        El modelo TextEmbedding, o None si falla la carga.
     """
     global _MODEL
     if _MODEL is None:
         try:
-            from sentence_transformers import SentenceTransformer
-            _MODEL = SentenceTransformer(
-                "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
-                device="cpu",
+            from fastembed import TextEmbedding
+            _MODEL = TextEmbedding(
+                model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
             )
         except Exception:
             _MODEL = False
@@ -29,9 +31,9 @@ def _load_model():
 def match_requirements(text: str, requirements: List[str]) -> List[dict]:
     """Evalúa cada requirement contra el texto usando similitud coseno.
 
-    Codifica tanto el texto completo como cada requirement usando un
-    modelo multilingüe MiniLM, luego calcula la similitud coseno entre
-    el embedding del texto y el embedding de cada requirement.
+    Codifica tanto el texto completo como cada requirement usando el
+    modelo multilingüe MiniLM via ONNX (fastembed), luego calcula la
+    similitud coseno entre el embedding del texto y el de cada requirement.
 
     Args:
         text: Texto del alumno en español.
@@ -53,12 +55,11 @@ def match_requirements(text: str, requirements: List[str]) -> List[dict]:
         return _fallback_keyword_match(text, requirements)
 
     try:
-        text_embedding = model.encode(text, normalize_embeddings=True)
-        req_embeddings = model.encode(requirements, normalize_embeddings=True)
+        text_embedding = list(model.embed([text]))[0]
+        req_embeddings = np.array(list(model.embed(requirements)))
     except Exception:
         return _fallback_keyword_match(text, requirements)
 
-    import numpy as np
     similarities = np.dot(req_embeddings, text_embedding)
 
     results = []
@@ -120,5 +121,5 @@ def precompute_embeddings(requirements: List[str]):
         return []
 
     model = _load_model()
-    embeddings = model.encode(requirements, normalize_embeddings=True)
+    embeddings = list(model.embed(requirements))
     return [emb.tolist() for emb in embeddings]
