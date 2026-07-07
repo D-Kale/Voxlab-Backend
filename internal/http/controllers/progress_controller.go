@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -189,5 +190,95 @@ func (h *ProgressController) UpdateProgress(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data":    progress,
+	})
+}
+
+type syncProgressItem struct {
+	LessonID    int        `json:"lesson_id" example:"1"`
+	Score       int        `json:"score" example:"85"`
+	Status      string     `json:"status" example:"completed"`
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
+}
+
+type syncProgressRequest struct {
+	ProgressItems []syncProgressItem `json:"progress_items"`
+}
+
+// SyncProgress godoc
+// @Summary      Bulk sync local progress (first-time registration only)
+// @Description  Syncs ALL locally-stored lesson progress to the server after registration.
+// @Description  Only applies if the user has ZERO XP and ZERO streak days (first-time sync).
+// @Description  If the user already has server-side progress, returns 409 Conflict.
+// @Description  The frontend groups exercises by lesson and sends lesson-level scores.
+// @Description  After sync, the frontend should re-fetch GET /progress and GET /auth/me
+// @Description  to replace local state with server state.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Progress
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body  syncProgressRequest  true  "List of lesson progress items to sync"
+// @Success      200  {object}  resources.SyncProgressResponse  "Progreso sincronizado — incluye progress[] y user actualizado"
+// @Failure      400  {object}  resources.BadRequestError        "Datos inválidos"
+// @Failure      401  {object}  resources.UnauthorizedError      "Token no proporcionado o inválido"
+// @Failure      409  {object}  resources.ConflictError          "El usuario ya tiene progreso en el servidor"
+// @Failure      500  {object}  resources.InternalServerError    "Error al sincronizar el progreso"
+// @Router       /api/v1/progress/sync [post]
+func (h *ProgressController) SyncProgress(c *gin.Context) {
+	userIDStr, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in token"})
+		return
+	}
+
+	var req syncProgressRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	if len(req.ProgressItems) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "progress_items is required"})
+		return
+	}
+
+	svcItems := make([]services.SyncProgressItem, len(req.ProgressItems))
+	for i, item := range req.ProgressItems {
+		svcItems[i] = services.SyncProgressItem{
+			LessonID:    item.LessonID,
+			Score:       item.Score,
+			Status:      item.Status,
+			CompletedAt: item.CompletedAt,
+		}
+	}
+
+	progress, user, err := h.service.SyncProgress(userID, services.SyncProgressInput{
+		ProgressItems: svcItems,
+	})
+	if err != nil {
+		status := http.StatusInternalServerError
+		msg := err.Error()
+		if msg == "user already has progress data, sync rejected" {
+			status = http.StatusConflict
+		} else if msg == "user not found" {
+			status = http.StatusNotFound
+		}
+		c.JSON(status, gin.H{"error": msg})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": gin.H{
+			"progress": progress,
+			"user":     user,
+		},
 	})
 }

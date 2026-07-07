@@ -711,6 +711,47 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/lessons/shared": {
+            "get": {
+                "description": "Returns lessons in module X that ALSO belong to other modules,\nincluding the names of those other modules.\n\n🔓 Public — no authentication required.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lessons"
+                ],
+                "summary": "Get shared lessons in a module",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Module ID (e.g. 1)",
+                        "name": "module_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lecciones compartidas con otros módulos",
+                        "schema": {
+                            "$ref": "#/definitions/resources.SharedLessonsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "module_id requerido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al obtener lecciones compartidas",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/lessons/{id}": {
             "get": {
                 "description": "Returns one lesson with its exercises. Use this to load the full lesson content\nincluding all exercise data.\n\n🔓 Public — no authentication required.",
@@ -1801,6 +1842,139 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Error al completar la lección",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/progress/sync": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Syncs ALL locally-stored lesson progress to the server after registration.\nOnly applies if the user has ZERO XP and ZERO streak days (first-time sync).\nIf the user already has server-side progress, returns 409 Conflict.\nThe frontend groups exercises by lesson and sends lesson-level scores.\nAfter sync, the frontend should re-fetch GET /progress and GET /auth/me\nto replace local state with server state.\n\n🔒 Requires JWT token (Authorization: Bearer \u003ctoken\u003e)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Progress"
+                ],
+                "summary": "Bulk sync local progress (first-time registration only)",
+                "parameters": [
+                    {
+                        "description": "List of lesson progress items to sync",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.syncProgressRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Progreso sincronizado — incluye progress[] y user actualizado",
+                        "schema": {
+                            "$ref": "#/definitions/resources.SyncProgressResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Token no proporcionado o inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "409": {
+                        "description": "El usuario ya tiene progreso en el servidor",
+                        "schema": {
+                            "$ref": "#/definitions/resources.ConflictError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al sincronizar el progreso",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/progress/{lesson_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Incrementally updates the XP earned for a lesson without marking it as completed.\nCalculates the XP diff from the previous value and grants only the delta (never double-counts).\nIf no progress record exists yet, creates one in \"in_progress\" status.\n\n🔒 Requires JWT token (Authorization: Bearer \u003ctoken\u003e)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Progress"
+                ],
+                "summary": "Update lesson progress",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Lesson ID",
+                        "name": "lesson_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated score",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.updateProgressRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Progreso actualizado",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UpdateProgressResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Token no proporcionado o inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "404": {
+                        "description": "Lección no encontrada",
+                        "schema": {
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al actualizar el progreso",
                         "schema": {
                             "$ref": "#/definitions/resources.InternalServerError"
                         }
@@ -3001,6 +3175,46 @@ const docTemplate = `{
                 }
             }
         },
+        "controllers.syncProgressItem": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "lesson_id": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "score": {
+                    "type": "integer",
+                    "example": 85
+                },
+                "status": {
+                    "type": "string",
+                    "example": "completed"
+                }
+            }
+        },
+        "controllers.syncProgressRequest": {
+            "type": "object",
+            "properties": {
+                "progress_items": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/controllers.syncProgressItem"
+                    }
+                }
+            }
+        },
+        "controllers.updateProgressRequest": {
+            "type": "object",
+            "properties": {
+                "score": {
+                    "type": "integer",
+                    "example": 85
+                }
+            }
+        },
         "models.Exercise": {
             "type": "object",
             "properties": {
@@ -3043,6 +3257,35 @@ const docTemplate = `{
                 "ExerciseTypeVideo",
                 "ExerciseTypeWriting"
             ]
+        },
+        "models.GamifiedTitle": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "requirement_condition": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_titles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserTitle"
+                    }
+                }
+            }
         },
         "models.Lesson": {
             "type": "object",
@@ -3140,11 +3383,25 @@ const docTemplate = `{
                 "lesson_id": {
                     "type": "integer"
                 },
+                "module": {
+                    "$ref": "#/definitions/models.Module"
+                },
                 "module_id": {
                     "type": "integer"
                 },
                 "order_index": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.ModuleRef": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },
@@ -3166,6 +3423,23 @@ const docTemplate = `{
                 "text": {
                     "type": "string",
                     "example": "Incluir una introducción clara del tema"
+                }
+            }
+        },
+        "models.SharedLessonInfo": {
+            "type": "object",
+            "properties": {
+                "lesson_id": {
+                    "type": "integer"
+                },
+                "lesson_title": {
+                    "type": "string"
+                },
+                "other_modules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ModuleRef"
+                    }
                 }
             }
         },
@@ -3201,6 +3475,47 @@ const docTemplate = `{
                 }
             }
         },
+        "models.User": {
+            "type": "object",
+            "properties": {
+                "avatar_url": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "lives": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role": {
+                    "type": "string"
+                },
+                "streak_days": {
+                    "type": "integer"
+                },
+                "titles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserTitle"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "xp": {
+                    "type": "integer"
+                }
+            }
+        },
         "models.UserProgress": {
             "type": "object",
             "properties": {
@@ -3224,6 +3539,26 @@ const docTemplate = `{
                 },
                 "xp_earned": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.UserTitle": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "is_equipped": {
+                    "type": "boolean"
+                },
+                "title": {
+                    "$ref": "#/definitions/models.GamifiedTitle"
+                },
+                "title_id": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
@@ -3855,6 +4190,55 @@ const docTemplate = `{
                 }
             }
         },
+        "resources.SharedLessonsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.SharedLessonInfo"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.SyncProgressData": {
+            "type": "object",
+            "properties": {
+                "progress": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.UserProgress"
+                    }
+                },
+                "user": {
+                    "$ref": "#/definitions/models.User"
+                }
+            }
+        },
+        "resources.SyncProgressResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/resources.SyncProgressData"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "resources.UnauthorizedError": {
             "type": "object",
             "properties": {
@@ -3915,6 +4299,22 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/models.Module"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UpdateProgressResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.UserProgress"
                 },
                 "message": {
                     "type": "string",

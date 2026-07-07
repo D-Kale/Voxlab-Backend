@@ -259,6 +259,33 @@ definitions:
         example: 1
         type: integer
     type: object
+  controllers.syncProgressItem:
+    properties:
+      completed_at:
+        type: string
+      lesson_id:
+        example: 1
+        type: integer
+      score:
+        example: 85
+        type: integer
+      status:
+        example: completed
+        type: string
+    type: object
+  controllers.syncProgressRequest:
+    properties:
+      progress_items:
+        items:
+          $ref: '#/definitions/controllers.syncProgressItem'
+        type: array
+    type: object
+  controllers.updateProgressRequest:
+    properties:
+      score:
+        example: 85
+        type: integer
+    type: object
   models.Exercise:
     properties:
       content:
@@ -291,6 +318,25 @@ definitions:
     - ExerciseTypeOratoryMinigame
     - ExerciseTypeVideo
     - ExerciseTypeWriting
+  models.GamifiedTitle:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      requirement_condition:
+        type: string
+      updated_at:
+        type: string
+      user_titles:
+        items:
+          $ref: '#/definitions/models.UserTitle'
+        type: array
+    type: object
   models.Lesson:
     properties:
       created_at:
@@ -354,10 +400,19 @@ definitions:
         $ref: '#/definitions/models.Lesson'
       lesson_id:
         type: integer
+      module:
+        $ref: '#/definitions/models.Module'
       module_id:
         type: integer
       order_index:
         type: integer
+    type: object
+  models.ModuleRef:
+    properties:
+      id:
+        type: integer
+      title:
+        type: string
     type: object
   models.RequirementCatalogItem:
     properties:
@@ -373,6 +428,17 @@ definitions:
       text:
         example: Incluir una introducción clara del tema
         type: string
+    type: object
+  models.SharedLessonInfo:
+    properties:
+      lesson_id:
+        type: integer
+      lesson_title:
+        type: string
+      other_modules:
+        items:
+          $ref: '#/definitions/models.ModuleRef'
+        type: array
     type: object
   models.Track:
     properties:
@@ -395,6 +461,33 @@ definitions:
       updated_at:
         type: string
     type: object
+  models.User:
+    properties:
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      lives:
+        type: integer
+      name:
+        type: string
+      role:
+        type: string
+      streak_days:
+        type: integer
+      titles:
+        items:
+          $ref: '#/definitions/models.UserTitle'
+        type: array
+      updated_at:
+        type: string
+      xp:
+        type: integer
+    type: object
   models.UserProgress:
     properties:
       completed_at:
@@ -411,6 +504,19 @@ definitions:
         type: string
       xp_earned:
         type: integer
+    type: object
+  models.UserTitle:
+    properties:
+      created_at:
+        type: string
+      is_equipped:
+        type: boolean
+      title:
+        $ref: '#/definitions/models.GamifiedTitle'
+      title_id:
+        type: integer
+      user_id:
+        type: string
     type: object
   resources.AnalyzeTextResponse:
     properties:
@@ -844,6 +950,39 @@ definitions:
         example: false
         type: boolean
     type: object
+  resources.SharedLessonsResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/models.SharedLessonInfo'
+        type: array
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.SyncProgressData:
+    properties:
+      progress:
+        items:
+          $ref: '#/definitions/models.UserProgress'
+        type: array
+      user:
+        $ref: '#/definitions/models.User'
+    type: object
+  resources.SyncProgressResponse:
+    properties:
+      data:
+        $ref: '#/definitions/resources.SyncProgressData'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
   resources.UnauthorizedError:
     properties:
       error:
@@ -886,6 +1025,17 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/models.Module'
+      message:
+        example: Operación realizada con éxito
+        type: string
+      success:
+        example: true
+        type: boolean
+    type: object
+  resources.UpdateProgressResponse:
+    properties:
+      data:
+        $ref: '#/definitions/models.UserProgress'
       message:
         example: Operación realizada con éxito
         type: string
@@ -1923,6 +2073,35 @@ paths:
       summary: Get modules containing a lesson
       tags:
       - Lessons
+  /api/v1/lessons/shared:
+    get:
+      description: "Returns lessons in module X that ALSO belong to other modules,\nincluding
+        the names of those other modules.\n\n\U0001F513 Public — no authentication
+        required."
+      parameters:
+      - description: Module ID (e.g. 1)
+        in: query
+        name: module_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Lecciones compartidas con otros módulos
+          schema:
+            $ref: '#/definitions/resources.SharedLessonsResponse'
+        "400":
+          description: module_id requerido
+          schema:
+            $ref: '#/definitions/resources.BadRequestError'
+        "500":
+          description: Error al obtener lecciones compartidas
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
+      summary: Get shared lessons in a module
+      tags:
+      - Lessons
   /api/v1/modules:
     post:
       consumes:
@@ -2311,6 +2490,101 @@ paths:
       security:
       - BearerAuth: []
       summary: Complete a lesson
+      tags:
+      - Progress
+  /api/v1/progress/{lesson_id}:
+    patch:
+      consumes:
+      - application/json
+      description: "Incrementally updates the XP earned for a lesson without marking
+        it as completed.\nCalculates the XP diff from the previous value and grants
+        only the delta (never double-counts).\nIf no progress record exists yet, creates
+        one in \"in_progress\" status.\n\n\U0001F512 Requires JWT token (Authorization:
+        Bearer <token>)"
+      parameters:
+      - description: Lesson ID
+        in: path
+        name: lesson_id
+        required: true
+        type: integer
+      - description: Updated score
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.updateProgressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Progreso actualizado
+          schema:
+            $ref: '#/definitions/resources.UpdateProgressResponse'
+        "400":
+          description: Datos inválidos
+          schema:
+            $ref: '#/definitions/resources.BadRequestError'
+        "401":
+          description: Token no proporcionado o inválido
+          schema:
+            $ref: '#/definitions/resources.UnauthorizedError'
+        "404":
+          description: Lección no encontrada
+          schema:
+            $ref: '#/definitions/resources.NotFoundError'
+        "500":
+          description: Error al actualizar el progreso
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
+      security:
+      - BearerAuth: []
+      summary: Update lesson progress
+      tags:
+      - Progress
+  /api/v1/progress/sync:
+    post:
+      consumes:
+      - application/json
+      description: "Syncs ALL locally-stored lesson progress to the server after registration.\nOnly
+        applies if the user has ZERO XP and ZERO streak days (first-time sync).\nIf
+        the user already has server-side progress, returns 409 Conflict.\nThe frontend
+        groups exercises by lesson and sends lesson-level scores.\nAfter sync, the
+        frontend should re-fetch GET /progress and GET /auth/me\nto replace local
+        state with server state.\n\n\U0001F512 Requires JWT token (Authorization:
+        Bearer <token>)"
+      parameters:
+      - description: List of lesson progress items to sync
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.syncProgressRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Progreso sincronizado — incluye progress[] y user actualizado
+          schema:
+            $ref: '#/definitions/resources.SyncProgressResponse'
+        "400":
+          description: Datos inválidos
+          schema:
+            $ref: '#/definitions/resources.BadRequestError'
+        "401":
+          description: Token no proporcionado o inválido
+          schema:
+            $ref: '#/definitions/resources.UnauthorizedError'
+        "409":
+          description: El usuario ya tiene progreso en el servidor
+          schema:
+            $ref: '#/definitions/resources.ConflictError'
+        "500":
+          description: Error al sincronizar el progreso
+          schema:
+            $ref: '#/definitions/resources.InternalServerError'
+      security:
+      - BearerAuth: []
+      summary: Bulk sync local progress (first-time registration only)
       tags:
       - Progress
   /api/v1/reactions:

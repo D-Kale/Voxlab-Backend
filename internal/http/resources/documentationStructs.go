@@ -285,6 +285,16 @@ type UpdateProgressResponse struct {
 	Data models.UserProgress `json:"data"`
 }
 
+type SyncProgressData struct {
+	Progress []models.UserProgress `json:"progress"`
+	User     *models.User          `json:"user"`
+}
+
+type SyncProgressResponse struct {
+	BaseResponse
+	Data SyncProgressData `json:"data"`
+}
+
 // ============================================================================
 // USERS — /api/v1/users/*
 // ============================================================================

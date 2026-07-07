@@ -1,19 +1,21 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/voxlab/voxlab-backend/internal/database"
 	"github.com/voxlab/voxlab-backend/internal/models"
 	"github.com/voxlab/voxlab-backend/internal/repositories"
 	"gorm.io/gorm"
 )
 
 type ProgressService struct {
-	repo      *repositories.ProgressRepository
+	repo       *repositories.ProgressRepository
 	lessonRepo *repositories.LessonRepository
-	userRepo  *repositories.UserRepository
+	userRepo   *repositories.UserRepository
 }
 
 func NewProgressService(
@@ -29,8 +31,8 @@ func NewProgressService(
 }
 
 type CompleteLessonInput struct {
-	LessonID int  `json:"lesson_id"`
-	Score    int  `json:"score"`
+	LessonID int `json:"lesson_id"`
+	Score    int `json:"score"`
 }
 
 func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonInput) (*models.UserProgress, error) {
@@ -74,6 +76,7 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 
 	if diff > 0 {
 		_ = s.userRepo.AddXP(userID.String(), diff)
+		s.grantDailyStreak(userID)
 	}
 
 	return progress, nil
@@ -108,6 +111,7 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 				return nil, err
 			}
 			_ = s.userRepo.AddXP(userID.String(), newXP)
+			s.grantDailyStreak(userID)
 			return progress, nil
 		}
 		return nil, err
@@ -127,9 +131,101 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 
 	if diff > 0 {
 		_ = s.userRepo.AddXP(userID.String(), diff)
+		s.grantDailyStreak(userID)
 	}
 
 	return existing, nil
+}
+
+type SyncProgressItem struct {
+	LessonID    int        `json:"lesson_id"`
+	Score       int        `json:"score"`
+	Status      string     `json:"status"`
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
+}
+
+type SyncProgressInput struct {
+	ProgressItems []SyncProgressItem `json:"progress_items"`
+}
+
+func (s *ProgressService) SyncProgress(userID uuid.UUID, input SyncProgressInput) ([]models.UserProgress, *models.User, error) {
+	user, err := s.userRepo.FindByID(userID.String())
+	if err != nil {
+		return nil, nil, errors.New("user not found")
+	}
+
+	if user.XP > 0 || user.StreakDays > 0 {
+		return nil, nil, errors.New("user already has progress data, sync rejected")
+	}
+
+	var totalXP int
+	var synced []models.UserProgress
+
+	for _, item := range input.ProgressItems {
+		lesson, err := s.lessonRepo.FindByID(item.LessonID)
+		if err != nil {
+			continue
+		}
+
+		exerciseCount := len(lesson.LessonExercises)
+		xpEarned := calculateXP(exerciseCount, item.Score)
+
+		progress := &models.UserProgress{
+			UserID:      userID,
+			LessonID:    item.LessonID,
+			Status:      item.Status,
+			XPEarned:    xpEarned,
+			CompletedAt: item.CompletedAt,
+		}
+		if progress.CompletedAt == nil {
+			now := time.Now()
+			progress.CompletedAt = &now
+		}
+
+		if err := s.repo.Upsert(progress); err != nil {
+			continue
+		}
+
+		totalXP += xpEarned
+		synced = append(synced, *progress)
+	}
+
+	user.XP = totalXP
+	if err := s.userRepo.Update(user); err != nil {
+		return nil, nil, err
+	}
+
+	if len(synced) > 0 {
+		s.grantDailyStreak(userID)
+	}
+
+	updatedUser, err := s.userRepo.FindByID(userID.String())
+	if err != nil {
+		return synced, user, nil
+	}
+
+	return synced, updatedUser, nil
+}
+
+func (s *ProgressService) grantDailyStreak(userID uuid.UUID) {
+	ctx := context.Background()
+	hasStreak, err := database.GetUserStreak(ctx, userID.String())
+	if err != nil || hasStreak {
+		return
+	}
+
+	user, err := s.userRepo.FindByID(userID.String())
+	if err != nil {
+		return
+	}
+
+	user.StreakDays++
+	if err := s.userRepo.Update(user); err != nil {
+		return
+	}
+
+	_ = database.SetUserStreak(ctx, userID.String())
+	_ = database.TrackUserProgress(ctx, userID.String(), user.XP, user.StreakDays)
 }
 
 func calculateXP(exerciseCount, score int) int {

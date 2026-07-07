@@ -172,6 +172,7 @@ func (r *Router) initEngine() {
 		progress.Use(middleware.AuthMiddleware())
 		{
 			progress.GET("", r.progress.GetMyProgress)
+			progress.POST("/sync", r.progress.SyncProgress)
 			progress.POST("", r.progress.CompleteLesson)
 			progress.PATCH("/:lesson_id", r.progress.UpdateProgress)
 		}
