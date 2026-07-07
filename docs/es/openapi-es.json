@@ -705,6 +705,47 @@
                 }
             }
         },
+        "/api/v1/lessons/shared": {
+            "get": {
+                "description": "Devuelve las lecciones del módulo X que también pertenecen a otros módulos,\nincluyendo los nombres de esos otros módulos.\n\n🔓 Público — no requiere autenticación.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Lecciones"
+                ],
+                "summary": "Obtener lecciones compartidas en un módulo",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID del módulo (por ejemplo, 1)",
+                        "name": "module_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lecciones compartidas con otros módulos",
+                        "schema": {
+                            "$ref": "#/definitions/resources.SharedLessonsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "module_id requerido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al obtener lecciones compartidas",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/lessons/{id}": {
             "get": {
                 "description": "Devuelve una lección con sus ejercicios. Úsalo para cargar el contenido completo de la lección\nincluyendo todos los datos de los ejercicios.\n\n🔓 Público — no requiere autenticación.",
@@ -1795,6 +1836,76 @@
                     },
                     "500": {
                         "description": "Error del servidor",
+                        "schema": {
+                            "$ref": "#/definitions/resources.InternalServerError"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/progress/{lesson_id}": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Actualiza incrementalmente el XP ganado para una lección sin marcarla como completada.\nCalcula la diferencia de XP desde el valor anterior y otorga solo el delta (nunca cuenta doble).\nSi aún no existe un registro de progreso, crea uno con estado \"in_progress\".\n\n🔒 Requiere JWT token (Authorization: Bearer <token>)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Progreso"
+                ],
+                "summary": "Actualizar progreso de lección",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "ID de la lección",
+                        "name": "lesson_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Puntuación actualizada",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controllers.updateProgressRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Progreso actualizado",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UpdateProgressResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "schema": {
+                            "$ref": "#/definitions/resources.BadRequestError"
+                        }
+                    },
+                    "401": {
+                        "description": "Token no proporcionado o inválido",
+                        "schema": {
+                            "$ref": "#/definitions/resources.UnauthorizedError"
+                        }
+                    },
+                    "404": {
+                        "description": "Lección no encontrada",
+                        "schema": {
+                            "$ref": "#/definitions/resources.NotFoundError"
+                        }
+                    },
+                    "500": {
+                        "description": "Error al actualizar el progreso",
                         "schema": {
                             "$ref": "#/definitions/resources.InternalServerError"
                         }
@@ -2995,6 +3106,15 @@
                 }
             }
         },
+        "controllers.updateProgressRequest": {
+            "type": "object",
+            "properties": {
+                "score": {
+                    "type": "integer",
+                    "example": 85
+                }
+            }
+        },
         "models.Exercise": {
             "type": "object",
             "properties": {
@@ -3134,11 +3254,25 @@
                 "lesson_id": {
                     "type": "integer"
                 },
+                "module": {
+                    "$ref": "#/definitions/models.Module"
+                },
                 "module_id": {
                     "type": "integer"
                 },
                 "order_index": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.ModuleRef": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "title": {
+                    "type": "string"
                 }
             }
         },
@@ -3160,6 +3294,23 @@
                 "text": {
                     "type": "string",
                     "example": "Incluir una introducción clara del tema"
+                }
+            }
+        },
+        "models.SharedLessonInfo": {
+            "type": "object",
+            "properties": {
+                "lesson_id": {
+                    "type": "integer"
+                },
+                "lesson_title": {
+                    "type": "string"
+                },
+                "other_modules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.ModuleRef"
+                    }
                 }
             }
         },
@@ -3849,6 +4000,25 @@
                 }
             }
         },
+        "resources.SharedLessonsResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.SharedLessonInfo"
+                    }
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
         "resources.UnauthorizedError": {
             "type": "object",
             "properties": {
@@ -3909,6 +4079,22 @@
             "properties": {
                 "data": {
                     "$ref": "#/definitions/models.Module"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Operación realizada con éxito"
+                },
+                "success": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "resources.UpdateProgressResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/models.UserProgress"
                 },
                 "message": {
                     "type": "string",

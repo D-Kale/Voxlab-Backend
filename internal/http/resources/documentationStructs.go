@@ -195,6 +195,11 @@ type GetExercisesByLessonResponse struct {
 	Data []models.LessonExercise `json:"data"`
 }
 
+type SharedLessonsResponse struct {
+	BaseResponse
+	Data []models.SharedLessonInfo `json:"data"`
+}
+
 // ============================================================================
 // LESSONS — /api/v1/lessons/* and /api/v1/modules/:id/lessons
 // ============================================================================

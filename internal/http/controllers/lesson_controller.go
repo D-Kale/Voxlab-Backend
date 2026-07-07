@@ -290,7 +290,7 @@ func (h *LessonController) GetModulesByLesson(c *gin.Context) {
 // @Tags         Lessons
 // @Produce      json
 // @Param        module_id  query  int  true  "Module ID (e.g. 1)"
-// @Success      200  {object}  resources.SuccessResponse "Lecciones compartidas con otros módulos"
+// @Success      200  {object}  resources.SharedLessonsResponse "Lecciones compartidas con otros módulos"
 // @Failure      400  {object}  resources.BadRequestError "module_id requerido"
 // @Failure      500  {object}  resources.InternalServerError "Error al obtener lecciones compartidas"
 // @Router       /api/v1/lessons/shared [get]
