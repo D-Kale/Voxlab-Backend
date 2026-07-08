@@ -54,19 +54,16 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 		return nil, err
 	}
 
-	diff := newXP
+	accumulated := newXP
 	if existing != nil {
-		diff = newXP - existing.XPEarned
-		if diff < 0 {
-			diff = 0
-		}
+		accumulated = existing.XPEarned + newXP
 	}
 
 	progress := &models.UserProgress{
 		UserID:      userID,
 		LessonID:    input.LessonID,
 		Status:      "completed",
-		XPEarned:    newXP,
+		XPEarned:    accumulated,
 		CompletedAt: &now,
 	}
 
@@ -74,8 +71,8 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 		return nil, err
 	}
 
-	if diff > 0 {
-		_ = s.userRepo.AddXP(userID.String(), diff)
+	if newXP > 0 {
+		_ = s.userRepo.AddXP(userID.String(), newXP)
 		s.grantDailyStreak(userID)
 	}
 
@@ -117,20 +114,15 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 		return nil, err
 	}
 
-	diff := newXP - existing.XPEarned
-	if diff < 0 {
-		diff = 0
-	}
-
-	existing.XPEarned = newXP
+	existing.XPEarned += newXP
 	existing.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(existing); err != nil {
 		return nil, err
 	}
 
-	if diff > 0 {
-		_ = s.userRepo.AddXP(userID.String(), diff)
+	if newXP > 0 {
+		_ = s.userRepo.AddXP(userID.String(), newXP)
 		s.grantDailyStreak(userID)
 	}
 
@@ -228,15 +220,11 @@ func (s *ProgressService) grantDailyStreak(userID uuid.UUID) {
 	_ = database.TrackUserProgress(ctx, userID.String(), user.XP, user.StreakDays)
 }
 
-func calculateXP(exerciseCount, score int) int {
-	baseXP := 10
-	if exerciseCount > 0 {
-		baseXP += exerciseCount * 5
+func calculateXP(_ int, score int) int {
+	if score < 0 {
+		return 0
 	}
-	if score > 0 {
-		baseXP += score / 10
-	}
-	return baseXP
+	return score
 }
 
 func (s *ProgressService) GetByUser(userID uuid.UUID) ([]models.UserProgress, error) {
