@@ -23,12 +23,13 @@ const (
 // The Content field is JSONB and its structure depends on the Type field.
 // Supported types: quiz, reading, oratory_minigame, audio, video, writing.
 type Exercise struct {
-	ID        uuid.UUID       `gorm:"type:uuid;primary_key" json:"id" swaggertype:"string"`
-	Name      string          `gorm:"type:varchar(255);default:''" json:"name" example:"Quiz de liderazgo"`
-	Type      ExerciseType    `gorm:"type:varchar(50);not null" json:"type"`
-	Content   json.RawMessage `gorm:"type:jsonb;not null" json:"content" swaggertype:"object"`
-	CreatedAt time.Time       `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt time.Time       `gorm:"autoUpdateTime" json:"updated_at"`
+	ID            uuid.UUID       `gorm:"type:uuid;primary_key" json:"id" swaggertype:"string"`
+	Name          string          `gorm:"type:varchar(255);default:''" json:"name" example:"Quiz de liderazgo"`
+	Type          ExerciseType    `gorm:"type:varchar(50);not null" json:"type"`
+	Content       json.RawMessage `gorm:"type:jsonb;not null" json:"content" swaggertype:"object"`
+	PassingScore  int             `gorm:"type:int;default:60" json:"passing_score" example:"60"`
+	CreatedAt     time.Time       `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt     time.Time       `gorm:"autoUpdateTime" json:"updated_at"`
 }
 
 // QuizQuestion represents a single multiple-choice question.

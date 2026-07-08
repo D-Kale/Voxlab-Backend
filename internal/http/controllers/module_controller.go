@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/voxlab/voxlab-backend/internal/models"
+	"github.com/voxlab/voxlab-backend/internal/repositories"
 	"github.com/voxlab/voxlab-backend/internal/services"
 )
 
@@ -235,6 +236,48 @@ func (h *ModuleController) DeleteModule(c *gin.Context) {
 		"success": true,
 		"message": "Module deleted successfully",
 	})
+}
+
+// ReorderModules godoc
+// @Summary      Reorder modules within a track (batch)
+// @Description  Updates the order_index for multiple modules at once.
+// @Description  Send an array of {id, order_index} pairs.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Modules
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id       path  int   true  "Track ID"
+// @Param        request  body  object{items=[]object{id=int,order_index=int}}  true  "Array of module order pairs"
+// @Success      200  {object}  map[string]interface{}  "Módulos reordenados"
+// @Failure      400  {object}  map[string]interface{}  "Datos inválidos"
+// @Failure      401  {object}  map[string]interface{}  "No autorizado"
+// @Failure      500  {object}  map[string]interface{}  "Error al reordenar"
+// @Router       /api/v1/tracks/{id}/modules/reorder [put]
+func (h *ModuleController) ReorderModules(c *gin.Context) {
+	var req struct {
+		Items []struct {
+			ID         int `json:"id"`
+			OrderIndex int `json:"order_index"`
+		} `json:"items"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	items := make([]repositories.ModuleOrderItem, len(req.Items))
+	for i, item := range req.Items {
+		items[i] = repositories.ModuleOrderItem{ID: item.ID, OrderIndex: item.OrderIndex}
+	}
+
+	if err := h.service.ReorderModules(items); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Modules reordered"})
 }
 
 // LinkLesson     godoc

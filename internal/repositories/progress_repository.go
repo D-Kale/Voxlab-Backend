@@ -46,3 +46,16 @@ func (r *ProgressRepository) FindAllByUser(userID uuid.UUID) ([]models.UserProgr
 	err := r.db.Where("user_id = ?", userID).Order("lesson_id asc").Find(&progress).Error
 	return progress, err
 }
+
+func (r *ProgressRepository) DeleteByUserAndLesson(userID uuid.UUID, lessonID int) error {
+	return r.db.Where("user_id = ? AND lesson_id = ?", userID, lessonID).Delete(&models.UserProgress{}).Error
+}
+
+func (r *ProgressRepository) FindLatestByUser(userID uuid.UUID) (*models.UserProgress, error) {
+	var progress models.UserProgress
+	err := r.db.Where("user_id = ?", userID).Order("updated_at desc").First(&progress).Error
+	if err != nil {
+		return nil, err
+	}
+	return &progress, nil
+}

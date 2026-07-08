@@ -32,3 +32,12 @@ func (s *TrackService) Update(track *models.Track) error {
 func (s *TrackService) Delete(id int) error {
 	return s.repo.Delete(id)
 }
+
+type ReorderTrackItem struct {
+	ID         int `json:"id"`
+	OrderIndex int `json:"order_index"`
+}
+
+func (s *TrackService) Reorder(items []repositories.TrackOrderItem) error {
+	return s.repo.BatchUpdateOrder(items)
+}

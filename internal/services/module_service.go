@@ -49,6 +49,13 @@ func (s *ModuleService) UnlinkLesson(moduleID, lessonID int) error {
 	return s.repo.UnlinkLesson(moduleID, lessonID)
 }
 
+func (s *ModuleService) ReorderModules(items []repositories.ModuleOrderItem) error {
+	if len(items) == 0 {
+		return fmt.Errorf("items cannot be empty")
+	}
+	return s.repo.BatchUpdateOrder(items)
+}
+
 func (s *ModuleService) ReorderLessons(moduleID int, items []models.ModuleLesson) error {
 	if moduleID <= 0 {
 		return fmt.Errorf("module_id must be a positive integer")

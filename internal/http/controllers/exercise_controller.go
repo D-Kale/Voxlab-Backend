@@ -13,7 +13,8 @@ import (
 )
 
 type ExerciseController struct {
-	service *services.ExerciseService
+	service    *services.ExerciseService
+	attemptSvc *services.AttemptService
 }
 
 // CreateExerciseRequest represents the request body for creating an exercise
@@ -27,8 +28,8 @@ type CreateExerciseRequest struct {
 	Content interface{} `json:"content" swaggertype:"object"`
 }
 
-func NewExerciseController(service *services.ExerciseService) *ExerciseController {
-	return &ExerciseController{service: service}
+func NewExerciseController(service *services.ExerciseService, attemptSvc *services.AttemptService) *ExerciseController {
+	return &ExerciseController{service: service, attemptSvc: attemptSvc}
 }
 
 // ListExercises godoc
@@ -551,6 +552,78 @@ func (h *ExerciseController) BatchReorderExercises(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Exercises reordered"})
+}
+
+// ============================================================================
+// Exercise Attempt (lives + streak)
+// ============================================================================
+
+type attemptExerciseRequest struct {
+	Score    int `json:"score" example:"75"`
+	LessonID int `json:"lesson_id" example:"1"`
+}
+
+// AttemptExercise godoc
+// @Summary      Register an exercise attempt
+// @Description  Records a user's attempt at an exercise. If the score is below the passing threshold,
+// @Description  a life is consumed. If lives reach 0, the streak resets and the current lesson progress is deleted.
+// @Description  Lives regenerate over time (1 every 2 hours, max 3).
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Exercises
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        id       path  string                true  "Exercise UUID"
+// @Param        request  body  attemptExerciseRequest true  "Attempt data"
+// @Success      200  {object}  map[string]interface{}  "Resultado del intento"
+// @Failure      400  {object}  map[string]interface{}  "Datos inválidos"
+// @Failure      401  {object}  map[string]interface{}  "No autorizado"
+// @Failure      404  {object}  map[string]interface{}  "Ejercicio no encontrado"
+// @Router       /api/v1/exercises/{id}/attempt [post]
+func (h *ExerciseController) AttemptExercise(c *gin.Context) {
+	exerciseID, err := uuid.Parse(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid exercise ID (must be a valid UUID)"})
+		return
+	}
+
+	userIDStr, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in token"})
+		return
+	}
+
+	var req attemptExerciseRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	if req.LessonID == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "lesson_id is required"})
+		return
+	}
+
+	result, err := h.attemptSvc.RegisterAttempt(userID, exerciseID, services.AttemptInput{
+		Score:    req.Score,
+		LessonID: req.LessonID,
+	})
+	if err != nil {
+		status := http.StatusInternalServerError
+		if err.Error() == "exercise not found" {
+			status = http.StatusNotFound
+		}
+		c.JSON(status, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": result})
 }
 
 // ============================================================================

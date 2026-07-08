@@ -43,6 +43,7 @@ func AutoMigrate() error {
 		&models.Exercise{},
 		&models.UserReaction{},
 		&models.UserProgress{},
+		&models.ExerciseAttempt{},
 	}
 
 	for _, model := range modelsList {

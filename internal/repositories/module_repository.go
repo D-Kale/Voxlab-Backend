@@ -53,6 +53,22 @@ func (r *ModuleRepository) UnlinkLesson(moduleID, lessonID int) error {
 	return r.db.Delete(&models.ModuleLesson{}, "module_id = ? AND lesson_id = ?", moduleID, lessonID).Error
 }
 
+type ModuleOrderItem struct {
+	ID         int `json:"id"`
+	OrderIndex int `json:"order_index"`
+}
+
+func (r *ModuleRepository) BatchUpdateOrder(items []ModuleOrderItem) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, item := range items {
+			if err := tx.Model(&models.Module{}).Where("id = ?", item.ID).Update("order_index", item.OrderIndex).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}
+
 func (r *ModuleRepository) ReorderLessons(moduleID int, items []models.ModuleLesson) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
 		for _, item := range items {

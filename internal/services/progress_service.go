@@ -13,20 +13,26 @@ import (
 )
 
 type ProgressService struct {
-	repo       *repositories.ProgressRepository
-	lessonRepo *repositories.LessonRepository
-	userRepo   *repositories.UserRepository
+	repo        *repositories.ProgressRepository
+	lessonRepo  *repositories.LessonRepository
+	userRepo    *repositories.UserRepository
+	lifeSvc     *LifeService
+	streakSvc   *StreakService
 }
 
 func NewProgressService(
 	repo *repositories.ProgressRepository,
 	lessonRepo *repositories.LessonRepository,
 	userRepo *repositories.UserRepository,
+	lifeSvc *LifeService,
+	streakSvc *StreakService,
 ) *ProgressService {
 	return &ProgressService{
 		repo:       repo,
 		lessonRepo: lessonRepo,
 		userRepo:   userRepo,
+		lifeSvc:    lifeSvc,
+		streakSvc:  streakSvc,
 	}
 }
 
@@ -79,6 +85,8 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 		s.grantDailyStreak(userID)
 	}
 
+	s.touchUserActivity(userID)
+
 	return progress, nil
 }
 
@@ -112,6 +120,7 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 			}
 			_ = s.userRepo.AddXP(userID.String(), newXP)
 			s.grantDailyStreak(userID)
+			s.touchUserActivity(userID)
 			return progress, nil
 		}
 		return nil, err
@@ -134,6 +143,8 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 		_ = s.userRepo.AddXP(userID.String(), newXP)
 		s.grantDailyStreak(userID)
 	}
+
+	s.touchUserActivity(userID)
 
 	return existing, nil
 }
@@ -198,6 +209,7 @@ func (s *ProgressService) SyncProgress(userID uuid.UUID, input SyncProgressInput
 
 	if len(synced) > 0 {
 		s.grantDailyStreak(userID)
+		s.touchUserActivity(userID)
 	}
 
 	updatedUser, err := s.userRepo.FindByID(userID.String())
@@ -220,6 +232,14 @@ func (s *ProgressService) grantDailyStreak(userID uuid.UUID) {
 		return
 	}
 
+	if s.streakSvc.IsStreakAtRisk(user) {
+		if user.Lives > 0 {
+			user.Lives--
+		} else {
+			return
+		}
+	}
+
 	user.StreakDays++
 	if err := s.userRepo.Update(user); err != nil {
 		return
@@ -227,6 +247,15 @@ func (s *ProgressService) grantDailyStreak(userID uuid.UUID) {
 
 	_ = database.SetUserStreak(ctx, userID.String())
 	_ = database.TrackUserProgress(ctx, userID.String(), user.XP, user.StreakDays)
+}
+
+func (s *ProgressService) touchUserActivity(userID uuid.UUID) {
+	user, err := s.userRepo.FindByID(userID.String())
+	if err != nil {
+		return
+	}
+	s.streakSvc.TouchActivity(user)
+	_ = s.userRepo.Update(user)
 }
 
 func calculateXP(_ int, score int) int {

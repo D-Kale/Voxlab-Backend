@@ -39,3 +39,19 @@ func (r *TrackRepository) Update(track *models.Track) error {
 func (r *TrackRepository) Delete(id int) error {
 	return r.db.Delete(&models.Track{}, id).Error
 }
+
+type TrackOrderItem struct {
+	ID         int `json:"id"`
+	OrderIndex int `json:"order_index"`
+}
+
+func (r *TrackRepository) BatchUpdateOrder(items []TrackOrderItem) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, item := range items {
+			if err := tx.Model(&models.Track{}).Where("id = ?", item.ID).Update("order_index", item.OrderIndex).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+}

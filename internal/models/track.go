@@ -3,12 +3,13 @@ package models
 import "time"
 
 type Track struct {
-	ID          int      `gorm:"primary_key" json:"id"`
-	Title       string   `gorm:"type:varchar(100);not null" json:"title"`
-	Description string   `gorm:"type:text" json:"description"`
-	IconURL     string   `gorm:"type:varchar(255)" json:"icon_url"`
-	IsActive    bool     `gorm:"default:true" json:"is_active"`
-	Modules     []Module `gorm:"foreignKey:TrackID" json:"modules,omitempty"`
+	ID          int       `gorm:"primary_key" json:"id"`
+	Title       string    `gorm:"type:varchar(100);not null" json:"title"`
+	Description string    `gorm:"type:text" json:"description"`
+	IconURL     string    `gorm:"type:varchar(255)" json:"icon_url"`
+	IsActive    bool      `gorm:"default:true" json:"is_active"`
+	OrderIndex  int       `gorm:"type:int;default:0" json:"order_index"`
+	Modules     []Module  `gorm:"foreignKey:TrackID" json:"modules,omitempty"`
 	CreatedAt   time.Time `gorm:"autoCreateTime" json:"created_at"`
 	UpdatedAt   time.Time `gorm:"autoUpdateTime" json:"updated_at"`
 }

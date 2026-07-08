@@ -14,13 +14,15 @@ type User struct {
 	Role         string         `gorm:"type:varchar(20);default:user" json:"role"`
 	AvatarURL    string         `gorm:"type:varchar(512)" json:"avatar_url"`
 	PasswordHash string         `gorm:"type:varchar(255);not null" json:"-"`
-	XP           int            `gorm:"type:int;default:0" json:"xp"`
-	StreakDays   int            `gorm:"type:int;default:0" json:"streak_days"`
-	Lives        int            `gorm:"type:int;default:5" json:"lives"`
-	CreatedAt    time.Time      `gorm:"autoCreateTime" json:"created_at"`
-	UpdatedAt    time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
-	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
-	Titles       []UserTitle    `gorm:"foreignKey:UserID" json:"titles,omitempty"`
+	XP              int            `gorm:"type:int;default:0" json:"xp"`
+	StreakDays      int            `gorm:"type:int;default:0" json:"streak_days"`
+	Lives           int            `gorm:"type:int;default:3" json:"lives"`
+	LastLifeRefillAt *time.Time    `json:"last_life_refill_at,omitempty"`
+	LastActivityAt  *time.Time    `json:"last_activity_at,omitempty"`
+	CreatedAt       time.Time      `gorm:"autoCreateTime" json:"created_at"`
+	UpdatedAt       time.Time      `gorm:"autoUpdateTime" json:"updated_at"`
+	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
+	Titles          []UserTitle    `gorm:"foreignKey:UserID" json:"titles,omitempty"`
 }
 
 type ProgressStatus struct {

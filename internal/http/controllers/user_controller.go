@@ -4,15 +4,42 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+	"github.com/voxlab/voxlab-backend/internal/models"
 	"github.com/voxlab/voxlab-backend/internal/services"
+	"gorm.io/gorm"
 )
 
 type UserController struct {
-	service *services.UserService
+	service   *services.UserService
+	lifeSvc   *services.LifeService
+	streakSvc *services.StreakService
+	db        *gorm.DB
 }
 
-func NewUserController(service *services.UserService) *UserController {
-	return &UserController{service: service}
+func NewUserController(service *services.UserService, lifeSvc *services.LifeService, streakSvc *services.StreakService, db *gorm.DB) *UserController {
+	return &UserController{service: service, lifeSvc: lifeSvc, streakSvc: streakSvc, db: db}
+}
+
+func (h *UserController) getFullUser(userID uuid.UUID) (*models.User, error) {
+	var user models.User
+	err := h.db.First(&user, "id = ?", userID).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func getUserID(c *gin.Context) (uuid.UUID, bool) {
+	userIDStr, exists := c.Get("user_id")
+	if !exists {
+		return uuid.Nil, false
+	}
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		return uuid.Nil, false
+	}
+	return userID, true
 }
 
 // GetUsers godoc
@@ -110,4 +137,84 @@ func (h *UserController) DeleteUser(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "message": "user deleted"})
+}
+
+// GetLives godoc
+// @Summary      Get current lives status
+// @Description  Returns the user's current lives, max lives, and next refill time.
+// @Description  Lives regenerate 1 every 2 hours up to a maximum of 3.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Users
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  map[string]interface{}  "Estado de vidas"
+// @Failure      401  {object}  map[string]interface{}  "No autorizado"
+// @Failure      404  {object}  map[string]interface{}  "Usuario no encontrado"
+// @Router       /api/v1/users/lives [get]
+func (h *UserController) GetLives(c *gin.Context) {
+	userID, ok := getUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	user, err := h.getFullUser(userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	h.lifeSvc.RefillLives(user)
+	_ = h.db.Save(user).Error
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "data": h.lifeSvc.GetLivesStatus(user)})
+}
+
+// RecoverStreak godoc
+// @Summary      Recover streak by spending a life
+// @Description  If the user's streak is at risk (24h without activity), spend 1 life to keep it alive.
+// @Description  Can only recover within the 24h grace window after the risk period.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Users
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  map[string]interface{}  "Racha recuperada"
+// @Failure      400  {object}  map[string]interface{}  "No se puede recuperar — sin vidas o racha no está en riesgo"
+// @Failure      401  {object}  map[string]interface{}  "No autorizado"
+// @Failure      404  {object}  map[string]interface{}  "Usuario no encontrado"
+// @Router       /api/v1/users/streak/recover [post]
+func (h *UserController) RecoverStreak(c *gin.Context) {
+	userID, ok := getUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	user, err := h.getFullUser(userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
+		return
+	}
+
+	h.lifeSvc.RefillLives(user)
+
+	if !h.streakSvc.IsStreakAtRisk(user) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "streak is not at risk, no recovery needed"})
+		return
+	}
+
+	if err := h.streakSvc.RecoverStreak(user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": gin.H{
+			"streak_days": user.StreakDays,
+			"lives":       user.Lives,
+		},
+	})
 }

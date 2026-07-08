@@ -23,17 +23,18 @@ type Router struct {
 	engine *gin.Engine
 	cfg    *config.Config
 
-	health   *controllers.HealthController
-	auth     *controllers.AuthController
-	track    *controllers.TrackController
-	module   *controllers.ModuleController
-	lesson   *controllers.LessonController
-	exercise *controllers.ExerciseController
-	progress *controllers.ProgressController
-	reaction *controllers.ReactionController
-	user     *controllers.UserController
-	upload   *controllers.UploadController
-	docs     *controllers.DocsController
+	health        *controllers.HealthController
+	auth          *controllers.AuthController
+	track         *controllers.TrackController
+	module        *controllers.ModuleController
+	lesson        *controllers.LessonController
+	exercise      *controllers.ExerciseController
+	progress      *controllers.ProgressController
+	reaction      *controllers.ReactionController
+	user          *controllers.UserController
+	upload        *controllers.UploadController
+	docs          *controllers.DocsController
+	learningPath  *controllers.LearningPathController
 }
 
 func NewRouter(cfg *config.Config) *Router {
@@ -53,13 +54,17 @@ func (r *Router) initDependencies() {
 	exerciseRepo := repositories.NewExerciseRepository(db)
 	lessonExerciseRepo := repositories.NewLessonExerciseRepository(db)
 	progressRepo := repositories.NewProgressRepository(db)
+	attemptRepo := repositories.NewExerciseAttemptRepository(db)
 
+	lifeSvc := services.NewLifeService(userRepo)
+	streakSvc := services.NewStreakService(userRepo)
 	authSvc := services.NewAuthService(userRepo, r.cfg.JWT.Secret)
 	trackSvc := services.NewTrackService(trackRepo)
 	moduleSvc := services.NewModuleService(moduleRepo)
 	lessonSvc := services.NewLessonService(lessonRepo)
 	exerciseSvc := services.NewExerciseService(exerciseRepo, lessonExerciseRepo)
-	progressSvc := services.NewProgressService(progressRepo, lessonRepo, userRepo)
+	progressSvc := services.NewProgressService(progressRepo, lessonRepo, userRepo, lifeSvc, streakSvc)
+	attemptSvc := services.NewAttemptService(lifeSvc, streakSvc, exerciseRepo, userRepo, attemptRepo, progressRepo)
 
 	userSvc := services.NewUserService(userRepo)
 	uploadSvc := services.NewUploadService(
@@ -72,11 +77,12 @@ func (r *Router) initDependencies() {
 	r.track = controllers.NewTrackController(trackSvc)
 	r.module = controllers.NewModuleController(moduleSvc)
 	r.lesson = controllers.NewLessonController(lessonSvc)
-	r.exercise = controllers.NewExerciseController(exerciseSvc)
+	r.exercise = controllers.NewExerciseController(exerciseSvc, attemptSvc)
 	r.progress = controllers.NewProgressController(progressSvc)
-	r.user = controllers.NewUserController(userSvc)
+	r.user = controllers.NewUserController(userSvc, lifeSvc, streakSvc, db)
 	r.upload = controllers.NewUploadController(uploadSvc)
 	r.docs = controllers.NewDocsController()
+	r.learningPath = controllers.NewLearningPathController(trackRepo, moduleRepo, lessonRepo, progressRepo, lifeSvc, streakSvc)
 }
 
 func (r *Router) initEngine() {
@@ -121,8 +127,10 @@ func (r *Router) initEngine() {
 			tracks.POST("", middleware.AuthMiddleware(), r.track.CreateTrack)
 			tracks.PUT("/:id", middleware.AuthMiddleware(), r.track.UpdateTrack)
 			tracks.DELETE("/:id", middleware.AuthMiddleware(), r.track.DeleteTrack)
+			tracks.PUT("/reorder", middleware.AuthMiddleware(), r.track.ReorderTracks)
 
 			tracks.GET("/:id/modules", r.module.GetModulesByTrack)
+			tracks.PUT("/:id/modules/reorder", middleware.AuthMiddleware(), r.module.ReorderModules)
 		}
 
 		modules := api.Group("/modules")
@@ -166,7 +174,17 @@ func (r *Router) initEngine() {
 			exercises.PUT("/:id", middleware.AuthMiddleware(), r.exercise.UpdateExercise)
 			exercises.DELETE("/:id", middleware.AuthMiddleware(), r.exercise.DeleteExercise)
 			exercises.POST("/analyze-text", middleware.AuthMiddleware(), r.exercise.AnalyzeText)
+			exercises.POST("/:id/attempt", middleware.AuthMiddleware(), r.exercise.AttemptExercise)
 		}
+
+		learningPath := api.Group("/learning-path")
+		learningPath.Use(middleware.AuthMiddleware())
+		{
+			learningPath.GET("", r.learningPath.GetLearningPath)
+		}
+
+		api.GET("/users/lives", middleware.AuthMiddleware(), r.user.GetLives)
+		api.POST("/users/streak/recover", middleware.AuthMiddleware(), r.user.RecoverStreak)
 
 		progress := api.Group("/progress")
 		progress.Use(middleware.AuthMiddleware())

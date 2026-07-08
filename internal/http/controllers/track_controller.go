@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/voxlab/voxlab-backend/internal/models"
+	"github.com/voxlab/voxlab-backend/internal/repositories"
 	"github.com/voxlab/voxlab-backend/internal/services"
 )
 
@@ -190,6 +191,47 @@ func (h *TrackController) UpdateTrack(c *gin.Context) {
 		"success": true,
 		"data":    existing,
 	})
+}
+
+// ReorderTracks godoc
+// @Summary      Reorder tracks (batch)
+// @Description  Updates the order_index for multiple tracks at once.
+// @Description  Send an array of {id, order_index} pairs.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Tracks (Educational Content)
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request  body  object{items=[]object{id=int,order_index=int}}  true  "Array of track order pairs"
+// @Success      200  {object}  map[string]interface{}  "Tracks reordenados"
+// @Failure      400  {object}  map[string]interface{}  "Datos inválidos"
+// @Failure      401  {object}  map[string]interface{}  "No autorizado"
+// @Failure      500  {object}  map[string]interface{}  "Error al reordenar"
+// @Router       /api/v1/tracks/reorder [put]
+func (h *TrackController) ReorderTracks(c *gin.Context) {
+	var req struct {
+		Items []struct {
+			ID         int `json:"id"`
+			OrderIndex int `json:"order_index"`
+		} `json:"items"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
+		return
+	}
+
+	items := make([]repositories.TrackOrderItem, len(req.Items))
+	for i, item := range req.Items {
+		items[i] = repositories.TrackOrderItem{ID: item.ID, OrderIndex: item.OrderIndex}
+	}
+
+	if err := h.service.Reorder(items); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"success": true, "message": "Tracks reordered"})
 }
 
 // DeleteTrack    godoc
