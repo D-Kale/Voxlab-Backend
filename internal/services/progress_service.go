@@ -56,6 +56,9 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 
 	accumulated := newXP
 	if existing != nil {
+		if existing.Status == "completed" {
+			return existing, nil
+		}
 		accumulated = existing.XPEarned + newXP
 	}
 
@@ -114,7 +117,13 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 		return nil, err
 	}
 
+	if existing.Status == "completed" {
+		return existing, nil
+	}
+
+	existing.Status = "completed"
 	existing.XPEarned += newXP
+	existing.CompletedAt = func() *time.Time { t := time.Now(); return &t }()
 	existing.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(existing); err != nil {
