@@ -35,20 +35,32 @@ func (h *HealthController) HealthCheck(c *gin.Context) {
 	db := database.GetDB()
 	rdb := database.GetRedis()
 
+	hasError := false
+
 	dbStatus := "ok"
 	if sqlDB, err := db.DB(); err != nil {
 		dbStatus = "error: " + err.Error()
+		hasError = true
 	} else if err := sqlDB.Ping(); err != nil {
 		dbStatus = "error: " + err.Error()
+		hasError = true
 	}
 
 	redisStatus := "ok"
 	if err := rdb.Ping(c.Request.Context()).Err(); err != nil {
 		redisStatus = "error: " + err.Error()
+		hasError = true
 	}
 
-	c.JSON(200, gin.H{
-		"status":    "ok",
+	statusCode := 200
+	overallStatus := "ok"
+	if hasError {
+		statusCode = 503
+		overallStatus = "degraded"
+	}
+
+	c.JSON(statusCode, gin.H{
+		"status":    overallStatus,
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
 		"version":   "1.0.0",
 		"services": gin.H{

@@ -42,7 +42,7 @@ type CompleteLessonInput struct {
 }
 
 func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonInput) (*models.UserProgress, error) {
-	lesson, err := s.lessonRepo.FindByID(input.LessonID)
+	_, err := s.lessonRepo.FindByID(input.LessonID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("lesson not found")
@@ -50,8 +50,7 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 		return nil, errors.New("lesson not found")
 	}
 
-	exerciseCount := len(lesson.LessonExercises)
-	newXP := calculateXP(exerciseCount, input.Score)
+	newXP := scoreToXP(input.Score)
 
 	now := time.Now()
 
@@ -95,7 +94,7 @@ type UpdateProgressInput struct {
 }
 
 func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input UpdateProgressInput) (*models.UserProgress, error) {
-	lesson, err := s.lessonRepo.FindByID(lessonID)
+	_, err := s.lessonRepo.FindByID(lessonID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("lesson not found")
@@ -103,8 +102,7 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 		return nil, errors.New("lesson not found")
 	}
 
-	exerciseCount := len(lesson.LessonExercises)
-	newXP := calculateXP(exerciseCount, input.Score)
+	newXP := scoreToXP(input.Score)
 
 	existing, err := s.repo.FindByUserAndLesson(userID, lessonID)
 	if err != nil {
@@ -126,13 +124,7 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 		return nil, err
 	}
 
-	if existing.Status == "completed" {
-		return existing, nil
-	}
-
-	existing.Status = "completed"
 	existing.XPEarned += newXP
-	existing.CompletedAt = func() *time.Time { t := time.Now(); return &t }()
 	existing.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(existing); err != nil {
@@ -174,13 +166,12 @@ func (s *ProgressService) SyncProgress(userID uuid.UUID, input SyncProgressInput
 	var synced []models.UserProgress
 
 	for _, item := range input.ProgressItems {
-		lesson, err := s.lessonRepo.FindByID(item.LessonID)
+		_, err := s.lessonRepo.FindByID(item.LessonID)
 		if err != nil {
 			continue
 		}
 
-		exerciseCount := len(lesson.LessonExercises)
-		xpEarned := calculateXP(exerciseCount, item.Score)
+		xpEarned := scoreToXP(item.Score)
 
 		progress := &models.UserProgress{
 			UserID:      userID,
@@ -258,7 +249,7 @@ func (s *ProgressService) touchUserActivity(userID uuid.UUID) {
 	_ = s.userRepo.Update(user)
 }
 
-func calculateXP(_ int, score int) int {
+func scoreToXP(score int) int {
 	if score < 0 {
 		return 0
 	}
