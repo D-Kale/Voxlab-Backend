@@ -30,7 +30,7 @@ COPY --from=builder /app/analyzers /app/analyzers
 COPY --from=builder /app/main.py /app/main.py
 COPY --from=builder /app/.cache/huggingface /app/.cache/huggingface
 
-RUN adduser -D -g '' appuser
+RUN adduser --system --disabled-password --disabled-login appuser
 USER appuser
 
 EXPOSE 8000
