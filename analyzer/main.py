@@ -2,7 +2,7 @@
 Voxlab Analyzer — Microservicio de análisis de texto.
 
 Endpoints:
-    GET  /health          — Healthcheck
+    GET  /health          — Healthcheck con verificación de modelos
     POST /analyze/text    — Analiza un texto de escritura
 
 El análisis incluye detección de gibberish, métricas estructurales,
@@ -10,16 +10,29 @@ calidad lingüística, matching semántico de requisitos y scoring
 ponderado. Ver docs/scoring.md para la documentación de la fórmula.
 """
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List, Optional
 
 from analyzers.text import analyze_text
+from analyzers.nlp import init_nlp, get_nlp
+from analyzers.requirements import init_embedding_model, _get_model
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_nlp()
+    init_embedding_model()
+    yield
+
 
 app = FastAPI(
     title="Voxlab Analyzer",
     version="0.2.0",
     description="Microservicio de análisis NLP para ejercicios de escritura y oratoria.",
+    lifespan=lifespan,
 )
 
 
@@ -89,7 +102,30 @@ class AnalyzeResponse(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    statuses = {}
+    ok = True
+
+    try:
+        nlp = get_nlp()
+        nlp("prueba")
+        statuses["spacy"] = "ok"
+    except Exception as e:
+        statuses["spacy"] = f"error: {e}"
+        ok = False
+
+    try:
+        model = _get_model()
+        list(model.embed(["prueba"]))
+        statuses["embeddings"] = "ok"
+    except Exception as e:
+        statuses["embeddings"] = f"error: {e}"
+        ok = False
+
+    code = 200 if ok else 503
+    return {
+        "status": "ok" if ok else "degraded",
+        "models": statuses,
+    }
 
 
 @app.post("/analyze/text", response_model=AnalyzeResponse)
