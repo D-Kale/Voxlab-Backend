@@ -41,6 +41,12 @@ func (r *ProgressRepository) FindByUserAndLesson(userID uuid.UUID, lessonID int)
 	return &progress, nil
 }
 
+func (r *ProgressRepository) FindByUserAndLessons(userID uuid.UUID, lessonIDs []int) ([]models.UserProgress, error) {
+	var progress []models.UserProgress
+	err := r.db.Where("user_id = ? AND lesson_id IN ?", userID, lessonIDs).Find(&progress).Error
+	return progress, err
+}
+
 func (r *ProgressRepository) FindAllByUser(userID uuid.UUID) ([]models.UserProgress, error) {
 	var progress []models.UserProgress
 	err := r.db.Where("user_id = ?", userID).Order("lesson_id asc").Find(&progress).Error

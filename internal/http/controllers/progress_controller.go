@@ -114,10 +114,13 @@ func (h *ProgressController) CompleteLesson(c *gin.Context) {
 	})
 	if err != nil {
 		status := http.StatusInternalServerError
-		if err.Error() == "lesson not found" {
+		msg := err.Error()
+		if msg == "lesson not found" {
 			status = http.StatusNotFound
+		} else if msg == "lesson is locked" {
+			status = http.StatusForbidden
 		}
-		c.JSON(status, gin.H{"error": err.Error()})
+		c.JSON(status, gin.H{"error": msg})
 		return
 	}
 
@@ -180,10 +183,13 @@ func (h *ProgressController) UpdateProgress(c *gin.Context) {
 	})
 	if err != nil {
 		status := http.StatusInternalServerError
-		if err.Error() == "lesson not found" {
+		msg := err.Error()
+		if msg == "lesson not found" {
 			status = http.StatusNotFound
+		} else if msg == "lesson is locked" {
+			status = http.StatusForbidden
 		}
-		c.JSON(status, gin.H{"error": err.Error()})
+		c.JSON(status, gin.H{"error": msg})
 		return
 	}
 

@@ -50,6 +50,14 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 		return nil, errors.New("lesson not found")
 	}
 
+	locked, err := s.CheckLessonLocked(userID, input.LessonID)
+	if err != nil {
+		return nil, err
+	}
+	if locked {
+		return nil, errors.New("lesson is locked")
+	}
+
 	newXP := scoreToXP(input.Score)
 
 	now := time.Now()
@@ -102,6 +110,14 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 		return nil, errors.New("lesson not found")
 	}
 
+	locked, err := s.CheckLessonLocked(userID, lessonID)
+	if err != nil {
+		return nil, err
+	}
+	if locked {
+		return nil, errors.New("lesson is locked")
+	}
+
 	newXP := scoreToXP(input.Score)
 
 	existing, err := s.repo.FindByUserAndLesson(userID, lessonID)
@@ -122,6 +138,10 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 			return progress, nil
 		}
 		return nil, err
+	}
+
+	if existing.Status == "completed" {
+		return existing, nil
 	}
 
 	existing.XPEarned += newXP
@@ -262,4 +282,45 @@ func (s *ProgressService) GetByUser(userID uuid.UUID) ([]models.UserProgress, er
 
 func (s *ProgressService) GetByUserAndLesson(userID uuid.UUID, lessonID int) (*models.UserProgress, error) {
 	return s.repo.FindByUserAndLesson(userID, lessonID)
+}
+
+func (s *ProgressService) CheckLessonLocked(userID uuid.UUID, lessonID int) (bool, error) {
+	moduleLessonLinks, err := s.lessonRepo.FindModulesByLesson(lessonID)
+	if err != nil || len(moduleLessonLinks) == 0 {
+		return false, errors.New("lesson not found in any module")
+	}
+
+	moduleID := moduleLessonLinks[0].ModuleID
+
+	moduleLessons, err := s.lessonRepo.FindAllByModule(moduleID)
+	if err != nil {
+		return false, err
+	}
+
+	var lessonIDs []int
+	for _, ml := range moduleLessons {
+		lessonIDs = append(lessonIDs, ml.LessonID)
+	}
+
+	progressList, err := s.repo.FindByUserAndLessons(userID, lessonIDs)
+	if err != nil {
+		return false, err
+	}
+
+	progressMap := make(map[int]string)
+	for _, p := range progressList {
+		progressMap[p.LessonID] = p.Status
+	}
+
+	for _, ml := range moduleLessons {
+		if ml.LessonID == lessonID {
+			return false, nil
+		}
+		status, exists := progressMap[ml.LessonID]
+		if !exists || status != "completed" {
+			return true, nil
+		}
+	}
+
+	return false, nil
 }

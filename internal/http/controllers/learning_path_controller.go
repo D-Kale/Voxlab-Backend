@@ -84,8 +84,10 @@ type ExerciseWithStatus struct {
 // GetLearningPath godoc
 // @Summary      Get complete learning path for a track
 // @Description  Returns the full tree (modules → lessons → exercises) for a track,
-// @Description  with the authenticated user's progress state. All content is ordered
-// @Description  by order_index. No content is blocked — all items are freely navigable.
+// @Description  with the authenticated user's progress state and locking. All content
+// @Description  is ordered by order_index. Lessons within a module are sequentially
+// @Description  locked: lesson N is available only when all previous lessons in the
+// @Description  same module have status "completed".
 // @Description
 // @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
 // @Tags         Learning Path
@@ -179,6 +181,8 @@ func (h *LearningPathController) buildTrackWithProgress(track models.Track, prog
 			OrderIndex:  mod.OrderIndex,
 		}
 
+		allPreviousCompleted := true
+
 		for _, ml := range mod.Lessons {
 			lesson := ml.Lesson
 			lw := LessonWithProgress{
@@ -197,6 +201,14 @@ func (h *LearningPathController) buildTrackWithProgress(track models.Track, prog
 					s := p.CompletedAt.Format(time.RFC3339)
 					lw.CompletedAt = &s
 				}
+			}
+
+			if lw.Status == "completed" {
+				allPreviousCompleted = true
+			} else if allPreviousCompleted {
+				allPreviousCompleted = false
+			} else {
+				lw.Status = "locked"
 			}
 
 			for _, le := range lesson.LessonExercises {
