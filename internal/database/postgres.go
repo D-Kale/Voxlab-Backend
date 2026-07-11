@@ -58,6 +58,10 @@ func AutoMigrate() error {
 		return fmt.Errorf("running SQL migrations: %w", err)
 	}
 
+	if err := MigrateJSONBCompletedAt(); err != nil {
+		return fmt.Errorf("running JSONB migration: %w", err)
+	}
+
 	if err := runSeed(); err != nil {
 		log.Printf("Seed warning: %v", err)
 	}

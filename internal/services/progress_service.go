@@ -117,8 +117,9 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 
 		if !alreadyCompleted {
 			newExercises = append(newExercises, models.CompletedExercise{
-				ExerciseID: exInput.ExerciseID,
-				Score:      exInput.Score,
+				ExerciseID:  exInput.ExerciseID,
+				Score:       exInput.Score,
+				CompletedAt: &now,
 			})
 			newXP += scoreToXP(exInput.Score)
 		}
@@ -194,6 +195,7 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 
 	newXP := 0
 	newExercises := make([]models.CompletedExercise, 0, len(input.Exercises))
+	now := time.Now()
 
 	existing, err := s.repo.FindByUserAndLesson(userID, lessonID)
 	if err != nil {
@@ -204,8 +206,9 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 					return nil, fmt.Errorf("exercise %s not in lesson %d", exInput.ExerciseID, lessonID)
 				}
 				newExercises = append(newExercises, models.CompletedExercise{
-					ExerciseID: exInput.ExerciseID,
-					Score:      exInput.Score,
+					ExerciseID:  exInput.ExerciseID,
+					Score:       exInput.Score,
+					CompletedAt: &now,
 				})
 				newXP += scoreToXP(exInput.Score)
 			}
@@ -264,8 +267,9 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 
 		if !alreadyCompleted {
 			newExercises = append(newExercises, models.CompletedExercise{
-				ExerciseID: exInput.ExerciseID,
-				Score:      exInput.Score,
+				ExerciseID:  exInput.ExerciseID,
+				Score:       exInput.Score,
+				CompletedAt: &now,
 			})
 			newXP += scoreToXP(exInput.Score)
 		}
@@ -477,28 +481,51 @@ func (s *ProgressService) GetWeeklyProgress(userID uuid.UUID) (*WeeklyProgressDa
 		weekday = 7
 	}
 	weekStart := now.AddDate(0, 0, -int(weekday-time.Monday))
+	weekEnd := weekStart.AddDate(0, 0, 7)
 
+	dailyCounts := make([]int, 7)
+
+	// 1. Count from exercise_attempts
 	attempts, err := s.attemptRepo.CountPassedAttemptsThisWeek(userID)
 	if err != nil {
 		return nil, err
 	}
-
-	// Map attempt dates to weekday indices (0=Monday...6=Sunday)
-	attemptMap := make(map[int]int)
 	for _, a := range attempts {
 		w := a.Date.Weekday()
 		idx := int(w) - 1
 		if idx < 0 {
 			idx = 6
 		}
-		attemptMap[idx] = a.Count
+		dailyCounts[idx] += a.Count
+	}
+
+	// 2. Count from JSONB completed_exercises (for exercises saved without exercise_attempts)
+	progressList, err := s.repo.FindAllByUser(userID)
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range progressList {
+		var exercises []models.CompletedExercise
+		if p.CompletedExercises != nil {
+			_ = json.Unmarshal(p.CompletedExercises, &exercises)
+		}
+		for _, ex := range exercises {
+			if ex.CompletedAt != nil && !ex.CompletedAt.Before(weekStart) && ex.CompletedAt.Before(weekEnd) {
+				w := ex.CompletedAt.Weekday()
+				idx := int(w) - 1
+				if idx < 0 {
+					idx = 6
+				}
+				dailyCounts[idx]++
+			}
+		}
 	}
 
 	daily := make([]DailyCount, 7)
 	for i := 0; i < 7; i++ {
 		daily[i] = DailyCount{
 			Weekday: i,
-			Count:   attemptMap[i],
+			Count:   dailyCounts[i],
 		}
 	}
 

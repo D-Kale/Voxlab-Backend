@@ -8,8 +8,9 @@ import (
 )
 
 type CompletedExercise struct {
-	ExerciseID string `json:"exercise_id"`
-	Score      int    `json:"score"`
+	ExerciseID  string     `json:"exercise_id"`
+	Score       int        `json:"score"`
+	CompletedAt *time.Time `json:"completed_at,omitempty"`
 }
 
 type UserProgress struct {
