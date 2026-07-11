@@ -2,7 +2,9 @@ package services
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/google/uuid"
@@ -36,9 +38,15 @@ func NewProgressService(
 	}
 }
 
+type CompleteExerciseInput struct {
+	ExerciseID string `json:"exercise_id"`
+	Score      int    `json:"score"`
+}
+
 type CompleteLessonInput struct {
-	LessonID int `json:"lesson_id"`
-	Score    int `json:"score"`
+	LessonID  int                    `json:"lesson_id"`
+	Score     int                    `json:"score"`
+	Exercises []CompleteExerciseInput `json:"exercises"`
 }
 
 func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonInput) (*models.UserProgress, error) {
@@ -58,7 +66,16 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 		return nil, errors.New("lesson is locked")
 	}
 
-	newXP := scoreToXP(input.Score)
+	// Obtener ejercicios de la lección para validar exercise_ids
+	lessonExercises, err := s.lessonRepo.FindExercisesByLesson(input.LessonID)
+	if err != nil {
+		return nil, err
+	}
+
+	validExerciseIDs := make(map[string]bool)
+	for _, le := range lessonExercises {
+		validExerciseIDs[le.ExerciseID.String()] = true
+	}
 
 	now := time.Now()
 
@@ -67,20 +84,62 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 		return nil, err
 	}
 
+	// Parsear ejercicios completados existentes
+	var existingExercises []models.CompletedExercise
+	if existing != nil && existing.CompletedExercises != nil {
+		_ = json.Unmarshal(existing.CompletedExercises, &existingExercises)
+		if existingExercises == nil {
+			existingExercises = []models.CompletedExercise{}
+		}
+	}
+
+	// Procesar ejercicios nuevos, validando duplicados
+	newExercises := make([]models.CompletedExercise, 0, len(input.Exercises))
+	newXP := 0
+
+	for _, exInput := range input.Exercises {
+		// Validar que el exercise_id pertenece a la lección
+		if !validExerciseIDs[exInput.ExerciseID] {
+			return nil, fmt.Errorf("exercise %s not in lesson %d", exInput.ExerciseID, input.LessonID)
+		}
+
+		// Verificar si ya está completado
+		alreadyCompleted := false
+		for _, ex := range existingExercises {
+			if ex.ExerciseID == exInput.ExerciseID {
+				alreadyCompleted = true
+				break
+			}
+		}
+
+		if !alreadyCompleted {
+			newExercises = append(newExercises, models.CompletedExercise{
+				ExerciseID: exInput.ExerciseID,
+				Score:      exInput.Score,
+			})
+			newXP += scoreToXP(exInput.Score)
+		}
+	}
+
+	// Merge: ejercicios existentes + nuevos
+	allExercises := append(existingExercises, newExercises...)
+	completedExercisesJSON, err := json.Marshal(allExercises)
+	if err != nil {
+		return nil, err
+	}
+
 	accumulated := newXP
 	if existing != nil {
-		if existing.Status == "completed" {
-			return existing, nil
-		}
 		accumulated = existing.XPEarned + newXP
 	}
 
 	progress := &models.UserProgress{
-		UserID:      userID,
-		LessonID:    input.LessonID,
-		Status:      "completed",
-		XPEarned:    accumulated,
-		CompletedAt: &now,
+		UserID:             userID,
+		LessonID:           input.LessonID,
+		Status:             "completed",
+		XPEarned:           accumulated,
+		CompletedExercises: completedExercisesJSON,
+		CompletedAt:        &now,
 	}
 
 	if err := s.repo.Upsert(progress); err != nil {
@@ -98,7 +157,8 @@ func (s *ProgressService) CompleteLesson(userID uuid.UUID, input CompleteLessonI
 }
 
 type UpdateProgressInput struct {
-	Score int `json:"score"`
+	Score     int                    `json:"score"`
+	Exercises []CompleteExerciseInput `json:"exercises"`
 }
 
 func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input UpdateProgressInput) (*models.UserProgress, error) {
@@ -118,22 +178,54 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 		return nil, errors.New("lesson is locked")
 	}
 
-	newXP := scoreToXP(input.Score)
+	// Obtener ejercicios de la lección para validar
+	lessonExercises, err := s.lessonRepo.FindExercisesByLesson(lessonID)
+	if err != nil {
+		return nil, err
+	}
+
+	validExerciseIDs := make(map[string]bool)
+	for _, le := range lessonExercises {
+		validExerciseIDs[le.ExerciseID.String()] = true
+	}
+
+	newXP := 0
+	newExercises := make([]models.CompletedExercise, 0, len(input.Exercises))
 
 	existing, err := s.repo.FindByUserAndLesson(userID, lessonID)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// No existe progreso previo, crear uno nuevo
+			for _, exInput := range input.Exercises {
+				if !validExerciseIDs[exInput.ExerciseID] {
+					return nil, fmt.Errorf("exercise %s not in lesson %d", exInput.ExerciseID, lessonID)
+				}
+				newExercises = append(newExercises, models.CompletedExercise{
+					ExerciseID: exInput.ExerciseID,
+					Score:      exInput.Score,
+				})
+				newXP += scoreToXP(exInput.Score)
+			}
+
+			completedExercisesJSON, err := json.Marshal(newExercises)
+			if err != nil {
+				return nil, err
+			}
+
 			progress := &models.UserProgress{
-				UserID:   userID,
-				LessonID: lessonID,
-				Status:   "in_progress",
-				XPEarned: newXP,
+				UserID:             userID,
+				LessonID:           lessonID,
+				Status:             "in_progress",
+				XPEarned:           newXP,
+				CompletedExercises: completedExercisesJSON,
 			}
 			if err := s.repo.Upsert(progress); err != nil {
 				return nil, err
 			}
-			_ = s.userRepo.AddXP(userID.String(), newXP)
-			s.grantDailyStreak(userID)
+			if newXP > 0 {
+				_ = s.userRepo.AddXP(userID.String(), newXP)
+				s.grantDailyStreak(userID)
+			}
 			s.touchUserActivity(userID)
 			return progress, nil
 		}
@@ -144,7 +236,47 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 		return existing, nil
 	}
 
+	// Parsear ejercicios existentes
+	var existingExercises []models.CompletedExercise
+	if existing.CompletedExercises != nil {
+		_ = json.Unmarshal(existing.CompletedExercises, &existingExercises)
+		if existingExercises == nil {
+			existingExercises = []models.CompletedExercise{}
+		}
+	}
+
+	// Procesar nuevos ejercicios, validando duplicados
+	for _, exInput := range input.Exercises {
+		if !validExerciseIDs[exInput.ExerciseID] {
+			return nil, fmt.Errorf("exercise %s not in lesson %d", exInput.ExerciseID, lessonID)
+		}
+
+		alreadyCompleted := false
+		for _, ex := range existingExercises {
+			if ex.ExerciseID == exInput.ExerciseID {
+				alreadyCompleted = true
+				break
+			}
+		}
+
+		if !alreadyCompleted {
+			newExercises = append(newExercises, models.CompletedExercise{
+				ExerciseID: exInput.ExerciseID,
+				Score:      exInput.Score,
+			})
+			newXP += scoreToXP(exInput.Score)
+		}
+	}
+
+	// Merge y serialización
+	allExercises := append(existingExercises, newExercises...)
+	completedExercisesJSON, err := json.Marshal(allExercises)
+	if err != nil {
+		return nil, err
+	}
+
 	existing.XPEarned += newXP
+	existing.CompletedExercises = completedExercisesJSON
 	existing.UpdatedAt = time.Now()
 
 	if err := s.repo.Update(existing); err != nil {

@@ -23,7 +23,7 @@ func (r *ProgressRepository) Upsert(progress *models.UserProgress) error {
 
 	return r.db.Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}, {Name: "lesson_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"status", "xp_earned", "completed_at", "updated_at"}),
+		DoUpdates: clause.AssignmentColumns([]string{"status", "xp_earned", "completed_exercises", "completed_at", "updated_at"}),
 	}).Create(progress).Error
 }
 

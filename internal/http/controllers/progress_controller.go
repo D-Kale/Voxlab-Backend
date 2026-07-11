@@ -57,9 +57,15 @@ func (h *ProgressController) GetMyProgress(c *gin.Context) {
 	})
 }
 
+type exerciseInput struct {
+	ExerciseID string `json:"exercise_id" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Score      int    `json:"score" example:"85"`
+}
+
 type completeLessonRequest struct {
-	LessonID int `json:"lesson_id" example:"1"`
-	Score    int `json:"score" example:"85"`
+	LessonID  int            `json:"lesson_id" example:"1"`
+	Score     int            `json:"score" example:"85"`
+	Exercises []exerciseInput `json:"exercises"`
 }
 
 // CompleteLesson godoc
@@ -108,9 +114,18 @@ func (h *ProgressController) CompleteLesson(c *gin.Context) {
 		return
 	}
 
+	svcExercises := make([]services.CompleteExerciseInput, len(req.Exercises))
+	for i, ex := range req.Exercises {
+		svcExercises[i] = services.CompleteExerciseInput{
+			ExerciseID: ex.ExerciseID,
+			Score:      ex.Score,
+		}
+	}
+
 	progress, err := h.service.CompleteLesson(userID, services.CompleteLessonInput{
-		LessonID: req.LessonID,
-		Score:    req.Score,
+		LessonID:  req.LessonID,
+		Score:     req.Score,
+		Exercises: svcExercises,
 	})
 	if err != nil {
 		status := http.StatusInternalServerError
@@ -131,7 +146,8 @@ func (h *ProgressController) CompleteLesson(c *gin.Context) {
 }
 
 type updateProgressRequest struct {
-	Score int `json:"score" example:"85"`
+	Score     int            `json:"score" example:"85"`
+	Exercises []exerciseInput `json:"exercises"`
 }
 
 // UpdateProgress godoc
@@ -178,8 +194,17 @@ func (h *ProgressController) UpdateProgress(c *gin.Context) {
 		return
 	}
 
+	svcExercises := make([]services.CompleteExerciseInput, len(req.Exercises))
+	for i, ex := range req.Exercises {
+		svcExercises[i] = services.CompleteExerciseInput{
+			ExerciseID: ex.ExerciseID,
+			Score:      ex.Score,
+		}
+	}
+
 	progress, err := h.service.UpdateProgress(userID, lessonID, services.UpdateProgressInput{
-		Score: req.Score,
+		Score:     req.Score,
+		Exercises: svcExercises,
 	})
 	if err != nil {
 		status := http.StatusInternalServerError
