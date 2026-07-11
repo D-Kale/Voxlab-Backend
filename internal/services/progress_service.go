@@ -218,12 +218,20 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 				return nil, err
 			}
 
+			status := "in_progress"
+			var completedAt *time.Time
+			if len(newExercises) >= len(lessonExercises) {
+				status = "completed"
+				completedAt = &now
+			}
+
 			progress := &models.UserProgress{
 				UserID:             userID,
 				LessonID:           lessonID,
-				Status:             "in_progress",
+				Status:             status,
 				XPEarned:           newXP,
 				CompletedExercises: completedExercisesJSON,
+				CompletedAt:        completedAt,
 			}
 			if err := s.repo.Upsert(progress); err != nil {
 				return nil, err
@@ -277,6 +285,12 @@ func (s *ProgressService) UpdateProgress(userID uuid.UUID, lessonID int, input U
 
 	// Merge y serialización
 	allExercises := append(existingExercises, newExercises...)
+
+	if len(allExercises) >= len(lessonExercises) {
+		existing.Status = "completed"
+		existing.CompletedAt = &now
+	}
+
 	completedExercisesJSON, err := json.Marshal(allExercises)
 	if err != nil {
 		return nil, err
