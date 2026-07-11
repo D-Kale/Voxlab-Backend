@@ -313,3 +313,42 @@ func (h *ProgressController) SyncProgress(c *gin.Context) {
 		},
 	})
 }
+
+// GetWeeklyProgress godoc
+// @Summary      Get weekly exercise activity
+// @Description  Returns the number of passed exercise attempts per day for the current week (Monday to Sunday).
+// @Description  Data is sourced from exercise_attempts table (per-exercise granularity).
+// @Description  Use this on the frontend to render the weekly activity chart.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Progress
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  map[string]interface{}  "Weekly progress data"
+// @Failure      401  {object}  map[string]interface{}  "No autorizado"
+// @Failure      500  {object}  map[string]interface{}  "Error al obtener actividad semanal"
+// @Router       /api/v1/progress/weekly [get]
+func (h *ProgressController) GetWeeklyProgress(c *gin.Context) {
+	userIDStr, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	userID, err := uuid.Parse(userIDStr.(string))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in token"})
+		return
+	}
+
+	data, err := h.service.GetWeeklyProgress(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch weekly progress"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    data,
+	})
+}

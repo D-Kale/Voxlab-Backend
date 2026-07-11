@@ -63,7 +63,7 @@ func (r *Router) initDependencies() {
 	moduleSvc := services.NewModuleService(moduleRepo)
 	lessonSvc := services.NewLessonService(lessonRepo)
 	exerciseSvc := services.NewExerciseService(exerciseRepo, lessonExerciseRepo)
-	progressSvc := services.NewProgressService(progressRepo, lessonRepo, userRepo, lifeSvc, streakSvc)
+	progressSvc := services.NewProgressService(progressRepo, lessonRepo, userRepo, lifeSvc, streakSvc, attemptRepo)
 	attemptSvc := services.NewAttemptService(lifeSvc, streakSvc, exerciseRepo, userRepo, attemptRepo, progressRepo)
 
 	userSvc := services.NewUserService(userRepo)
@@ -191,6 +191,7 @@ func (r *Router) initEngine() {
 		progress.Use(middleware.AuthMiddleware())
 		{
 			progress.GET("", r.progress.GetMyProgress)
+			progress.GET("/weekly", r.progress.GetWeeklyProgress)
 			progress.POST("/sync", r.progress.SyncProgress)
 			progress.POST("", r.progress.CompleteLesson)
 			progress.PATCH("/:lesson_id", r.progress.UpdateProgress)

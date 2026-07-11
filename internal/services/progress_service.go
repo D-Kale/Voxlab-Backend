@@ -20,6 +20,7 @@ type ProgressService struct {
 	userRepo    *repositories.UserRepository
 	lifeSvc     *LifeService
 	streakSvc   *StreakService
+	attemptRepo *repositories.ExerciseAttemptRepository
 }
 
 func NewProgressService(
@@ -28,13 +29,15 @@ func NewProgressService(
 	userRepo *repositories.UserRepository,
 	lifeSvc *LifeService,
 	streakSvc *StreakService,
+	attemptRepo *repositories.ExerciseAttemptRepository,
 ) *ProgressService {
 	return &ProgressService{
-		repo:       repo,
-		lessonRepo: lessonRepo,
-		userRepo:   userRepo,
-		lifeSvc:    lifeSvc,
-		streakSvc:  streakSvc,
+		repo:        repo,
+		lessonRepo:  lessonRepo,
+		userRepo:    userRepo,
+		lifeSvc:     lifeSvc,
+		streakSvc:   streakSvc,
+		attemptRepo: attemptRepo,
 	}
 }
 
@@ -455,4 +458,52 @@ func (s *ProgressService) CheckLessonLocked(userID uuid.UUID, lessonID int) (boo
 	}
 
 	return false, nil
+}
+
+type DailyCount struct {
+	Weekday int `json:"weekday"`
+	Count   int `json:"count"`
+}
+
+type WeeklyProgressData struct {
+	WeekStart string       `json:"week_start"`
+	Daily     []DailyCount `json:"daily"`
+}
+
+func (s *ProgressService) GetWeeklyProgress(userID uuid.UUID) (*WeeklyProgressData, error) {
+	now := time.Now()
+	weekday := now.Weekday()
+	if weekday == time.Sunday {
+		weekday = 7
+	}
+	weekStart := now.AddDate(0, 0, -int(weekday-time.Monday))
+
+	attempts, err := s.attemptRepo.CountPassedAttemptsThisWeek(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Map attempt dates to weekday indices (0=Monday...6=Sunday)
+	attemptMap := make(map[int]int)
+	for _, a := range attempts {
+		w := a.Date.Weekday()
+		idx := int(w) - 1
+		if idx < 0 {
+			idx = 6
+		}
+		attemptMap[idx] = a.Count
+	}
+
+	daily := make([]DailyCount, 7)
+	for i := 0; i < 7; i++ {
+		daily[i] = DailyCount{
+			Weekday: i,
+			Count:   attemptMap[i],
+		}
+	}
+
+	return &WeeklyProgressData{
+		WeekStart: weekStart.Format("2006-01-02"),
+		Daily:     daily,
+	}, nil
 }
