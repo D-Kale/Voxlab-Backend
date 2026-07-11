@@ -29,12 +29,16 @@ func (r *ProgressRepository) Upsert(progress *models.UserProgress) error {
 
 func (r *ProgressRepository) Update(progress *models.UserProgress) error {
 	now := time.Now()
+	completedExercises := "[]"
+	if progress.CompletedExercises != nil {
+		completedExercises = string(progress.CompletedExercises)
+	}
 	return r.db.Model(&models.UserProgress{}).
 		Where("user_id = ? AND lesson_id = ?", progress.UserID, progress.LessonID).
 		Updates(map[string]interface{}{
 			"status":              progress.Status,
 			"xp_earned":           progress.XPEarned,
-			"completed_exercises": progress.CompletedExercises,
+			"completed_exercises": completedExercises,
 			"completed_at":        progress.CompletedAt,
 			"updated_at":          now,
 		}).Error
