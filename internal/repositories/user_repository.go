@@ -53,3 +53,15 @@ func (r *UserRepository) AddXP(id string, xp int) error {
 	return r.db.Model(&models.User{}).Where("id = ?", id).
 		UpdateColumn("xp", gorm.Expr("xp + ?", xp)).Error
 }
+
+func (r *UserRepository) FindLeaderboard(limit int) ([]models.User, error) {
+	var users []models.User
+	err := r.db.Order("xp desc").Limit(limit).Find(&users).Error
+	return users, err
+}
+
+func (r *UserRepository) CountByXPGreaterThan(xp int) (int64, error) {
+	var count int64
+	err := r.db.Model(&models.User{}).Where("xp > ?", xp).Count(&count).Error
+	return count, err
+}

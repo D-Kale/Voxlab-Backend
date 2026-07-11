@@ -185,6 +185,7 @@ func (r *Router) initEngine() {
 
 		api.GET("/users/lives", middleware.AuthMiddleware(), r.user.GetLives)
 		api.POST("/users/streak/recover", middleware.AuthMiddleware(), r.user.RecoverStreak)
+		api.GET("/leaderboard", middleware.AuthMiddleware(), r.user.GetLeaderboard)
 
 		progress := api.Group("/progress")
 		progress.Use(middleware.AuthMiddleware())

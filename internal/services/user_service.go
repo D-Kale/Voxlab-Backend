@@ -96,3 +96,45 @@ func toAdminData(u models.User) AdminUserData {
 		UpdatedAt:  u.UpdatedAt,
 	}
 }
+
+type LeaderboardUser struct {
+	Name string `json:"name" example:"John Doe"`
+	XP   int    `json:"xp" example:"850"`
+}
+
+type LeaderboardData struct {
+	MyRank  int               `json:"my_rank" example:"3"`
+	MyXP    int               `json:"my_xp" example:"850"`
+	TopUsers []LeaderboardUser `json:"top_users"`
+}
+
+func (s *UserService) GetLeaderboard(userID string, limit int) (*LeaderboardData, error) {
+	users, err := s.repo.FindLeaderboard(limit)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := s.repo.FindByID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	topUsers := make([]LeaderboardUser, len(users))
+	for i, u := range users {
+		topUsers[i] = LeaderboardUser{
+			Name: u.Name,
+			XP:   u.XP,
+		}
+	}
+
+	rank, err := s.repo.CountByXPGreaterThan(user.XP)
+	if err != nil {
+		rank = 0
+	}
+
+	return &LeaderboardData{
+		MyRank:   int(rank) + 1,
+		MyXP:     user.XP,
+		TopUsers: topUsers,
+	}, nil
+}

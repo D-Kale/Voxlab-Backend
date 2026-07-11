@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -216,5 +217,45 @@ func (h *UserController) RecoverStreak(c *gin.Context) {
 			"streak_days": user.StreakDays,
 			"lives":       user.Lives,
 		},
+	})
+}
+
+// GetLeaderboard godoc
+// @Summary      Get leaderboard ranking
+// @Description  Returns the top N users ranked by XP, along with the current user's rank and XP.
+// @Description  Default limit is 10. The response includes my_rank, my_xp, and an ordered top_users array.
+// @Description
+// @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
+// @Tags         Users
+// @Produce      json
+// @Security     BearerAuth
+// @Param        limit  query  int  false  "Number of top users to return (default: 10)"
+// @Success      200  {object}  map[string]interface{}  "Leaderboard data"
+// @Failure      401  {object}  map[string]interface{}  "No autorizado"
+// @Failure      500  {object}  map[string]interface{}  "Error al obtener leaderboard"
+// @Router       /api/v1/leaderboard [get]
+func (h *UserController) GetLeaderboard(c *gin.Context) {
+	userID, ok := getUserID(c)
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not authenticated"})
+		return
+	}
+
+	limit := 10
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if parsed, err := strconv.Atoi(limitStr); err == nil && parsed > 0 && parsed <= 50 {
+			limit = parsed
+		}
+	}
+
+	data, err := h.service.GetLeaderboard(userID.String(), limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch leaderboard"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    data,
 	})
 }
