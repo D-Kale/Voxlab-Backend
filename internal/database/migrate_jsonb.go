@@ -33,7 +33,7 @@ func MigrateJSONBCompletedAt() error {
 	log.Println("Running JSONB completed_at migration...")
 
 	var rows []userProgressRow
-	if err := DB.Model(&userProgressRow{}).
+	if err := DB.Table("user_progress").
 		Select("user_id, lesson_id, completed_exercises, updated_at").
 		Where("completed_exercises IS NOT NULL").
 		Where("completed_exercises != '[]'::jsonb").
@@ -85,7 +85,7 @@ func MigrateJSONBCompletedAt() error {
 			continue
 		}
 
-		if err := DB.Model(&userProgressRow{}).
+		if err := DB.Table("user_progress").
 			Where("user_id = ? AND lesson_id = ?", row.UserID, row.LessonID).
 			UpdateColumn("completed_exercises", data).Error; err != nil {
 			log.Printf("Error updating row %s/%d: %v", row.UserID, row.LessonID, err)
