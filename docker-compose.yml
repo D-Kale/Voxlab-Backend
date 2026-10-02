@@ -116,7 +116,7 @@ services:
 
   # ── MinIO (S3-compatible) ──
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:latest
     container_name: voxlab-minio
     ports:
       - "9010:9000"
