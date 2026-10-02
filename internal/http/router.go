@@ -23,18 +23,19 @@ type Router struct {
 	engine *gin.Engine
 	cfg    *config.Config
 
-	health        *controllers.HealthController
-	auth          *controllers.AuthController
-	track         *controllers.TrackController
-	module        *controllers.ModuleController
-	lesson        *controllers.LessonController
-	exercise      *controllers.ExerciseController
-	progress      *controllers.ProgressController
-	reaction      *controllers.ReactionController
-	user          *controllers.UserController
-	upload        *controllers.UploadController
-	docs          *controllers.DocsController
-	learningPath  *controllers.LearningPathController
+	health               *controllers.HealthController
+	auth                 *controllers.AuthController
+	track                *controllers.TrackController
+	module               *controllers.ModuleController
+	lesson               *controllers.LessonController
+	exercise             *controllers.ExerciseController
+	progress             *controllers.ProgressController
+	exerciseProgress     *controllers.ExerciseProgressController
+	reaction             *controllers.ReactionController
+	user                 *controllers.UserController
+	upload               *controllers.UploadController
+	docs                 *controllers.DocsController
+	learningPath         *controllers.LearningPathController
 }
 
 func NewRouter(cfg *config.Config) *Router {
@@ -55,6 +56,7 @@ func (r *Router) initDependencies() {
 	lessonExerciseRepo := repositories.NewLessonExerciseRepository(db)
 	progressRepo := repositories.NewProgressRepository(db)
 	attemptRepo := repositories.NewExerciseAttemptRepository(db)
+	exerciseProgressRepo := repositories.NewExerciseProgressRepository(db)
 
 	lifeSvc := services.NewLifeService(userRepo)
 	streakSvc := services.NewStreakService(userRepo)
@@ -65,6 +67,7 @@ func (r *Router) initDependencies() {
 	exerciseSvc := services.NewExerciseService(exerciseRepo, lessonExerciseRepo)
 	progressSvc := services.NewProgressService(progressRepo, lessonRepo, userRepo, lifeSvc, streakSvc, attemptRepo)
 	attemptSvc := services.NewAttemptService(lifeSvc, streakSvc, exerciseRepo, userRepo, attemptRepo, progressRepo)
+	exerciseProgressSvc := services.NewExerciseProgressService(exerciseProgressRepo, userRepo, exerciseRepo)
 
 	userSvc := services.NewUserService(userRepo)
 	uploadSvc := services.NewUploadService(
@@ -79,6 +82,7 @@ func (r *Router) initDependencies() {
 	r.lesson = controllers.NewLessonController(lessonSvc)
 	r.exercise = controllers.NewExerciseController(exerciseSvc, attemptSvc)
 	r.progress = controllers.NewProgressController(progressSvc)
+	r.exerciseProgress = controllers.NewExerciseProgressController(exerciseProgressSvc)
 	r.user = controllers.NewUserController(userSvc, lifeSvc, streakSvc, db)
 	r.upload = controllers.NewUploadController(uploadSvc)
 	r.docs = controllers.NewDocsController()
@@ -195,6 +199,14 @@ func (r *Router) initEngine() {
 			progress.POST("/sync", r.progress.SyncProgress)
 			progress.POST("", r.progress.CompleteLesson)
 			progress.PATCH("/:lesson_id", r.progress.UpdateProgress)
+		}
+
+		exerciseProgress := api.Group("/progress")
+		exerciseProgress.Use(middleware.AuthMiddleware())
+		{
+			exerciseProgress.GET("", r.exerciseProgress.GetProgress)
+			exerciseProgress.POST("", r.exerciseProgress.CompleteExercise)
+			exerciseProgress.POST("/sync", r.exerciseProgress.SyncProgress)
 		}
 
 		users := api.Group("/users")
