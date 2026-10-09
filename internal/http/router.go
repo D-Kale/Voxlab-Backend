@@ -71,6 +71,9 @@ func (r *Router) initDependencies() {
 	attemptSvc := services.NewAttemptService(lifeSvc, streakSvc, exerciseRepo, userRepo, attemptRepo, progressRepo)
 	exerciseProgressSvc := services.NewExerciseProgressService(exerciseProgressRepo, userRepo, exerciseRepo)
 
+	clientLogRepo := repositories.NewClientLogRepository(db)
+	clientLogSvc := services.NewClientLogService(clientLogRepo)
+
 	userSvc := services.NewUserService(userRepo)
 	uploadSvc := services.NewUploadService(
 		storage.GetStorage(),
@@ -89,6 +92,7 @@ func (r *Router) initDependencies() {
 	r.upload = controllers.NewUploadController(uploadSvc)
 	r.docs = controllers.NewDocsController()
 	r.learningPath = controllers.NewLearningPathController(trackRepo, moduleRepo, lessonRepo, progressRepo, lifeSvc, streakSvc)
+	r.clientLog = controllers.NewClientLogController(clientLogSvc, clientLogRepo)
 }
 
 func (r *Router) initEngine() {
@@ -224,6 +228,14 @@ func (r *Router) initEngine() {
 			users.GET("/:id", r.user.GetUser)
 			users.PUT("/:id", r.user.UpdateUser)
 			users.DELETE("/:id", r.user.DeleteUser)
+		}
+
+		// Logs del cliente. POST requiere token (cualquier admin logueado);
+		// GET exige admin porque expone URLs y stacks de otros usuarios.
+		logs := api.Group("/logs")
+		{
+			logs.POST("", middleware.AuthMiddleware(), r.clientLog.Ingest)
+			logs.GET("", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.clientLog.ListRecent)
 		}
 
 		upload := api.Group("/upload")
