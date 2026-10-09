@@ -9,12 +9,14 @@ import (
 type Config struct {
 	AppEnv  string
 	AppPort string
-	DB      DatabaseConfig
-	Redis   RedisConfig
-	MinIO   MinIOConfig
-	JWT     JWTConfig
-	LiveKit LiveKitConfig
-	Admin   AdminConfig
+	// LogLevel: debug | info | warn | error. En production el logger emite JSON.
+	LogLevel string
+	DB       DatabaseConfig
+	Redis    RedisConfig
+	MinIO    MinIOConfig
+	JWT      JWTConfig
+	LiveKit  LiveKitConfig
+	Admin    AdminConfig
 }
 
 type DatabaseConfig struct {
@@ -26,11 +28,11 @@ type RedisConfig struct {
 }
 
 type MinIOConfig struct {
-	Endpoint        string
-	AccessKey       string
-	SecretKey       string
-	Bucket          string
-	UseSSL          bool
+	Endpoint       string
+	AccessKey      string
+	SecretKey      string
+	Bucket         string
+	UseSSL         bool
 	PublicEndpoint string
 }
 
@@ -55,8 +57,9 @@ func LoadConfig() error {
 	godotenv.Load(".env")
 
 	AppConfig = &Config{
-		AppEnv:  getEnv("APP_ENV", "development"),
-		AppPort: getEnv("APP_PORT", "3000"),
+		AppEnv:   getEnv("APP_ENV", "development"),
+		AppPort:  getEnv("APP_PORT", "3000"),
+		LogLevel: getEnv("LOG_LEVEL", "info"),
 		DB: DatabaseConfig{
 			URL: getEnv("DATABASE_URL", "postgres://voxlab:voxlab_pass_2024@localhost:5432/voxlab_db?sslmode=disable"),
 		},
@@ -64,12 +67,12 @@ func LoadConfig() error {
 			URL: getEnv("REDIS_URL", "localhost:6379"),
 		},
 		MinIO: MinIOConfig{
-			Endpoint:        getEnv("MINIO_ENDPOINT", "localhost:9000"),
-			AccessKey:       getEnv("MINIO_ACCESS_KEY", "voxlab_minio_admin"),
-			SecretKey:       getEnv("MINIO_SECRET_KEY", "voxlab_minio_pass_2024"),
-			Bucket:          getEnv("MINIO_BUCKET", "voxlab-media"),
-			UseSSL:          false,
-			PublicEndpoint:  getEnv("MINIO_PUBLIC_ENDPOINT", "http://localhost:9010"),
+			Endpoint:       getEnv("MINIO_ENDPOINT", "localhost:9000"),
+			AccessKey:      getEnv("MINIO_ACCESS_KEY", "voxlab_minio_admin"),
+			SecretKey:      getEnv("MINIO_SECRET_KEY", "voxlab_minio_pass_2024"),
+			Bucket:         getEnv("MINIO_BUCKET", "voxlab-media"),
+			UseSSL:         false,
+			PublicEndpoint: getEnv("MINIO_PUBLIC_ENDPOINT", "http://localhost:9010"),
 		},
 		JWT: JWTConfig{
 			Secret: getEnv("JWT_SECRET", "voxlab_jwt_super_secret_key_2024_change_in_production"),

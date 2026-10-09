@@ -2,10 +2,12 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/voxlab/voxlab-backend/internal/config"
 	"github.com/voxlab/voxlab-backend/internal/database"
 	appHTTP "github.com/voxlab/voxlab-backend/internal/http"
+	"github.com/voxlab/voxlab-backend/internal/logger"
 	"github.com/voxlab/voxlab-backend/internal/storage"
 )
 
@@ -57,6 +59,10 @@ func main() {
 
 	cfg := config.MustGetConfig()
 
+	// El logger se inicializa acá, antes de cualquier otra cosa, para que los
+	// fallos de Postgres/Redis/MinIO ya queden en formato estructurado.
+	logger.Init(cfg)
+
 	if err := database.ConnectPostgres(cfg); err != nil {
 		log.Fatalf("Error connecting to PostgreSQL: %v", err)
 	}
@@ -75,10 +81,14 @@ func main() {
 
 	router := appHTTP.NewRouter(cfg)
 
-	log.Printf("Server starting on port %s", cfg.AppPort)
-	log.Printf("Swagger docs: http://localhost:%s/swagger/index.html", cfg.AppPort)
+	logger.Info("server starting",
+		"port", cfg.AppPort,
+		"env", cfg.AppEnv,
+		"swagger", "http://localhost:"+cfg.AppPort+"/swagger/index.html",
+	)
 
 	if err := router.Run(cfg.AppPort); err != nil {
-		log.Fatalf("Server error: %v", err)
+		logger.Error("server error", "error", err.Error())
+		os.Exit(1)
 	}
 }
