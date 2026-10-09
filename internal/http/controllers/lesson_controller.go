@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voxlab/voxlab-backend/internal/http/resources"
 	"github.com/voxlab/voxlab-backend/internal/models"
 	"github.com/voxlab/voxlab-backend/internal/services"
 )
@@ -20,8 +21,8 @@ func NewLessonController(service *services.LessonService) *LessonController {
 // CreateLessonRequest represents the request body for creating a lesson
 // @Description Request body for creating a new lesson
 type CreateLessonRequest struct {
-	Title               string `json:"title" example:"Respiración Diafragmática"`
-	Description         string `json:"description" example:"Aprende a respirar desde el diafragma para proyectar tu voz"`
+	Title                string `json:"title" example:"Respiración Diafragmática"`
+	Description          string `json:"description" example:"Aprende a respirar desde el diafragma para proyectar tu voz"`
 	EstimatedTimeSeconds int    `json:"estimated_time_seconds" example:"300"`
 }
 
@@ -55,7 +56,7 @@ func (h *LessonController) GetLessonsByModule(c *gin.Context) {
 
 	lessons, err := h.service.GetAllByModule(moduleID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch lessons"})
+		resources.InternalError(c, err, "Failed to fetch lessons")
 		return
 	}
 
@@ -126,7 +127,7 @@ func (h *LessonController) CreateLesson(c *gin.Context) {
 	}
 
 	if err := h.service.Create(&lesson); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create lesson"})
+		resources.InternalError(c, err, "Failed to create lesson")
 		return
 	}
 
@@ -183,7 +184,7 @@ func (h *LessonController) UpdateLesson(c *gin.Context) {
 	}
 
 	if err := h.service.Update(existing); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update lesson"})
+		resources.InternalError(c, err, "Failed to update lesson")
 		return
 	}
 
@@ -222,7 +223,7 @@ func (h *LessonController) DeleteLesson(c *gin.Context) {
 	}
 
 	if err := h.service.Delete(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete lesson"})
+		resources.InternalError(c, err, "Failed to delete lesson")
 		return
 	}
 
@@ -246,7 +247,7 @@ func (h *LessonController) DeleteLesson(c *gin.Context) {
 func (h *LessonController) ListLessons(c *gin.Context) {
 	lessons, err := h.service.GetAll()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch lessons"})
+		resources.InternalError(c, err, "Failed to fetch lessons")
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"success": true, "data": lessons})
@@ -274,7 +275,7 @@ func (h *LessonController) GetModulesByLesson(c *gin.Context) {
 
 	modules, err := h.service.GetModulesByLesson(lessonID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch modules"})
+		resources.InternalError(c, err, "Failed to fetch modules")
 		return
 	}
 
@@ -303,7 +304,7 @@ func (h *LessonController) GetSharedLessons(c *gin.Context) {
 
 	lessons, err := h.service.GetSharedLessons(moduleID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch shared lessons"})
+		resources.InternalError(c, err, "Failed to fetch shared lessons")
 		return
 	}
 
@@ -335,7 +336,7 @@ func (h *LessonController) GetExercisesByLesson(c *gin.Context) {
 
 	exercises, err := h.service.GetExercisesByLesson(lessonID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch exercises"})
+		resources.InternalError(c, err, "Failed to fetch exercises")
 		return
 	}
 

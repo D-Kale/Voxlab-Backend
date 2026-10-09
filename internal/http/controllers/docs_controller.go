@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voxlab/voxlab-backend/internal/logger"
 )
 
 var translations = map[string]string{
@@ -67,16 +68,16 @@ var translations = map[string]string{
 	"Complete a lesson":        "Completar lección",
 
 	// Upload
-	"Upload track image":           "Subir imagen del curso",
-	"Upload module image":          "Subir imagen del módulo",
-	"Upload lesson image":          "Subir imagen de la lección",
-	"Upload user avatar":           "Subir avatar del usuario",
+	"Upload track image":  "Subir imagen del curso",
+	"Upload module image": "Subir imagen del módulo",
+	"Upload lesson image": "Subir imagen de la lección",
+	"Upload user avatar":  "Subir avatar del usuario",
 
 	// Users
-	"List all users (admin)":    "Listar usuarios (admin)",
-	"Get user by ID (admin)":    "Obtener usuario por ID (admin)",
-	"Update user (admin)":       "Actualizar usuario (admin)",
-	"Delete user (admin)":       "Eliminar usuario (admin)",
+	"List all users (admin)": "Listar usuarios (admin)",
+	"Get user by ID (admin)": "Obtener usuario por ID (admin)",
+	"Update user (admin)":    "Actualizar usuario (admin)",
+	"Delete user (admin)":    "Eliminar usuario (admin)",
 
 	// Auth profile
 	"Get user profile":    "Obtener perfil del usuario",
@@ -246,13 +247,15 @@ func (c *DocsController) ServeTranslatedSpec(ctx *gin.Context) {
 	}
 
 	if err != nil {
-		http.Error(ctx.Writer, err.Error(), http.StatusInternalServerError)
+		logger.Error("failed to read swagger spec", "error", err.Error())
+		http.Error(ctx.Writer, "Failed to load the API specification", http.StatusInternalServerError)
 		return
 	}
 
 	var spec map[string]interface{}
 	if err := json.Unmarshal(data, &spec); err != nil {
-		http.Error(ctx.Writer, err.Error(), http.StatusInternalServerError)
+		logger.Error("failed to parse swagger spec", "error", err.Error())
+		http.Error(ctx.Writer, "Failed to parse the API specification", http.StatusInternalServerError)
 		return
 	}
 

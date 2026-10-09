@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voxlab/voxlab-backend/internal/http/resources"
 	"github.com/voxlab/voxlab-backend/internal/models"
 	"github.com/voxlab/voxlab-backend/internal/repositories"
 	"github.com/voxlab/voxlab-backend/internal/services"
@@ -50,7 +51,7 @@ type UpdateTrackRequest struct {
 func (h *TrackController) GetTracks(c *gin.Context) {
 	tracks, err := h.service.GetAll()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tracks"})
+		resources.InternalError(c, err, "Failed to fetch tracks")
 		return
 	}
 
@@ -125,7 +126,7 @@ func (h *TrackController) CreateTrack(c *gin.Context) {
 	}
 
 	if err := h.service.Create(&track); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create track"})
+		resources.InternalError(c, err, "Failed to create track")
 		return
 	}
 
@@ -183,7 +184,7 @@ func (h *TrackController) UpdateTrack(c *gin.Context) {
 	}
 
 	if err := h.service.Update(existing); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update track"})
+		resources.InternalError(c, err, "Failed to update track")
 		return
 	}
 
@@ -227,7 +228,7 @@ func (h *TrackController) ReorderTracks(c *gin.Context) {
 	}
 
 	if err := h.service.Reorder(items); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resources.InternalError(c, err, "Operation failed")
 		return
 	}
 
@@ -263,7 +264,7 @@ func (h *TrackController) DeleteTrack(c *gin.Context) {
 	}
 
 	if err := h.service.Delete(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete track"})
+		resources.InternalError(c, err, "Failed to delete track")
 		return
 	}
 

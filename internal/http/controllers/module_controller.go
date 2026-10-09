@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voxlab/voxlab-backend/internal/http/resources"
 	"github.com/voxlab/voxlab-backend/internal/models"
 	"github.com/voxlab/voxlab-backend/internal/repositories"
 	"github.com/voxlab/voxlab-backend/internal/services"
@@ -61,7 +62,7 @@ func (h *ModuleController) GetModulesByTrack(c *gin.Context) {
 
 	modules, err := h.service.GetAllByTrack(trackID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch modules"})
+		resources.InternalError(c, err, "Failed to fetch modules")
 		return
 	}
 
@@ -131,7 +132,7 @@ func (h *ModuleController) CreateModule(c *gin.Context) {
 	}
 
 	if err := h.service.Create(&module); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create module"})
+		resources.InternalError(c, err, "Failed to create module")
 		return
 	}
 
@@ -188,7 +189,7 @@ func (h *ModuleController) UpdateModule(c *gin.Context) {
 	}
 
 	if err := h.service.Update(existing); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update module"})
+		resources.InternalError(c, err, "Failed to update module")
 		return
 	}
 
@@ -228,7 +229,7 @@ func (h *ModuleController) DeleteModule(c *gin.Context) {
 	}
 
 	if err := h.service.Delete(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete module"})
+		resources.InternalError(c, err, "Failed to delete module")
 		return
 	}
 
@@ -273,7 +274,7 @@ func (h *ModuleController) ReorderModules(c *gin.Context) {
 	}
 
 	if err := h.service.ReorderModules(items); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resources.InternalError(c, err, "Operation failed")
 		return
 	}
 
@@ -312,7 +313,7 @@ func (h *ModuleController) LinkLesson(c *gin.Context) {
 	}
 
 	if err := h.service.LinkLesson(moduleID, req.LessonID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resources.InternalError(c, err, "Operation failed")
 		return
 	}
 
@@ -352,7 +353,7 @@ func (h *ModuleController) UnlinkLesson(c *gin.Context) {
 	}
 
 	if err := h.service.UnlinkLesson(moduleID, lessonID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resources.InternalError(c, err, "Operation failed")
 		return
 	}
 
@@ -400,7 +401,7 @@ func (h *ModuleController) ReorderLessons(c *gin.Context) {
 	}
 
 	if err := h.service.ReorderLessons(moduleID, items); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resources.InternalError(c, err, "Operation failed")
 		return
 	}
 

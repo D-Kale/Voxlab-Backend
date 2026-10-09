@@ -7,6 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/voxlab/voxlab-backend/internal/http/middleware"
+	"github.com/voxlab/voxlab-backend/internal/http/resources"
 	"github.com/voxlab/voxlab-backend/internal/services"
 )
 
@@ -41,13 +43,14 @@ func (h *ProgressController) GetMyProgress(c *gin.Context) {
 
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in token"})
+		middleware.LogRequestWarn(c, "invalid user id in token")
+		resources.Error(c, http.StatusInternalServerError, "Invalid user ID in token")
 		return
 	}
 
 	progress, err := h.service.GetByUser(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch progress"})
+		resources.InternalError(c, err, "Failed to fetch progress")
 		return
 	}
 
@@ -63,8 +66,8 @@ type exerciseInput struct {
 }
 
 type completeLessonRequest struct {
-	LessonID  int            `json:"lesson_id" example:"1"`
-	Score     int            `json:"score" example:"85"`
+	LessonID  int             `json:"lesson_id" example:"1"`
+	Score     int             `json:"score" example:"85"`
 	Exercises []exerciseInput `json:"exercises"`
 }
 
@@ -99,7 +102,8 @@ func (h *ProgressController) CompleteLesson(c *gin.Context) {
 
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in token"})
+		middleware.LogRequestWarn(c, "invalid user id in token")
+		resources.Error(c, http.StatusInternalServerError, "Invalid user ID in token")
 		return
 	}
 
@@ -135,7 +139,7 @@ func (h *ProgressController) CompleteLesson(c *gin.Context) {
 		} else if msg == "lesson is locked" {
 			status = http.StatusForbidden
 		}
-		c.JSON(status, gin.H{"error": msg})
+		resources.Fail(c, err, status, err.Error())
 		return
 	}
 
@@ -146,7 +150,7 @@ func (h *ProgressController) CompleteLesson(c *gin.Context) {
 }
 
 type updateProgressRequest struct {
-	Score     int            `json:"score" example:"85"`
+	Score     int             `json:"score" example:"85"`
 	Exercises []exerciseInput `json:"exercises"`
 }
 
@@ -178,7 +182,8 @@ func (h *ProgressController) UpdateProgress(c *gin.Context) {
 
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in token"})
+		middleware.LogRequestWarn(c, "invalid user id in token")
+		resources.Error(c, http.StatusInternalServerError, "Invalid user ID in token")
 		return
 	}
 
@@ -214,7 +219,7 @@ func (h *ProgressController) UpdateProgress(c *gin.Context) {
 		} else if msg == "lesson is locked" {
 			status = http.StatusForbidden
 		}
-		c.JSON(status, gin.H{"error": msg})
+		resources.Fail(c, err, status, err.Error())
 		return
 	}
 
@@ -265,7 +270,8 @@ func (h *ProgressController) SyncProgress(c *gin.Context) {
 
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in token"})
+		middleware.LogRequestWarn(c, "invalid user id in token")
+		resources.Error(c, http.StatusInternalServerError, "Invalid user ID in token")
 		return
 	}
 
@@ -301,7 +307,7 @@ func (h *ProgressController) SyncProgress(c *gin.Context) {
 		} else if msg == "user not found" {
 			status = http.StatusNotFound
 		}
-		c.JSON(status, gin.H{"error": msg})
+		resources.Fail(c, err, status, err.Error())
 		return
 	}
 
@@ -337,13 +343,14 @@ func (h *ProgressController) GetWeeklyProgress(c *gin.Context) {
 
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in token"})
+		middleware.LogRequestWarn(c, "invalid user id in token")
+		resources.Error(c, http.StatusInternalServerError, "Invalid user ID in token")
 		return
 	}
 
 	data, err := h.service.GetWeeklyProgress(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch weekly progress"})
+		resources.InternalError(c, err, "Failed to fetch weekly progress")
 		return
 	}
 

@@ -8,6 +8,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/voxlab/voxlab-backend/internal/analyzer"
+	"github.com/voxlab/voxlab-backend/internal/http/middleware"
+	"github.com/voxlab/voxlab-backend/internal/http/resources"
 	"github.com/voxlab/voxlab-backend/internal/models"
 	"github.com/voxlab/voxlab-backend/internal/services"
 )
@@ -46,7 +48,7 @@ func NewExerciseController(service *services.ExerciseService, attemptSvc *servic
 func (h *ExerciseController) ListExercises(c *gin.Context) {
 	exercises, err := h.service.GetAll()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch exercises"})
+		resources.InternalError(c, err, "Failed to fetch exercises")
 		return
 	}
 
@@ -215,7 +217,7 @@ func (h *ExerciseController) CreateExercise(c *gin.Context) {
 	}
 
 	if err := h.service.Create(&exercise); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create exercise"})
+		resources.InternalError(c, err, "Failed to create exercise")
 		return
 	}
 
@@ -243,9 +245,9 @@ func (h *ExerciseController) CreateExercise(c *gin.Context) {
 // @Failure      404  {object}  resources.NotFoundError            "Ejercicio no encontrado"
 // @Router       /api/v1/exercises/{id} [put]
 type updateExerciseInput struct {
-	Name    *string             `json:"name,omitempty"`
+	Name    *string              `json:"name,omitempty"`
 	Type    *models.ExerciseType `json:"type,omitempty"`
-	Content json.RawMessage     `json:"content,omitempty"`
+	Content json.RawMessage      `json:"content,omitempty"`
 }
 
 func (h *ExerciseController) UpdateExercise(c *gin.Context) {
@@ -278,7 +280,7 @@ func (h *ExerciseController) UpdateExercise(c *gin.Context) {
 	}
 
 	if err := h.service.Update(existing); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update exercise"})
+		resources.InternalError(c, err, "Failed to update exercise")
 		return
 	}
 
@@ -317,7 +319,7 @@ func (h *ExerciseController) DeleteExercise(c *gin.Context) {
 	}
 
 	if err := h.service.Delete(id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete exercise"})
+		resources.InternalError(c, err, "Failed to delete exercise")
 		return
 	}
 
@@ -377,7 +379,7 @@ func (h *ExerciseController) LinkExerciseToLesson(c *gin.Context) {
 	}
 
 	if err := h.service.LinkExerciseToLesson(lessonID, exerciseID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to link exercise"})
+		resources.InternalError(c, err, "Failed to link exercise")
 		return
 	}
 
@@ -414,7 +416,7 @@ func (h *ExerciseController) UnlinkExerciseFromLesson(c *gin.Context) {
 	}
 
 	if err := h.service.UnlinkExerciseFromLesson(lessonID, exerciseID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to unlink exercise"})
+		resources.InternalError(c, err, "Failed to unlink exercise")
 		return
 	}
 
@@ -461,7 +463,7 @@ func (h *ExerciseController) ReorderExerciseInLesson(c *gin.Context) {
 	}
 
 	if err := h.service.ReorderExerciseInLesson(lessonID, exerciseID, req.OrderIndex); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to reorder exercise"})
+		resources.InternalError(c, err, "Failed to reorder exercise")
 		return
 	}
 
@@ -494,7 +496,7 @@ func (h *ExerciseController) GetLessonsByExercise(c *gin.Context) {
 
 	links, err := h.service.GetLessonsByExercise(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch lessons"})
+		resources.InternalError(c, err, "Failed to fetch lessons")
 		return
 	}
 
@@ -547,7 +549,7 @@ func (h *ExerciseController) BatchReorderExercises(c *gin.Context) {
 	}
 
 	if err := h.service.BatchReorderExercises(lessonID, items); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resources.InternalError(c, err, "Operation failed")
 		return
 	}
 
@@ -595,7 +597,8 @@ func (h *ExerciseController) AttemptExercise(c *gin.Context) {
 	}
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in token"})
+		middleware.LogRequestWarn(c, "invalid user id in token")
+		resources.Error(c, http.StatusInternalServerError, "Invalid user ID in token")
 		return
 	}
 
@@ -619,7 +622,7 @@ func (h *ExerciseController) AttemptExercise(c *gin.Context) {
 		if err.Error() == "exercise not found" {
 			status = http.StatusNotFound
 		}
-		c.JSON(status, gin.H{"error": err.Error()})
+		resources.Fail(c, err, status, err.Error())
 		return
 	}
 

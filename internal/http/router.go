@@ -4,6 +4,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -23,19 +24,20 @@ type Router struct {
 	engine *gin.Engine
 	cfg    *config.Config
 
-	health               *controllers.HealthController
-	auth                 *controllers.AuthController
-	track                *controllers.TrackController
-	module               *controllers.ModuleController
-	lesson               *controllers.LessonController
-	exercise             *controllers.ExerciseController
-	progress             *controllers.ProgressController
-	exerciseProgress     *controllers.ExerciseProgressController
-	reaction             *controllers.ReactionController
-	user                 *controllers.UserController
-	upload               *controllers.UploadController
-	docs                 *controllers.DocsController
-	learningPath         *controllers.LearningPathController
+	health           *controllers.HealthController
+	auth             *controllers.AuthController
+	track            *controllers.TrackController
+	module           *controllers.ModuleController
+	lesson           *controllers.LessonController
+	exercise         *controllers.ExerciseController
+	progress         *controllers.ProgressController
+	exerciseProgress *controllers.ExerciseProgressController
+	reaction         *controllers.ReactionController
+	user             *controllers.UserController
+	upload           *controllers.UploadController
+	docs             *controllers.DocsController
+	learningPath     *controllers.LearningPathController
+	clientLog        *controllers.ClientLogController
 }
 
 func NewRouter(cfg *config.Config) *Router {
@@ -90,9 +92,15 @@ func (r *Router) initDependencies() {
 }
 
 func (r *Router) initEngine() {
-	gin.SetMode(gin.DebugMode)
+	gin.SetMode(ginMode(r.cfg.AppEnv))
+
 	r.engine = gin.New()
-	r.engine.Use(gin.Recovery())
+
+	// El orden importa: RequestID debe correr antes que RequestLogger para que
+	// cada línea del access log pueda incluir el ID de correlación.
+	r.engine.Use(middleware.RequestID())
+	r.engine.Use(middleware.RequestLogger())
+	r.engine.Use(gin.RecoveryWithWriter(os.Stdout))
 	r.engine.Use(middleware.CORSMiddleware())
 
 	r.engine.GET("/api/v1/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
@@ -226,6 +234,15 @@ func (r *Router) initEngine() {
 			upload.POST("/avatar", middleware.AuthMiddleware(), r.upload.UploadAvatar)
 		}
 	}
+}
+
+// ginMode mapea APP_ENV al modo de gin. Antes estaba hardcodeado a DebugMode,
+// lo que en producción activaba warnings de routing y verbosity innecesaria.
+func ginMode(appEnv string) string {
+	if strings.EqualFold(appEnv, "production") {
+		return gin.ReleaseMode
+	}
+	return gin.DebugMode
 }
 
 func (r *Router) Run(port string) error {

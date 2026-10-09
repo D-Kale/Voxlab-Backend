@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voxlab/voxlab-backend/internal/http/resources"
 	"github.com/voxlab/voxlab-backend/internal/services"
 )
 
@@ -63,7 +64,7 @@ func (h *UploadController) UploadTrackImage(c *gin.Context) {
 
 	result, err := h.service.UploadTrackImage(c.Request.Context(), id, bytes.NewReader(data))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resources.InternalError(c, err, "Operation failed")
 		return
 	}
 
@@ -106,7 +107,7 @@ func (h *UploadController) UploadModuleImage(c *gin.Context) {
 
 	result, err := h.service.UploadModuleImage(c.Request.Context(), id, bytes.NewReader(data))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resources.InternalError(c, err, "Operation failed")
 		return
 	}
 
@@ -149,7 +150,7 @@ func (h *UploadController) UploadLessonImage(c *gin.Context) {
 
 	result, err := h.service.UploadLessonImage(c.Request.Context(), id, bytes.NewReader(data))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resources.InternalError(c, err, "Operation failed")
 		return
 	}
 
@@ -191,7 +192,7 @@ func (h *UploadController) UploadAvatar(c *gin.Context) {
 
 	result, err := h.service.UploadAvatar(c.Request.Context(), userID.(string), bytes.NewReader(data))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resources.InternalError(c, err, "Operation failed")
 		return
 	}
 

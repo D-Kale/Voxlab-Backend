@@ -7,6 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/voxlab/voxlab-backend/internal/http/middleware"
+	"github.com/voxlab/voxlab-backend/internal/http/resources"
 	"github.com/voxlab/voxlab-backend/internal/models"
 	"github.com/voxlab/voxlab-backend/internal/repositories"
 	"github.com/voxlab/voxlab-backend/internal/services"
@@ -44,33 +46,33 @@ type LearningPathResponse struct {
 }
 
 type TrackWithProgress struct {
-	ID          int                    `json:"id"`
-	Title       string                 `json:"title"`
-	Description string                 `json:"description"`
-	IconURL     string                 `json:"icon_url"`
-	OrderIndex  int                    `json:"order_index"`
-	Modules     []ModuleWithProgress   `json:"modules"`
+	ID          int                  `json:"id"`
+	Title       string               `json:"title"`
+	Description string               `json:"description"`
+	IconURL     string               `json:"icon_url"`
+	OrderIndex  int                  `json:"order_index"`
+	Modules     []ModuleWithProgress `json:"modules"`
 }
 
 type ModuleWithProgress struct {
-	ID           int                    `json:"id"`
-	Title        string                 `json:"title"`
-	Description  string                 `json:"description"`
-	ImageURL     string                 `json:"image_url"`
-	OrderIndex   int                    `json:"order_index"`
-	Lessons      []LessonWithProgress   `json:"lessons"`
+	ID          int                  `json:"id"`
+	Title       string               `json:"title"`
+	Description string               `json:"description"`
+	ImageURL    string               `json:"image_url"`
+	OrderIndex  int                  `json:"order_index"`
+	Lessons     []LessonWithProgress `json:"lessons"`
 }
 
 type LessonWithProgress struct {
-	ID                   int                      `json:"id"`
-	Title                string                   `json:"title"`
-	Description          string                   `json:"description"`
-	EstimatedTimeSeconds int                      `json:"estimated_time_seconds"`
-	OrderIndex           int                      `json:"order_index"`
-	Status               string                   `json:"status"`
-	XPEarned             int                      `json:"xp_earned"`
-	CompletedAt          *string                  `json:"completed_at,omitempty"`
-	Exercises            []ExerciseWithStatus     `json:"exercises"`
+	ID                   int                  `json:"id"`
+	Title                string               `json:"title"`
+	Description          string               `json:"description"`
+	EstimatedTimeSeconds int                  `json:"estimated_time_seconds"`
+	OrderIndex           int                  `json:"order_index"`
+	Status               string               `json:"status"`
+	XPEarned             int                  `json:"xp_earned"`
+	CompletedAt          *string              `json:"completed_at,omitempty"`
+	Exercises            []ExerciseWithStatus `json:"exercises"`
 }
 
 type ExerciseWithStatus struct {
@@ -106,7 +108,8 @@ func (h *LearningPathController) GetLearningPath(c *gin.Context) {
 	}
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID"})
+		middleware.LogRequestWarn(c, "invalid user id in token")
+		resources.Error(c, http.StatusInternalServerError, "Invalid user ID")
 		return
 	}
 
@@ -141,7 +144,7 @@ func (h *LearningPathController) GetLearningPath(c *gin.Context) {
 	} else {
 		allTracks, err := h.trackRepo.FindAll()
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch tracks"})
+			resources.InternalError(c, err, "Failed to fetch tracks")
 			return
 		}
 		for _, track := range allTracks {

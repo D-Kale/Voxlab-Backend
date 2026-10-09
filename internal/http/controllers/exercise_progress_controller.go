@@ -6,6 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/voxlab/voxlab-backend/internal/http/middleware"
+	"github.com/voxlab/voxlab-backend/internal/http/resources"
 	"github.com/voxlab/voxlab-backend/internal/services"
 )
 
@@ -48,13 +50,14 @@ func (h *ExerciseProgressController) GetProgress(c *gin.Context) {
 	}
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID"})
+		middleware.LogRequestWarn(c, "invalid user id in token")
+		resources.Error(c, http.StatusInternalServerError, "Invalid user ID")
 		return
 	}
 
 	response, err := h.service.GetProgress(userID)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resources.InternalError(c, err, "Operation failed")
 		return
 	}
 
@@ -85,7 +88,8 @@ func (h *ExerciseProgressController) CompleteExercise(c *gin.Context) {
 	}
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID"})
+		middleware.LogRequestWarn(c, "invalid user id in token")
+		resources.Error(c, http.StatusInternalServerError, "Invalid user ID")
 		return
 	}
 
@@ -108,7 +112,7 @@ func (h *ExerciseProgressController) CompleteExercise(c *gin.Context) {
 		} else if err.Error() == "invalid exercise_id format (must be UUID)" || err.Error() == "completed_at cannot be in the future" {
 			status = http.StatusBadRequest
 		}
-		c.JSON(status, gin.H{"error": err.Error()})
+		resources.Fail(c, err, status, err.Error())
 		return
 	}
 
@@ -138,7 +142,8 @@ func (h *ExerciseProgressController) SyncProgress(c *gin.Context) {
 	}
 	userID, err := uuid.Parse(userIDStr.(string))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID"})
+		middleware.LogRequestWarn(c, "invalid user id in token")
+		resources.Error(c, http.StatusInternalServerError, "Invalid user ID")
 		return
 	}
 
@@ -162,7 +167,7 @@ func (h *ExerciseProgressController) SyncProgress(c *gin.Context) {
 		Entries: svcEntries,
 	})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		resources.InternalError(c, err, "Operation failed")
 		return
 	}
 

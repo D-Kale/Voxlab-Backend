@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/voxlab/voxlab-backend/internal/http/resources"
 	"github.com/voxlab/voxlab-backend/internal/services"
 )
 
@@ -72,7 +73,7 @@ func (h *AuthController) Register(c *gin.Context) {
 		if err.Error() == "email already registered" {
 			status = http.StatusConflict
 		}
-		c.JSON(status, gin.H{"error": err.Error()})
+		resources.Fail(c, err, status, err.Error())
 		return
 	}
 
@@ -100,7 +101,7 @@ func (h *AuthController) Logout(c *gin.Context) {
 	tokenString := authHeader[7:]
 
 	if err := h.service.Logout(tokenString); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to logout"})
+		resources.InternalError(c, err, "failed to logout")
 		return
 	}
 
@@ -206,7 +207,7 @@ func (h *AuthController) UpdateProfile(c *gin.Context) {
 
 	profile, err := h.service.UpdateProfile(userID.(string), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update profile"})
+		resources.InternalError(c, err, "failed to update profile")
 		return
 	}
 
