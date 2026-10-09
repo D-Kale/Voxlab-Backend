@@ -30,6 +30,17 @@ services:
       - AWS_S3_BUCKET=voxlab
       - MINIO_PUBLIC_ENDPOINT=http://localhost:9010
       - ANALYZER_URL=http://analyzer:8000
+      # NO se setea APP_ENV=production acá a propósito: el mismo compose se usa
+      # en local y en el VPS, y APP_ENV=production endurece el CORS a
+      # https://voxlab.app. Cuando toques prod, pasalo por variable de entorno.
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    # Sin esto Docker usa el driver json-file sin rotación y el disco del VPS
+    # se llena con los logs del access log.
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
     depends_on:
       postgres:
         condition: service_healthy
