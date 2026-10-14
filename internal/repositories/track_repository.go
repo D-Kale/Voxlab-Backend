@@ -13,15 +13,28 @@ func NewTrackRepository(db *gorm.DB) *TrackRepository {
 	return &TrackRepository{db: db}
 }
 
+// withLearningPath preloads modules, lessons and exercises sorted by their
+// order_index, so the app's map follows the order set with the reorder
+// endpoints (a bare Preload returns rows in arbitrary order).
+func withLearningPath(db *gorm.DB) *gorm.DB {
+	byOrder := func(db *gorm.DB) *gorm.DB { return db.Order("order_index asc") }
+	return db.
+		Preload("Modules", byOrder).
+		Preload("Modules.Lessons", byOrder).
+		Preload("Modules.Lessons.Lesson").
+		Preload("Modules.Lessons.Lesson.LessonExercises", byOrder).
+		Preload("Modules.Lessons.Lesson.LessonExercises.Exercise")
+}
+
 func (r *TrackRepository) FindAll() ([]models.Track, error) {
 	var tracks []models.Track
-	err := r.db.Preload("Modules.Lessons.Lesson.LessonExercises.Exercise").Find(&tracks).Error
+	err := withLearningPath(r.db).Order("order_index asc, id asc").Find(&tracks).Error
 	return tracks, err
 }
 
 func (r *TrackRepository) FindByID(id int) (*models.Track, error) {
 	var track models.Track
-	err := r.db.Preload("Modules.Lessons.Lesson.LessonExercises.Exercise").First(&track, id).Error
+	err := withLearningPath(r.db).First(&track, id).Error
 	if err != nil {
 		return nil, err
 	}
