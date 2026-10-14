@@ -302,9 +302,9 @@ def transcribe(path: str) -> tuple[List[Word], float]:
         language="es",
         word_timestamps=True,
         initial_prompt=WHISPER_PROMPT,
-        # Greedy: en CPU es ~3x más rápido que beam_size=5 y con el modelo
-        # "base" en español no cambia la detección de muletillas ni pausas.
-        beam_size=int(os.getenv("WHISPER_BEAM_SIZE", "1")),
+        # Probado con "base": greedy (1) entra en bucles, dispara el
+        # fallback de temperatura y termina ~6x más lento y peor que 5.
+        beam_size=int(os.getenv("WHISPER_BEAM_SIZE", "5")),
         # El filtro VAD hizo entrar al modelo en bucles de repetición con
         # pausas largas; sin él las pausas quedan medidas igual.
         vad_filter=False,

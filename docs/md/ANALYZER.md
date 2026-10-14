@@ -313,8 +313,9 @@ Exposed by the API as `POST /api/v1/exercises/analyze-speech` (JWT required,
 Pipeline (`analyzer/analyzers/speech.py`):
 
 1. **Transcription** with [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
-   on CPU (int8), Spanish, word-level timestamps, greedy decoding
-   (`beam_size=1`, ~3× faster than 5 on CPU). The model is downloaded at
+   on CPU (int8), Spanish, word-level timestamps, `beam_size=5` (greedy
+   decoding looped and triggered temperature fallback: ~6× slower and worse
+   on a 28 s test take). The model is downloaded at
    image build time and preloaded in a background thread at startup
    (`WHISPER_WARMUP=0` to disable), so the first take does not pay the load.
    One transcription runs at a time (`SPEECH_CONCURRENCY`); with more than
@@ -350,7 +351,7 @@ when the LLM was not used).
 | `WHISPER_MODEL` | `base` | `small` transcribes better but was ~10× slower on CPU in tests |
 | `WHISPER_THREADS` | `2` | CPU threads for transcription |
 | `WHISPER_PROMPT` | natural sentence with fillers | Nudges Whisper to keep hesitations |
-| `WHISPER_BEAM_SIZE` | `1` | Greedy decoding |
+| `WHISPER_BEAM_SIZE` | `5` | 1 (greedy) was slower in tests, see above |
 | `WHISPER_WARMUP` | `1` | Preload the model at startup |
 | `SPEECH_CONCURRENCY` | `1` | Simultaneous transcriptions |
 | `SPEECH_MAX_WAITING` | `4` | Queued takes before answering 503 |
