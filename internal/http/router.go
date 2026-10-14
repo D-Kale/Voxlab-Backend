@@ -190,6 +190,7 @@ func (r *Router) initEngine() {
 			exercises.PUT("/:id", middleware.AuthMiddleware(), r.exercise.UpdateExercise)
 			exercises.DELETE("/:id", middleware.AuthMiddleware(), r.exercise.DeleteExercise)
 			exercises.POST("/analyze-text", middleware.AuthMiddleware(), r.exercise.AnalyzeText)
+			exercises.POST("/analyze-speech", middleware.AuthMiddleware(), r.exercise.AnalyzeSpeech)
 			exercises.POST("/:id/attempt", middleware.AuthMiddleware(), r.exercise.AttemptExercise)
 		}
 

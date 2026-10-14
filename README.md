@@ -13,7 +13,7 @@ Plataforma educativa de oratoria con progresión gamificada (estilo Duolingo) y 
 | Admin DB | pgAdmin 4 | `5050` |
 | Archivos | MinIO (S3-compatible) | `9000` / `9001` |
 | Llamadas | LiveKit | `7880` / `7881` / `7882` |
-| Analizador de texto | Python (FastAPI + spaCy) | `8001` |
+| Analizador de texto y voz | Python (FastAPI + spaCy + faster-whisper) | `8001` |
 
 ## Arquitectura del flujo
 

@@ -298,3 +298,59 @@ To add new analysis features:
 2. Add analysis function in the Python service
 3. Update the feedback generator
 4. Update scoring weights if needed
+## Speech analysis (`POST /analyze/speech`)
+
+Exposed by the API as `POST /api/v1/exercises/analyze-speech` (JWT required,
+`multipart/form-data`):
+
+| Field | Type | Required | Notes |
+|-------|------|----------|-------|
+| `audio` | file | yes | m4a/aac, wav, webm/opus or mp3, max 15 MB |
+| `min_seconds` | number | no | Minimum expected duration |
+| `target_seconds` | number | no | Target duration |
+
+Pipeline (`analyzer/analyzers/speech.py`):
+
+1. **Transcription** with [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
+   on CPU (int8), Spanish, word-level timestamps. The model is downloaded at
+   image build time and loaded on the first request, so the text analyzer does
+   not pay its memory until speech is used.
+2. **Metrics** from the word timestamps: words per minute (fillers excluded),
+   pauses (gaps ≥ 0.6 s), long pauses (≥ 3 s), speaking time, filler words.
+3. **Fillers**: pure hesitations (`eh`, `mmm`, `ehm`…) always count;
+   contextual ones (`este`, `bueno`, `pues`, `tipo`…) only when they stand
+   alone (followed by a comma or a pause), so "este proyecto" is not a filler;
+   multi-word ones (`o sea`, `como que`, `es decir`).
+4. **Score** (0-100), weighted:
+
+| Component | Weight | Ideal |
+|-----------|--------|-------|
+| `ritmo` | 25 % | 110-160 words per minute |
+| `muletillas` | 25 % | ≤ 1 filler per minute |
+| `pausas` | 20 % | 3-10 pauses per minute, −10 per pause > 3 s |
+| `fluidez` | 15 % | speaking ≥ 65 % of the take |
+| `duracion` | 15 % | reach `min_seconds`, don't exceed `target_seconds` by 25 % |
+
+Response (`data` in the API envelope): `transcript`, `duration_seconds`,
+`speaking_seconds`, `word_count`, `words_per_minute`, `pause_count`,
+`long_pause_count`, `longest_pause_seconds`, `filler_words`,
+`filler_breakdown`, `score`, `score_breakdown` (same shape as the text
+analyzer) and `feedback`.
+
+### Configuration
+
+| Variable | Default | Notes |
+|----------|---------|-------|
+| `WHISPER_MODEL` | `base` | `small` transcribes better but was ~10× slower on CPU in tests |
+| `WHISPER_THREADS` | `2` | CPU threads for transcription |
+| `WHISPER_PROMPT` | natural sentence with fillers | Nudges Whisper to keep hesitations |
+
+Findings from testing with `base` (kept in the code comments):
+- A prompt made only of fillers ("Eh... este... mmm") is echoed back as the
+  transcript; a natural sentence with fillers is not. Echoes are dropped.
+- `vad_filter=True` sent the model into repetition loops after long pauses,
+  so it stays off; pauses are measured from word timestamps instead.
+- faster-whisper 1.2 calls `av.open(metadata_errors=...)`, removed in PyAV 16,
+  so `av` is pinned below 16.
+
+Tests: `cd analyzer && uv run --group dev pytest tests` (no model needed).

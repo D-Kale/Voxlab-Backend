@@ -4,6 +4,7 @@ Voxlab Analyzer — Microservicio de análisis de texto.
 Endpoints:
     GET  /health          — Healthcheck con verificación de modelos
     POST /analyze/text    — Analiza un texto de escritura
+    POST /analyze/speech  — Transcribe un audio de oratoria y mide la entrega
 
 El análisis incluye detección de gibberish, métricas estructurales,
 calidad lingüística, matching semántico de requisitos y scoring
@@ -12,13 +13,19 @@ ponderado. Ver docs/scoring.md para la documentación de la fórmula.
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+import os
+import shutil
+import tempfile
+
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from analyzers.text import analyze_text
 from analyzers.nlp import init_nlp, get_nlp
 from analyzers.requirements import init_embedding_model, _get_model
+from analyzers.speech import analyze_speech, whisper_model_name
 
 
 @asynccontextmanager
@@ -121,6 +128,9 @@ def health():
         statuses["embeddings"] = f"error: {e}"
         ok = False
 
+    # Whisper se carga bajo demanda; acá solo se informa cuál se usará.
+    statuses["whisper"] = f"lazy ({whisper_model_name()})"
+
     code = 200 if ok else 503
     return {
         "status": "ok" if ok else "degraded",
@@ -147,3 +157,52 @@ def analyze(req: AnalyzeRequest):
         max_words=req.max_words,
     )
     return AnalyzeResponse(**result)
+
+
+class SpeechResponse(BaseModel):
+    transcript: str
+    duration_seconds: float
+    speaking_seconds: float
+    word_count: int
+    words_per_minute: int
+    pause_count: int
+    long_pause_count: int
+    longest_pause_seconds: float
+    filler_words: int
+    filler_breakdown: Dict[str, int]
+    score: int
+    score_breakdown: dict
+    feedback: List[str]
+
+
+@app.post("/analyze/speech", response_model=SpeechResponse)
+async def analyze_speech_endpoint(
+    audio: UploadFile = File(...),
+    min_seconds: Optional[float] = Form(None),
+    target_seconds: Optional[float] = Form(None),
+):
+    """Transcribe un audio de oratoria (español) y mide la entrega.
+
+    El scoring usa 5 componentes (ver analyzers/speech.py):
+        - ritmo (25%): palabras por minuto, ideal 110-160
+        - muletillas (25%): "eh", "este", "o sea"... por minuto
+        - pausas (20%): pausas por minuto, ideal 3-10, penaliza las largas
+        - fluidez (15%): proporción del tiempo hablando
+        - duracion (15%): cumplimiento del mínimo / objetivo
+
+    El modelo Whisper se carga en la primera llamada (WHISPER_MODEL).
+    """
+    suffix = os.path.splitext(audio.filename or "")[1] or ".m4a"
+    with tempfile.NamedTemporaryFile(suffix=suffix) as tmp:
+        shutil.copyfileobj(audio.file, tmp)
+        tmp.flush()
+        try:
+            result = await run_in_threadpool(
+                analyze_speech, tmp.name, min_seconds, target_seconds
+            )
+        except Exception as e:  # audio corrupto o formato no soportado
+            raise HTTPException(
+                status_code=422,
+                detail=f"No se pudo procesar el audio: {e}",
+            )
+    return SpeechResponse(**result)
