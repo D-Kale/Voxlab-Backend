@@ -33,6 +33,8 @@ type UpdateTrackRequest struct {
 	Title       *string `json:"title,omitempty" example:"Oratoria Avanzada"`
 	Description *string `json:"description,omitempty" example:"Técnicas avanzadas para audiencias grandes"`
 	IconURL     *string `json:"icon_url,omitempty" example:"https://cdn.voxlab.com/icons/advanced.webp"`
+	// false hides the track from the app (draft); true publishes it.
+	IsActive *bool `json:"is_active,omitempty" example:"false"`
 }
 
 // GetTracks      godoc
@@ -138,8 +140,9 @@ func (h *TrackController) CreateTrack(c *gin.Context) {
 
 // UpdateTrack    godoc
 // @Summary      Update an existing track
-// @Description  Modifies the title, description, or icon of a track.
-// @Description  Send only the fields you want to change.
+// @Description  Modifies the title, description, icon or visibility of a track.
+// @Description  Send only the fields you want to change. is_active=false hides
+// @Description  the track from the app (draft), is_active=true publishes it.
 // @Description
 // @Description  🔒 Requires JWT token (Authorization: Bearer <token>)
 // @Tags         Tracks (Educational Content)
@@ -167,20 +170,23 @@ func (h *TrackController) UpdateTrack(c *gin.Context) {
 		return
 	}
 
-	var input models.Track
+	var input UpdateTrackRequest
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body", "details": err.Error()})
 		return
 	}
 
-	if input.Title != "" {
-		existing.Title = input.Title
+	if input.Title != nil && *input.Title != "" {
+		existing.Title = *input.Title
 	}
-	if input.Description != "" {
-		existing.Description = input.Description
+	if input.Description != nil && *input.Description != "" {
+		existing.Description = *input.Description
 	}
-	if input.IconURL != "" {
-		existing.IconURL = input.IconURL
+	if input.IconURL != nil && *input.IconURL != "" {
+		existing.IconURL = *input.IconURL
+	}
+	if input.IsActive != nil {
+		existing.IsActive = *input.IsActive
 	}
 
 	if err := h.service.Update(existing); err != nil {
