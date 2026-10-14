@@ -1,0 +1,69 @@
+{
+  "track": {
+    "title": "Oratoria para entrevistas",
+    "description": "Prepará tus respuestas y hablá con seguridad en una entrevista de trabajo."
+  },
+  "modules": [
+    {
+      "title": "Tu presentación",
+      "description": "Contá quién sos en menos de un minuto.",
+      "lessons": [
+        {
+          "title": "El pitch personal",
+          "description": "Estructura de una presentación breve y memorable.",
+          "estimated_time_seconds": 300,
+          "exercises": [
+            {
+              "name": "Pitch personal: lectura",
+              "type": "reading",
+              "content": {
+                "title": "Qué es un pitch personal",
+                "content": "Un pitch personal es una presentación de 30 a 60 segundos...\n\nTiene tres partes: quién sos, qué hacés y qué buscás.",
+                "reading_time_seconds": 60,
+                "points": 5
+              }
+            },
+            {
+              "name": "Pitch personal: quiz",
+              "type": "quiz",
+              "content": {
+                "points_per_question": 5,
+                "questions": [
+                  {
+                    "question": "¿Cuánto debería durar un pitch personal?",
+                    "options": ["5 minutos", "Entre 30 y 60 segundos", "10 segundos"],
+                    "correct_index": 1,
+                    "explanation": "Lo suficiente para despertar interés sin aburrir."
+                  }
+                ]
+              }
+            },
+            {
+              "name": "Pitch personal: escribilo",
+              "type": "writing",
+              "content": {
+                "prompt": "Escribí tu pitch personal para una entrevista.",
+                "min_words": 40,
+                "max_words": 120,
+                "requirements": ["Decir tu nombre", "Contar a qué te dedicás", "Explicar qué buscás"],
+                "points": 15
+              }
+            },
+            {
+              "name": "Pitch personal: decilo",
+              "type": "oratory_minigame",
+              "content": {
+                "prompt": "Presentate como si estuvieras en una entrevista.",
+                "topic": "Mi pitch personal",
+                "duration_seconds": 60,
+                "min_duration_seconds": 30,
+                "requirements": ["Volumen claro", "Sin muletillas"],
+                "points": 20
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
