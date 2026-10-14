@@ -302,6 +302,9 @@ def transcribe(path: str) -> tuple[List[Word], float]:
         language="es",
         word_timestamps=True,
         initial_prompt=WHISPER_PROMPT,
+        # Greedy: en CPU es ~3x más rápido que beam_size=5 y con el modelo
+        # "base" en español no cambia la detección de muletillas ni pausas.
+        beam_size=int(os.getenv("WHISPER_BEAM_SIZE", "1")),
         # El filtro VAD hizo entrar al modelo en bucles de repetición con
         # pausas largas; sin él las pausas quedan medidas igual.
         vad_filter=False,
@@ -322,13 +325,35 @@ def drop_prompt_echo(words: List[Word]) -> List[Word]:
     return [] if said and said == prompt else words
 
 
+def warm_up() -> None:
+    """Carga el modelo en segundo plano al arrancar, así la primera toma no
+    paga los ~10 s de carga."""
+    try:
+        _get_model()
+    except Exception as e:  # sin red o sin modelo: se reintenta al usarlo
+        print(f"whisper warm-up failed: {e}")
+
+
 def analyze_speech(
     path: str,
     min_seconds: Optional[float] = None,
     target_seconds: Optional[float] = None,
+    topic: Optional[str] = None,
+    use_llm: bool = True,
 ) -> dict:
     words, duration = transcribe(path)
-    return analyze_words(words, duration, min_seconds, target_seconds)
+    result = analyze_words(words, duration, min_seconds, target_seconds)
+    result["ai_feedback"] = None
+    result["ai_model"] = None
+    if use_llm and result["word_count"]:
+        from analyzers import llm
+
+        review = llm.review_speech(result["transcript"], topic, result)
+        if review is not None:
+            result["ai_feedback"] = review["feedback"]
+            result["ai_model"] = review["model"] or None
+            result["feedback"] = [review["feedback"], *result["feedback"]]
+    return result
 
 
 def words_from(items: Iterable[tuple]) -> List[Word]:

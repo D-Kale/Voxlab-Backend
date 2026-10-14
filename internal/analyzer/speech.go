@@ -3,6 +3,7 @@ package analyzer
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime/multipart"
@@ -27,12 +28,16 @@ type SpeechAnalyzeResponse struct {
 	Score               int                           `json:"score"`
 	ScoreBreakdown      map[string]ScoreBreakdownItem `json:"score_breakdown"`
 	Feedback            []string                      `json:"feedback"`
+	AiFeedback          *string                       `json:"ai_feedback"`
+	AiModel             *string                       `json:"ai_model"`
 }
 
 // SpeechAnalyzeOptions are the optional targets of the oratory exercise.
 type SpeechAnalyzeOptions struct {
 	MinSeconds    *float64
 	TargetSeconds *float64
+	// Topic is the exercise topic, used by the LLM coaching tip.
+	Topic string
 }
 
 // ErrUnprocessableAudio means the analyzer could read the request but not
@@ -40,6 +45,10 @@ type SpeechAnalyzeOptions struct {
 type ErrUnprocessableAudio struct{ Detail string }
 
 func (e ErrUnprocessableAudio) Error() string { return e.Detail }
+
+// ErrAnalyzerBusy means the analyzer queue is full; the client should retry
+// in a moment instead of treating the service as down.
+var ErrAnalyzerBusy = errors.New("analyzer busy")
 
 // AnalyzeSpeech uploads an audio take to the analyzer for transcription
 // and delivery analysis. Transcription runs on CPU, so the timeout is long.
@@ -75,6 +84,10 @@ func AnalyzeSpeech(
 			_ = json.NewDecoder(resp.Body).Decode(&detail)
 			resp.Body.Close()
 			return nil, ErrUnprocessableAudio{Detail: detail.Detail}
+		}
+		if resp.StatusCode == http.StatusServiceUnavailable {
+			resp.Body.Close()
+			return nil, ErrAnalyzerBusy
 		}
 		if resp.StatusCode != http.StatusOK {
 			resp.Body.Close()
@@ -114,6 +127,9 @@ func speechForm(
 	}
 	if opts.TargetSeconds != nil {
 		_ = w.WriteField("target_seconds", strconv.FormatFloat(*opts.TargetSeconds, 'f', -1, 64))
+	}
+	if opts.Topic != "" {
+		_ = w.WriteField("topic", opts.Topic)
 	}
 	if err := w.Close(); err != nil {
 		return nil, "", err

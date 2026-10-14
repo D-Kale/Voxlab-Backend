@@ -13,7 +13,7 @@ Flujo:
 from typing import List, Optional
 
 from analyzers.nlp import get_nlp
-from analyzers import gibberish, structure, vocabulary, readability, requirements
+from analyzers import gibberish, structure, vocabulary, readability, requirements, llm
 from analyzers.scoring import calculate_score
 
 
@@ -35,6 +35,8 @@ def _empty_result(word_count: int, feedback: list) -> dict:
         "score": 0,
         "score_breakdown": {},
         "feedback": feedback,
+        "ai_feedback": None,
+        "ai_model": None,
     }
 
 
@@ -43,6 +45,7 @@ def analyze_text(
     requirements_list: Optional[List[str]] = None,
     min_words: Optional[int] = None,
     max_words: Optional[int] = None,
+    use_llm: bool = True,
 ) -> dict:
     """Analiza un texto de escritura y devuelve métricas + score.
 
@@ -91,8 +94,49 @@ def analyze_text(
     result["score"] = scoring_result["score"]
     result["score_breakdown"] = scoring_result["score_breakdown"]
     result["feedback"] = scoring_result["feedback"]
+    result["ai_feedback"] = None
+    result["ai_model"] = None
+
+    if use_llm:
+        _apply_llm_review(result, stripped, min_words, max_words)
 
     return result
+
+
+# Similitud que se le asigna a un requisito cuando el LLM lo confirma o lo
+# descarta (el score de cobertura es el promedio de similitudes).
+_LLM_MATCHED_SIM = 0.70
+_LLM_UNMATCHED_SIM = 0.25
+
+
+def _apply_llm_review(result: dict, text: str, min_words, max_words) -> None:
+    """Pide al LLM un veredicto sobre los requisitos dudosos y un consejo.
+
+    No hace nada si no hay API key o si el análisis local alcanza
+    (ver analyzers/llm.py).
+    """
+    review = llm.review_text(text, result["requirements"], result["score"])
+    if review is None:
+        return
+    verdicts = review["requirements"]
+    if verdicts:
+        for r in result["requirements"]:
+            if r["requirement"] in verdicts:
+                matched = verdicts[r["requirement"]]
+                r["matched"] = matched
+                r["score"] = (
+                    max(r["score"], _LLM_MATCHED_SIM)
+                    if matched
+                    else min(r["score"], _LLM_UNMATCHED_SIM)
+                )
+        rescored = calculate_score(result, min_words, max_words)
+        result["score"] = rescored["score"]
+        result["score_breakdown"] = rescored["score_breakdown"]
+        result["feedback"] = rescored["feedback"]
+    if review["feedback"]:
+        result["ai_feedback"] = review["feedback"]
+        result["feedback"] = [review["feedback"], *result["feedback"]]
+    result["ai_model"] = review["model"] or None
 
 
 def _sentence_length_stats(doc) -> dict:

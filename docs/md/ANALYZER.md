@@ -308,13 +308,18 @@ Exposed by the API as `POST /api/v1/exercises/analyze-speech` (JWT required,
 | `audio` | file | yes | m4a/aac, wav, webm/opus or mp3, max 15 MB |
 | `min_seconds` | number | no | Minimum expected duration |
 | `target_seconds` | number | no | Target duration |
+| `topic` | string | no | Exercise topic, used by the AI coaching tip (max 200 chars) |
 
 Pipeline (`analyzer/analyzers/speech.py`):
 
 1. **Transcription** with [faster-whisper](https://github.com/SYSTRAN/faster-whisper)
-   on CPU (int8), Spanish, word-level timestamps. The model is downloaded at
-   image build time and loaded on the first request, so the text analyzer does
-   not pay its memory until speech is used.
+   on CPU (int8), Spanish, word-level timestamps, greedy decoding
+   (`beam_size=1`, ~3× faster than 5 on CPU). The model is downloaded at
+   image build time and preloaded in a background thread at startup
+   (`WHISPER_WARMUP=0` to disable), so the first take does not pay the load.
+   One transcription runs at a time (`SPEECH_CONCURRENCY`); with more than
+   `SPEECH_MAX_WAITING` takes queued the analyzer answers 503 and the API
+   forwards it as 503 so the app can retry.
 2. **Metrics** from the word timestamps: words per minute (fillers excluded),
    pauses (gaps ≥ 0.6 s), long pauses (≥ 3 s), speaking time, filler words.
 3. **Fillers**: pure hesitations (`eh`, `mmm`, `ehm`…) always count;
@@ -335,7 +340,8 @@ Response (`data` in the API envelope): `transcript`, `duration_seconds`,
 `speaking_seconds`, `word_count`, `words_per_minute`, `pause_count`,
 `long_pause_count`, `longest_pause_seconds`, `filler_words`,
 `filler_breakdown`, `score`, `score_breakdown` (same shape as the text
-analyzer) and `feedback`.
+analyzer), `feedback`, and `ai_feedback` / `ai_model` (see below; `null`
+when the LLM was not used).
 
 ### Configuration
 
@@ -344,6 +350,10 @@ analyzer) and `feedback`.
 | `WHISPER_MODEL` | `base` | `small` transcribes better but was ~10× slower on CPU in tests |
 | `WHISPER_THREADS` | `2` | CPU threads for transcription |
 | `WHISPER_PROMPT` | natural sentence with fillers | Nudges Whisper to keep hesitations |
+| `WHISPER_BEAM_SIZE` | `1` | Greedy decoding |
+| `WHISPER_WARMUP` | `1` | Preload the model at startup |
+| `SPEECH_CONCURRENCY` | `1` | Simultaneous transcriptions |
+| `SPEECH_MAX_WAITING` | `4` | Queued takes before answering 503 |
 
 Findings from testing with `base` (kept in the code comments):
 - A prompt made only of fillers ("Eh... este... mmm") is echoed back as the
@@ -354,3 +364,38 @@ Findings from testing with `base` (kept in the code comments):
   so `av` is pinned below 16.
 
 Tests: `cd analyzer && uv run --group dev pytest tests` (no model needed).
+
+## AI coaching with an LLM (OpenRouter, optional)
+
+`analyzer/analyzers/llm.py` adds a short coaching tip on top of the local
+analysis. The local metrics measure form (length, structure, pace, pauses,
+fillers); the LLM is used only for what they cannot see: whether the content
+answers the prompt, and one concrete tip about the ideas.
+
+It is called **only when needed**:
+
+- `OPENROUTER_API_KEY` is set (without it nothing changes),
+- writing: ≥ 15 words, and either a requirement is ambiguous (embedding
+  similarity between 0.30 and 0.55, where MiniLM is unreliable) or the
+  score is below 85. The LLM verdict on ambiguous requirements replaces the
+  embedding verdict and the score is recomputed,
+- speech: the transcript has ≥ 25 words,
+- the daily budget (`LLM_DAILY_LIMIT`) is not exhausted,
+- the same request is not in the in-memory cache (256 entries).
+
+Any failure (timeout, rate limit, invalid JSON) falls back silently to the
+local result. The tip is returned as `ai_feedback` (also prepended to
+`feedback`) and the model used as `ai_model`.
+
+| Variable | Default | Notes |
+|----------|---------|-------|
+| `OPENROUTER_API_KEY` | empty | Key from https://openrouter.ai/keys |
+| `OPENROUTER_MODELS` | `google/gemma-4-31b-it:free,openrouter/free` | Comma-separated, tried in order (OpenRouter `models` fallback). Free models change over time; check https://openrouter.ai/models?max_price=0 |
+| `LLM_DAILY_LIMIT` | `300` | Calls per day per analyzer process |
+| `LLM_TIMEOUT_SECONDS` | `20` | Per call |
+
+Free models on OpenRouter are rate limited (about 20 requests/minute, and
+50 requests/day on accounts without credits, 1000/day after buying $10 of
+credits once). Keep `LLM_DAILY_LIMIT` under the account limit.
+
+Tests: `tests/test_llm.py` (no network).

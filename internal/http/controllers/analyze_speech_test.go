@@ -118,3 +118,36 @@ func TestAnalyzeSpeechMapsUnreadableAudioTo422(t *testing.T) {
 		t.Fatalf("status = %d, want 422; body = %s", rec.Code, rec.Body.String())
 	}
 }
+
+func TestAnalyzeSpeechForwardsTopicAndAiFeedback(t *testing.T) {
+	_, got, _ := fakeAnalyzer(t, http.StatusOK, `{"transcript":"hola","score":70,"score_breakdown":{},"feedback":[],"ai_feedback":"Cerrá con una idea fuerte.","ai_model":"google/gemma-4-31b-it:free"}`)
+
+	rec := serve(speechRequest(t, []byte("fake-aac"), map[string]string{"topic": "  Presentación breve  "}))
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("status = %d, body = %s", rec.Code, rec.Body.String())
+	}
+	if got.FormValue("topic") != "Presentación breve" {
+		t.Errorf("forwarded topic = %q", got.FormValue("topic"))
+	}
+	var body struct {
+		Data struct {
+			AiFeedback *string `json:"ai_feedback"`
+			AiModel    *string `json:"ai_model"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(rec.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if body.Data.AiFeedback == nil || *body.Data.AiFeedback != "Cerrá con una idea fuerte." {
+		t.Errorf("ai_feedback = %v", body.Data.AiFeedback)
+	}
+}
+
+func TestAnalyzeSpeechMapsBusyAnalyzerTo503(t *testing.T) {
+	fakeAnalyzer(t, http.StatusServiceUnavailable, `{"detail":"ocupado"}`)
+	rec := serve(speechRequest(t, []byte("audio"), nil))
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Fatalf("status = %d, want 503; body = %s", rec.Code, rec.Body.String())
+	}
+}

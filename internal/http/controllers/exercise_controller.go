@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -670,11 +671,13 @@ const maxSpeechUploadBytes = 15 << 20
 // @Param        audio           formData  file    true   "Audio file (max 15 MB)"
 // @Param        min_seconds     formData  number  false  "Minimum expected duration in seconds"
 // @Param        target_seconds  formData  number  false  "Target duration in seconds"
+// @Param        topic           formData  string  false  "Exercise topic, used for the AI coaching tip (max 200 chars)"
 // @Success      200  {object}  map[string]interface{}             "Transcripción y métricas de la oratoria"
 // @Failure      400  {object}  resources.BadRequestError           "Falta el audio o es demasiado grande"
 // @Failure      401  {object}  resources.UnauthorizedError         "Token no proporcionado o inválido"
 // @Failure      422  {object}  resources.BadRequestError           "El audio no se pudo procesar"
 // @Failure      502  {object}  resources.ServiceUnavailableError   "Analizador no disponible — intente más tarde"
+// @Failure      503  {object}  resources.ServiceUnavailableError   "Analizador ocupado — reintentar en unos segundos"
 // @Router       /api/v1/exercises/analyze-speech [post]
 func (h *ExerciseController) AnalyzeSpeech(c *gin.Context) {
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxSpeechUploadBytes+1<<20)
@@ -704,6 +707,13 @@ func (h *ExerciseController) AnalyzeSpeech(c *gin.Context) {
 		}
 	}
 
+	if topic := strings.TrimSpace(c.PostForm("topic")); topic != "" {
+		if r := []rune(topic); len(r) > 200 {
+			topic = string(r[:200])
+		}
+		opts.Topic = topic
+	}
+
 	audio, err := file.Open()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "could not read audio file"})
@@ -716,6 +726,10 @@ func (h *ExerciseController) AnalyzeSpeech(c *gin.Context) {
 		var unprocessable analyzer.ErrUnprocessableAudio
 		if errors.As(err, &unprocessable) {
 			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "audio could not be processed", "details": unprocessable.Detail})
+			return
+		}
+		if errors.Is(err, analyzer.ErrAnalyzerBusy) {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "analyzer busy, retry in a few seconds"})
 			return
 		}
 		logger.FromContext(c.Request.Context()).Error("speech analysis failed", "error", err.Error())
