@@ -66,7 +66,7 @@ services:
       # Coaching con LLM (opcional). Sin key el analizador funciona igual,
       # solo sin el consejo de IA. Ver docs/md/ANALYZER.md.
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
-      - OPENROUTER_MODELS=${OPENROUTER_MODELS:-google/gemma-4-31b-it:free,openrouter/free}
+      - OPENROUTER_MODELS=${OPENROUTER_MODELS:-nvidia/nemotron-3-ultra-550b-a55b:free,nvidia/nemotron-3-super-120b-a12b:free,dots-studio/dots-3-note-preview:free}
       - LLM_DAILY_LIMIT=${LLM_DAILY_LIMIT:-300}
       - WHISPER_MODEL=${WHISPER_MODEL:-base}
       - WHISPER_THREADS=${WHISPER_THREADS:-2}

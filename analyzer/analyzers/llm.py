@@ -31,7 +31,11 @@ from typing import List, Optional
 log = logging.getLogger("analyzer.llm")
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-DEFAULT_MODELS = "google/gemma-4-31b-it:free,openrouter/free"
+DEFAULT_MODELS = (
+    "nvidia/nemotron-3-ultra-550b-a55b:free,"
+    "nvidia/nemotron-3-super-120b-a12b:free,"
+    "dots-studio/dots-3-note-preview:free"
+)
 
 # Mínimos de contenido para pedir opinión al LLM.
 MIN_TEXT_WORDS = 15
@@ -116,14 +120,28 @@ def ask_json(system: str, user: str, max_tokens: int = 350) -> Optional[dict]:
         log.info("LLM daily budget exhausted; skipping")
         return None
 
+    # Free models vary a lot: some are classifiers or spend every token
+    # reasoning. Try them one by one and keep the first valid JSON answer.
+    for model in models():
+        result = _ask_model(model, system, user, max_tokens)
+        if result is not None:
+            _cache_put(key, result)
+            return result
+    return None
+
+
+def _ask_model(model: str, system: str, user: str, max_tokens: int) -> Optional[dict]:
     body = {
-        "models": models(),
+        "model": model,
         "messages": [
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ],
         "temperature": 0.3,
-        "max_tokens": max_tokens,
+        # Room for models that think before answering; the thinking itself
+        # is not returned.
+        "max_tokens": max(max_tokens, 900),
+        "reasoning": {"exclude": True},
     }
     request = urllib.request.Request(
         OPENROUTER_URL,
@@ -143,13 +161,11 @@ def ask_json(system: str, user: str, max_tokens: int = 350) -> Optional[dict]:
         content = payload["choices"][0]["message"]["content"] or ""
         data = _extract_json(content)
         if data is None:
-            log.warning("LLM returned non-JSON content")
+            log.warning("LLM %s returned non-JSON content", model)
             return None
-        result = {"data": data, "model": payload.get("model", "")}
-        _cache_put(key, result)
-        return result
+        return {"data": data, "model": payload.get("model", model)}
     except (urllib.error.URLError, TimeoutError, KeyError, IndexError, ValueError) as e:
-        log.warning("LLM call failed: %s", e)
+        log.warning("LLM %s call failed: %s", model, e)
         return None
 
 

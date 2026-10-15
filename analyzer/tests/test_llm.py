@@ -68,7 +68,8 @@ def test_review_text_only_asks_ambiguous_requirements(monkeypatch):
     prompt = calls[0]["messages"][1]["content"]
     assert "hablar del público" in prompt
     assert "usar conectores" not in prompt
-    assert calls[0]["models"] == llm.models()
+    assert calls[0]["model"] == llm.models()[0]
+    assert calls[0]["reasoning"] == {"exclude": True}
 
 
 def test_review_text_skips_short_or_excellent_text(monkeypatch):
@@ -108,3 +109,35 @@ def test_invalid_json_returns_none(monkeypatch):
     monkeypatch.setenv("OPENROUTER_API_KEY", "sk-test")
     _fake_openrouter(monkeypatch, "Claro, acá va mi opinión", [])
     assert llm.review_speech(" ".join(["palabra"] * 30), None, {}) is None
+
+
+def test_falls_back_to_the_next_model(monkeypatch):
+    monkeypatch.setenv("OPENROUTER_API_KEY", "sk-test")
+    monkeypatch.setenv("OPENROUTER_MODELS", "a:free,b:free")
+    calls = []
+
+    class _Response:
+        def __init__(self, body):
+            self._body = body
+
+        def read(self):
+            return self._body
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    def urlopen(request, timeout):
+        sent = json.loads(request.data)
+        calls.append(sent["model"])
+        # The first model answers with a classifier label, not JSON.
+        content = "User Safety: safe" if sent["model"] == "a:free" else '{"feedback": "Bien."}'
+        body = {"model": sent["model"], "choices": [{"message": {"content": content}}]}
+        return _Response(json.dumps(body).encode())
+
+    monkeypatch.setattr(llm.urllib.request, "urlopen", urlopen)
+    review = llm.review_speech(" ".join(["palabra"] * 30), "Tema nuevo", {})
+    assert review is not None and review["feedback"] == "Bien."
+    assert calls == ["a:free", "b:free"]
