@@ -49,6 +49,34 @@ func (r *UserRepository) Delete(id string) error {
 	return r.db.Where("id = ?", id).Delete(&models.User{}).Error
 }
 
+// userDataTables hold rows that belong to a user. Some have no foreign key
+// to users, so they are cleared explicitly before the user row goes.
+var userDataTables = []string{
+	"client_logs",
+	"exercise_attempts",
+	"user_exercise_progress",
+	"user_exercise_progresses",
+	"user_progress",
+	"user_titles",
+}
+
+// HardDelete permanently removes a user and everything stored about them
+// (account deletion requested by the user; Google Play requires it).
+// Unlike Delete it does not soft-delete: the email and name are gone.
+func (r *UserRepository) HardDelete(id string) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		for _, table := range userDataTables {
+			if !tx.Migrator().HasTable(table) {
+				continue
+			}
+			if err := tx.Exec("DELETE FROM "+table+" WHERE user_id = ?", id).Error; err != nil {
+				return err
+			}
+		}
+		return tx.Unscoped().Where("id = ?", id).Delete(&models.User{}).Error
+	})
+}
+
 func (r *UserRepository) AddXP(id string, xp int) error {
 	return r.db.Model(&models.User{}).Where("id = ?", id).
 		UpdateColumn("xp", gorm.Expr("xp + ?", xp)).Error

@@ -132,6 +132,7 @@ func (r *Router) initEngine() {
 			auth.POST("/register", r.auth.Register)
 			auth.POST("/logout", r.auth.Logout)
 			auth.GET("/me", middleware.AuthMiddleware(), r.auth.Me)
+			auth.DELETE("/me", middleware.AuthMiddleware(), r.auth.DeleteAccount)
 			auth.GET("/profile", middleware.AuthMiddleware(), r.auth.GetProfile)
 			auth.PUT("/profile", middleware.AuthMiddleware(), r.auth.UpdateProfile)
 		}
