@@ -2,14 +2,17 @@ package controllers
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/voxlab/voxlab-backend/internal/analyzer"
 	"github.com/voxlab/voxlab-backend/internal/http/middleware"
 	"github.com/voxlab/voxlab-backend/internal/http/resources"
+	"github.com/voxlab/voxlab-backend/internal/logger"
 	"github.com/voxlab/voxlab-backend/internal/models"
 	"github.com/voxlab/voxlab-backend/internal/services"
 )
@@ -645,6 +648,99 @@ type RequirementCatalogItem struct {
 	Text     string `json:"text" example:"Incluir una introducción clara del tema"`
 	Category string `json:"category" example:"Cobertura del contenido"`
 	Order    int    `json:"order" example:"1"`
+}
+
+// maxSpeechUploadBytes caps oratory uploads: ~3 minutes of AAC mono at
+// 64 kbps is about 1.5 MB, so 15 MB leaves room for other codecs.
+const maxSpeechUploadBytes = 15 << 20
+
+// AnalyzeSpeech godoc
+// @Summary      Analyze a recorded oratory take
+// @Description  Uploads an audio recording (m4a/aac, wav, webm/opus, mp3) and returns its
+// @Description  transcript and delivery analysis: words per minute, pauses, long pauses,
+// @Description  filler words ("eh", "este", "o sea"...), fluency, and a weighted score with
+// @Description  per-skill feedback (ritmo 25 %, muletillas 25 %, pausas 20 %, fluidez 15 %,
+// @Description  duración 15 %). Transcription runs with Whisper on the analyzer, so a
+// @Description  one-minute take can take several seconds.
+// @Description
+// @Description  🔐 Requires a valid JWT.
+// @Tags         Exercises
+// @Accept       multipart/form-data
+// @Produce      json
+// @Security     BearerAuth
+// @Param        audio           formData  file    true   "Audio file (max 15 MB)"
+// @Param        min_seconds     formData  number  false  "Minimum expected duration in seconds"
+// @Param        target_seconds  formData  number  false  "Target duration in seconds"
+// @Param        topic           formData  string  false  "Exercise topic, used for the AI coaching tip (max 200 chars)"
+// @Success      200  {object}  map[string]interface{}             "Transcripción y métricas de la oratoria"
+// @Failure      400  {object}  resources.BadRequestError           "Falta el audio o es demasiado grande"
+// @Failure      401  {object}  resources.UnauthorizedError         "Token no proporcionado o inválido"
+// @Failure      422  {object}  resources.BadRequestError           "El audio no se pudo procesar"
+// @Failure      502  {object}  resources.ServiceUnavailableError   "Analizador no disponible — intente más tarde"
+// @Failure      503  {object}  resources.ServiceUnavailableError   "Analizador ocupado — reintentar en unos segundos"
+// @Router       /api/v1/exercises/analyze-speech [post]
+func (h *ExerciseController) AnalyzeSpeech(c *gin.Context) {
+	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxSpeechUploadBytes+1<<20)
+
+	file, err := c.FormFile("audio")
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "audio file is required", "details": err.Error()})
+		return
+	}
+	if file.Size == 0 || file.Size > maxSpeechUploadBytes {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "audio must be between 1 byte and 15 MB"})
+		return
+	}
+
+	var opts analyzer.SpeechAnalyzeOptions
+	for field, target := range map[string]**float64{
+		"min_seconds":    &opts.MinSeconds,
+		"target_seconds": &opts.TargetSeconds,
+	} {
+		if raw := c.PostForm(field); raw != "" {
+			v, err := strconv.ParseFloat(raw, 64)
+			if err != nil || v < 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": field + " must be a positive number"})
+				return
+			}
+			*target = &v
+		}
+	}
+
+	if topic := strings.TrimSpace(c.PostForm("topic")); topic != "" {
+		if r := []rune(topic); len(r) > 200 {
+			topic = string(r[:200])
+		}
+		opts.Topic = topic
+	}
+
+	audio, err := file.Open()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "could not read audio file"})
+		return
+	}
+	defer audio.Close()
+
+	result, err := analyzer.AnalyzeSpeech(audio, file.Filename, opts)
+	if err != nil {
+		var unprocessable analyzer.ErrUnprocessableAudio
+		if errors.As(err, &unprocessable) {
+			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "audio could not be processed", "details": unprocessable.Detail})
+			return
+		}
+		if errors.Is(err, analyzer.ErrAnalyzerBusy) {
+			c.JSON(http.StatusServiceUnavailable, gin.H{"error": "analyzer busy, retry in a few seconds"})
+			return
+		}
+		logger.FromContext(c.Request.Context()).Error("speech analysis failed", "error", err.Error())
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Analyzer service unavailable", "details": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data":    result,
+	})
 }
 
 // GetRequirementCatalog godoc

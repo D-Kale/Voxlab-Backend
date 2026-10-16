@@ -7,6 +7,7 @@ Uso:
 Descarga:
     - spaCy: es_core_news_md (modelo de lenguaje español)
     - fastembed: paraphrase-multilingual-MiniLM-L12-v2 (embeddings ONNX)
+    - faster-whisper: modelo de transcripción (WHISPER_MODEL, default "base")
 """
 
 import subprocess
@@ -31,9 +32,21 @@ def download_embedding_model():
     print("Embeddings: OK")
 
 
+def download_whisper_model():
+    from faster_whisper.utils import download_model
+
+    from analyzers.speech import whisper_model_name
+
+    name = whisper_model_name()
+    print(f"Descargando modelo faster-whisper '{name}'...")
+    download_model(name)
+    print("Whisper: OK")
+
+
 def main():
     download_spacy_model()
     download_embedding_model()
+    download_whisper_model()
     print("Todos los modelos descargados correctamente.")
 
 

@@ -132,34 +132,37 @@ func (r *Router) initEngine() {
 			auth.POST("/register", r.auth.Register)
 			auth.POST("/logout", r.auth.Logout)
 			auth.GET("/me", middleware.AuthMiddleware(), r.auth.Me)
+			auth.DELETE("/me", middleware.AuthMiddleware(), r.auth.DeleteAccount)
 			auth.GET("/profile", middleware.AuthMiddleware(), r.auth.GetProfile)
 			auth.PUT("/profile", middleware.AuthMiddleware(), r.auth.UpdateProfile)
 		}
 
+		// Contenido: lectura pública; crear, editar, borrar y reordenar solo
+		// admin (antes bastaba cualquier token de la app).
 		tracks := api.Group("/tracks")
 		{
 			tracks.GET("", r.track.GetTracks)
 			tracks.GET("/:id", r.track.GetTrack)
-			tracks.POST("", middleware.AuthMiddleware(), r.track.CreateTrack)
-			tracks.PUT("/:id", middleware.AuthMiddleware(), r.track.UpdateTrack)
-			tracks.DELETE("/:id", middleware.AuthMiddleware(), r.track.DeleteTrack)
-			tracks.PUT("/reorder", middleware.AuthMiddleware(), r.track.ReorderTracks)
+			tracks.POST("", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.track.CreateTrack)
+			tracks.PUT("/:id", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.track.UpdateTrack)
+			tracks.DELETE("/:id", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.track.DeleteTrack)
+			tracks.PUT("/reorder", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.track.ReorderTracks)
 
 			tracks.GET("/:id/modules", r.module.GetModulesByTrack)
-			tracks.PUT("/:id/modules/reorder", middleware.AuthMiddleware(), r.module.ReorderModules)
+			tracks.PUT("/:id/modules/reorder", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.module.ReorderModules)
 		}
 
 		modules := api.Group("/modules")
 		{
 			modules.GET("/:id", r.module.GetModule)
-			modules.POST("", middleware.AuthMiddleware(), r.module.CreateModule)
-			modules.PUT("/:id", middleware.AuthMiddleware(), r.module.UpdateModule)
-			modules.DELETE("/:id", middleware.AuthMiddleware(), r.module.DeleteModule)
+			modules.POST("", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.module.CreateModule)
+			modules.PUT("/:id", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.module.UpdateModule)
+			modules.DELETE("/:id", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.module.DeleteModule)
 
-			modules.POST("/:id/lessons", middleware.AuthMiddleware(), r.module.LinkLesson)
+			modules.POST("/:id/lessons", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.module.LinkLesson)
 			modules.GET("/:id/lessons", r.lesson.GetLessonsByModule)
-			modules.DELETE("/:id/lessons/:lessonId", middleware.AuthMiddleware(), r.module.UnlinkLesson)
-			modules.PUT("/:id/lessons/reorder", middleware.AuthMiddleware(), r.module.ReorderLessons)
+			modules.DELETE("/:id/lessons/:lessonId", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.module.UnlinkLesson)
+			modules.PUT("/:id/lessons/reorder", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.module.ReorderLessons)
 		}
 
 		api.GET("/lessons/shared", r.lesson.GetSharedLessons)
@@ -168,16 +171,16 @@ func (r *Router) initEngine() {
 		{
 			lessons.GET("", r.lesson.ListLessons)
 			lessons.GET("/:id", r.lesson.GetLesson)
-			lessons.POST("", middleware.AuthMiddleware(), r.lesson.CreateLesson)
-			lessons.PUT("/:id", middleware.AuthMiddleware(), r.lesson.UpdateLesson)
-			lessons.DELETE("/:id", middleware.AuthMiddleware(), r.lesson.DeleteLesson)
+			lessons.POST("", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.lesson.CreateLesson)
+			lessons.PUT("/:id", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.lesson.UpdateLesson)
+			lessons.DELETE("/:id", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.lesson.DeleteLesson)
 
 			lessons.GET("/:id/modules", r.lesson.GetModulesByLesson)
 			lessons.GET("/:id/exercises", r.lesson.GetExercisesByLesson)
-			lessons.POST("/:id/exercises", middleware.AuthMiddleware(), r.exercise.LinkExerciseToLesson)
-			lessons.DELETE("/:id/exercises/:exerciseId", middleware.AuthMiddleware(), r.exercise.UnlinkExerciseFromLesson)
-			lessons.PUT("/:id/exercises/reorder", middleware.AuthMiddleware(), r.exercise.BatchReorderExercises)
-			lessons.PUT("/:id/exercises/:exerciseId/reorder", middleware.AuthMiddleware(), r.exercise.ReorderExerciseInLesson)
+			lessons.POST("/:id/exercises", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.exercise.LinkExerciseToLesson)
+			lessons.DELETE("/:id/exercises/:exerciseId", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.exercise.UnlinkExerciseFromLesson)
+			lessons.PUT("/:id/exercises/reorder", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.exercise.BatchReorderExercises)
+			lessons.PUT("/:id/exercises/:exerciseId/reorder", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.exercise.ReorderExerciseInLesson)
 		}
 
 		exercises := api.Group("/exercises")
@@ -186,10 +189,11 @@ func (r *Router) initEngine() {
 			exercises.GET("/requirement-catalog", r.exercise.GetRequirementCatalog)
 			exercises.GET("/:id", r.exercise.GetExercise)
 			exercises.GET("/:id/lessons", r.exercise.GetLessonsByExercise)
-			exercises.POST("", middleware.AuthMiddleware(), r.exercise.CreateExercise)
-			exercises.PUT("/:id", middleware.AuthMiddleware(), r.exercise.UpdateExercise)
-			exercises.DELETE("/:id", middleware.AuthMiddleware(), r.exercise.DeleteExercise)
+			exercises.POST("", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.exercise.CreateExercise)
+			exercises.PUT("/:id", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.exercise.UpdateExercise)
+			exercises.DELETE("/:id", middleware.AuthMiddleware(), middleware.AdminMiddleware(), r.exercise.DeleteExercise)
 			exercises.POST("/analyze-text", middleware.AuthMiddleware(), r.exercise.AnalyzeText)
+			exercises.POST("/analyze-speech", middleware.AuthMiddleware(), r.exercise.AnalyzeSpeech)
 			exercises.POST("/:id/attempt", middleware.AuthMiddleware(), r.exercise.AttemptExercise)
 		}
 

@@ -8,13 +8,18 @@ dependencies = [
     "spacy>=3.8",
     "textstat>=0.7",
     "fastembed>=0.4.0",
+    "faster-whisper>=1.1",
+    # faster-whisper 1.2 llama a av.open(metadata_errors=...), que PyAV 16+
+    # ya no acepta.
+    "av>=11,<16",
+    "python-multipart>=0.0.9",
 ]
 
 [project.scripts]
 download-model = "analyzers.download_model:main"
 
 [dependency-groups]
-dev = []
+dev = ["pytest>=8"]
 
 [tool.uv]
 package = true

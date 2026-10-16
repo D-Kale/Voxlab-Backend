@@ -62,3 +62,11 @@ CREATE INDEX IF NOT EXISTS idx_module_lessons_module ON module_lessons(module_id
 CREATE INDEX IF NOT EXISTS idx_module_lessons_lesson ON module_lessons(lesson_id);
 CREATE INDEX IF NOT EXISTS idx_user_titles_user ON user_titles(user_id);
 CREATE INDEX IF NOT EXISTS idx_user_titles_equipped ON user_titles(is_equipped);
+
+-- The inserts above use explicit ids, which do not advance the serial
+-- sequences: move each one past the highest id, or the next row created
+-- through the API collides with an existing id (500 on POST /tracks).
+SELECT setval(pg_get_serial_sequence('gamified_titles', 'id'), COALESCE((SELECT MAX(id) FROM gamified_titles), 0) + 1, false);
+SELECT setval(pg_get_serial_sequence('tracks', 'id'), COALESCE((SELECT MAX(id) FROM tracks), 0) + 1, false);
+SELECT setval(pg_get_serial_sequence('modules', 'id'), COALESCE((SELECT MAX(id) FROM modules), 0) + 1, false);
+SELECT setval(pg_get_serial_sequence('lessons', 'id'), COALESCE((SELECT MAX(id) FROM lessons), 0) + 1, false);

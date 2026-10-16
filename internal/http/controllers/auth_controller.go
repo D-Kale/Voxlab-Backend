@@ -111,6 +111,37 @@ func (h *AuthController) Logout(c *gin.Context) {
 	})
 }
 
+// DeleteAccount godoc
+// @Summary      Delete my account
+// @Description  Permanently deletes the authenticated user's account and all
+// @Description  their data (progress, attempts, titles, logs), then revokes the token.
+// @Description  This cannot be undone.
+// @Tags         Auth
+// @Produce      json
+// @Security     BearerAuth
+// @Success      200  {object}  resources.LogoutResponse       "Cuenta eliminada"
+// @Failure      401  {object}  resources.UnauthorizedError    "Token no proporcionado o inválido"
+// @Failure      500  {object}  resources.InternalServerError  "Error al eliminar la cuenta"
+// @Router       /api/v1/auth/me [delete]
+func (h *AuthController) DeleteAccount(c *gin.Context) {
+	userID, exists := c.Get("user_id")
+	authHeader := c.GetHeader("Authorization")
+	if !exists || len(authHeader) < 8 {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
+		return
+	}
+
+	if err := h.service.DeleteAccount(userID.(string), authHeader[7:]); err != nil {
+		resources.InternalError(c, err, "failed to delete account")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "account deleted",
+	})
+}
+
 // Me godoc
 // @Summary      Get Current User
 // @Description  Returns the authenticated user's profile (name, email, XP, streak, lives).

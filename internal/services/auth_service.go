@@ -135,6 +135,15 @@ func (s *AuthService) Logout(tokenString string) error {
 	return s.rdb.Set(database.Ctx, blacklistKey, "true", ttl).Err()
 }
 
+// DeleteAccount permanently deletes the user and their data, then revokes
+// the token used for the request.
+func (s *AuthService) DeleteAccount(userID, tokenString string) error {
+	if err := s.userRepo.HardDelete(userID); err != nil {
+		return err
+	}
+	return s.Logout(tokenString)
+}
+
 func (s *AuthService) IsTokenBlacklisted(tokenString string) (bool, error) {
 	blacklistKey := tokenBlacklistKey(tokenString)
 	exists, err := s.rdb.Exists(database.Ctx, blacklistKey).Result()

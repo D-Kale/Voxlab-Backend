@@ -21,7 +21,7 @@ func NewExerciseProgressController(service *services.ExerciseProgressService) *E
 
 type completeExerciseRequest struct {
 	ExerciseID  string    `json:"exercise_id" binding:"required"`
-	Score       int       `json:"score" binding:"required,min=0,max=100"`
+	Score       int       `json:"score" binding:"min=0,max=100"`
 	CompletedAt time.Time `json:"completed_at" binding:"required"`
 	LessonID    *int      `json:"lesson_id,omitempty"`
 }

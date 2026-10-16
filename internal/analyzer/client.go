@@ -71,6 +71,10 @@ type AnalyzeResponse struct {
 	Score               int                            `json:"score"`
 	ScoreBreakdown      map[string]ScoreBreakdownItem  `json:"score_breakdown"`
 	Feedback            []string                       `json:"feedback"`
+	// AiFeedback is the LLM coaching tip (OpenRouter), nil when the analyzer
+	// did not need it or has no API key.
+	AiFeedback *string `json:"ai_feedback"`
+	AiModel    *string `json:"ai_model"`
 }
 
 func analyzerURLs() []string {
